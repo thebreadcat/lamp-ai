@@ -11,7 +11,7 @@
     <path d="M380 340 L387 357 L405 364 L387 371 L380 388 L373 371 L355 364 L373 357 Z"/>
     <path d="M525 330 L531 344 L545 350 L531 356 L525 370 L519 356 L505 350 L519 344 Z"/>
   </g>
-  <g fill="#1c1917">
+  <g fill="#1c1917" transform="translate(575 355) scale(1.5) translate(-575 -355)">
     <rect x="430" y="90" width="220" height="70" rx="35" transform="rotate(35 430 90)"/>
     <circle cx="650" cy="260" r="32"/>
     <circle cx="650" cy="260" r="12" fill="#f5f5f4"/>

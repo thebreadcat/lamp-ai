@@ -58,7 +58,7 @@ AUTH_PUBLIC_GET = {
     "/icon-512.png",
     "/favicon.ico",
 }
-AUTH_PUBLIC_GET_PREFIX = ("/api/auth/",)
+AUTH_PUBLIC_GET_PREFIX = ("/api/auth/", "/assets/")
 AUTH_PUBLIC_POST = {"/api/auth/login", "/api/auth/setup"}
 
 
@@ -147,20 +147,36 @@ class LampHandler(WorkshopHandler):
             return True
         fp = mapping.get(path)
         if fp and fp.is_file():
-            ct = {
-                ".json": "application/json",
-                ".js": "application/javascript",
-                ".png": "image/png",
-                ".svg": "image/svg+xml",
-            }.get(fp.suffix, "application/octet-stream")
-            b = fp.read_bytes()
-            self.send_response(200)
-            self.send_header("Content-Type", ct)
-            self.send_header("Content-Length", str(len(b)))
-            self.end_headers()
-            self.wfile.write(b)
+            self._send_file(fp)
             return True
+        if path.startswith("/assets/"):
+            rel = path[len("/assets/") :].lstrip("/")
+            if rel and ".." not in rel:
+                fp = (LAMP_DIR / "assets" / rel).resolve()
+                root = (LAMP_DIR / "assets").resolve()
+                if fp.is_file() and str(fp).startswith(str(root)):
+                    self._send_file(fp)
+                    return True
         return False
+
+    def _send_file(self, fp: Path):
+        ct = {
+            ".json": "application/json",
+            ".js": "application/javascript",
+            ".css": "text/css; charset=utf-8",
+            ".png": "image/png",
+            ".svg": "image/svg+xml",
+            ".woff2": "font/woff2",
+            ".woff": "font/woff",
+            ".ttf": "font/ttf",
+            ".txt": "text/plain; charset=utf-8",
+        }.get(fp.suffix.lower(), "application/octet-stream")
+        b = fp.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", ct)
+        self.send_header("Content-Length", str(len(b)))
+        self.end_headers()
+        self.wfile.write(b)
 
     def _sse_write(self, data: dict):
         self.wfile.write(f"data: {json.dumps(data)}\n\n".encode())

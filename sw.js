@@ -1,5 +1,14 @@
-const CACHE = "lamp-shell-v9";
-const PRECACHE = ["/", "/manifest.json", "/sw.js", "/favicon.svg"];
+const CACHE = "lamp-shell-v12";
+const PRECACHE = [
+  "/",
+  "/manifest.json",
+  "/sw.js",
+  "/favicon.svg",
+  "/lamp-icons.js",
+  "/assets/fontawesome/css/all.min.css",
+  "/assets/fontawesome/webfonts/fa-solid-900.woff2",
+  "/assets/fontawesome/webfonts/fa-regular-400.woff2",
+];
 
 async function cacheUrl(cache, url) {
   try {

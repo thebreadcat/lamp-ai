@@ -66,7 +66,7 @@ Before testing, use [TESTING.md](TESTING.md) for a full checklist.
 - **Chat** — adaptive desktop/mobile layout; star, rename, delete; pull-to-refresh
 - **Per-chat model** — switch Ollama/LM Studio mid-conversation; history resumes on the new model
 - Home **app chips** with initials; shared apps labeled
-- Monochrome SVG icons; onboarding tour; pull-to-refresh; notification swipe
+- Font Awesome Free icons (self-hosted); onboarding tour; pull-to-refresh; notification swipe
 - Apps **Shared** / **My apps**; per-app **Clear data**
 - Light/dark theme; chat → build handoff; HF import; admin system stats
 - Loading spinners on admin, home, apps, chat, login, and notifications while data loads
@@ -99,4 +99,6 @@ Mac smoke test (server running): `./scripts/smoke-test.sh`
 
 ## License
 
-Same as Workshop/Tortoise — Tortoise License (free to use and modify; no selling the codebase or paid support for it).
+[Lamp License](LICENSE) — same terms as [Tortoise](https://github.com/thebreadcat/tortoise/blob/main/LICENSE) and [Workshop](https://github.com/thebreadcat/workshop/blob/main/LICENSE). Free to use and modify; you may not sell the software or offer paid support for the Lamp codebase itself.
+
+UI icons use [Font Awesome Free 6](https://fontawesome.com) (self-hosted under `assets/fontawesome/`; see [assets/fontawesome/LICENSE.txt](assets/fontawesome/LICENSE.txt)).
