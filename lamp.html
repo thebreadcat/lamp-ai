@@ -172,12 +172,82 @@ html, body {
   font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase;
   letter-spacing: 0.06em; padding: 16px 20px 8px;
 }
-.notif-row { position: relative; touch-action: pan-y; transition: transform 0.15s ease; }
-.notif-row.swiping { transition: none; }
-.notif-dismiss-hint {
-  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-  font-size: 12px; color: var(--muted); opacity: 0; pointer-events: none;
+.notif-card {
+  position: relative; touch-action: pan-y;
+  display: flex; align-items: flex-start; gap: 14px;
+  margin: 0 20px 10px; padding: 16px;
+  border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface); box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color var(--t-fast), box-shadow var(--t-fast);
 }
+[data-theme="dark"] .notif-card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, var(--surface) 55%);
+}
+.notif-card:active { transform: scale(0.99); }
+.notif-card.unread {
+  border-color: rgba(251, 191, 36, 0.35);
+  box-shadow: var(--shadow-sm), inset 3px 0 0 var(--accent);
+}
+[data-theme="dark"] .notif-card.unread {
+  background: linear-gradient(145deg, rgba(251, 191, 36, 0.1) 0%, var(--surface) 50%);
+  box-shadow: var(--shadow-sm), inset 3px 0 0 var(--accent), 0 0 24px rgba(251, 191, 36, 0.08);
+}
+.notif-card.read { opacity: 0.72; }
+.notif-card.swiping { transition: none; }
+.notif-avatar {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 800; color: var(--accent);
+  background: var(--accent-l); border: 1px solid rgba(251, 191, 36, 0.25);
+}
+.notif-avatar.sm { width: 36px; height: 36px; font-size: 15px; border-radius: 10px; }
+.notif-content { flex: 1; min-width: 0; }
+.notif-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px; margin-bottom: 4px;
+}
+.notif-title { font-weight: 700; font-size: 15px; line-height: 1.3; color: var(--text); }
+.notif-time {
+  flex-shrink: 0; font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.03em; padding-top: 2px;
+}
+.notif-msg {
+  margin: 0; font-size: 14px; line-height: 1.45; color: var(--subtle);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.notif-app-tag {
+  display: inline-block; margin-top: 8px; padding: 3px 9px;
+  border-radius: 999px; font-size: 11px; font-weight: 600;
+  color: var(--accent); background: var(--accent-l);
+  letter-spacing: 0.02em;
+}
+.notif-dot {
+  position: absolute; top: 14px; right: 14px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 0 3px var(--accent-l);
+}
+.notif-dismiss-hint {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 12px; font-weight: 600; color: var(--accent);
+  opacity: 0; pointer-events: none; transition: opacity var(--t-fast);
+}
+.notif-card.swiping .notif-dismiss-hint { opacity: 1; }
+.notif-feed { padding: 8px 0 24px; }
+.notif-empty {
+  text-align: center; padding: 56px 28px; margin: 12px 20px;
+  border-radius: var(--r); border: 1px dashed var(--border);
+  background: var(--surface);
+}
+.notif-empty-icon {
+  width: 56px; height: 56px; margin: 0 auto 16px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-l); color: var(--accent);
+}
+.notif-empty-icon .ico { width: 26px; height: 26px; }
+.notif-empty-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.notif-empty-sub { font-size: 14px; color: var(--muted); line-height: 1.45; max-width: 260px; margin: 0 auto; }
 .convo-list.ptr-pulling { transition: none; }
 .ptr-indicator {
   text-align: center; font-size: 13px; color: var(--muted); padding: 8px;
@@ -766,16 +836,59 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 .template-title { font-weight: 700; font-size: 15px; color: var(--text); }
 .template-sub { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.35; }
 
-/* notifications */
-.notif-row {
-  padding: 16px 20px; border-bottom: 1px solid var(--border);
-  display: flex; gap: 12px; align-items: flex-start;
+/* notifications — card list (matches app-card / template styling) */
+.home-notif-banner {
+  margin: 0 20px 20px; padding: 16px; border-radius: var(--r);
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  background: var(--surface); box-shadow: var(--shadow-sm);
 }
-.notif-row.unread { background: var(--accent-l); }
-.notif-body { flex: 1; }
-.notif-title { font-weight: 700; font-size: 15px; }
-.notif-msg { color: var(--muted); font-size: 14px; margin-top: 4px; }
-.notif-time { font-size: 12px; color: var(--muted); margin-top: 6px; }
+[data-theme="dark"] .home-notif-banner {
+  background: linear-gradient(160deg, rgba(251, 191, 36, 0.12) 0%, var(--surface) 45%);
+  box-shadow: var(--shadow-sm), 0 0 28px rgba(251, 191, 36, 0.06);
+}
+.home-notif-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; gap: 8px;
+}
+.home-notif-head span {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 700; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.home-notif-head span::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 0 3px var(--accent-l);
+}
+.home-notif-list { display: flex; flex-direction: column; gap: 8px; }
+.home-notif-card {
+  display: flex; align-items: flex-start; gap: 12px; width: 100%;
+  padding: 12px; border: 1px solid var(--border); border-radius: 12px;
+  background: var(--surface-raised); color: inherit; cursor: pointer; text-align: left;
+  transition: border-color var(--t-fast), transform var(--t-fast);
+}
+[data-theme="dark"] .home-notif-card {
+  background: rgba(255, 255, 255, 0.04);
+}
+.home-notif-card:hover { border-color: var(--border-strong); }
+.home-notif-card:active { transform: scale(0.99); }
+.home-notif-text { flex: 1; min-width: 0; }
+.home-notif-text strong {
+  display: block; font-size: 14px; font-weight: 700; margin-bottom: 3px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.home-notif-text span {
+  font-size: 13px; color: var(--muted); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.plan-app-name { width: 100%; margin: 10px 0 6px; }
+.plan-slug-hint {
+  font-size: 12px; color: var(--muted); margin: 0 0 12px;
+}
+.plan-slug-hint code {
+  font-size: 11px; padding: 2px 6px; border-radius: 6px;
+  background: var(--surface-raised); color: var(--subtle);
+}
 
 /* admin */
 .admin-tabs { display: flex; gap: 4px; padding: 12px 20px; overflow-x: auto; }
@@ -1067,6 +1180,7 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
         <button type="button" class="hero-btn hero-btn-secondary" id="hero-chat-btn" onclick="location.hash='#/chat'">Chat with Lamp</button>
         <button type="button" class="hero-btn" id="hero-build-btn" onclick="location.hash='#/build'">Build something new</button>
       </div>
+      <div id="home-notif-banner" class="home-notif-banner" style="display:none" hidden></div>
       <div class="section-title">Recent apps</div>
       <div id="home-apps" class="apps-row"></div>
       <div id="home-templates-wrap">
@@ -1241,8 +1355,7 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   </button>
   <button class="nav-item" data-route="home" onclick="location.hash='#/'" style="position:relative">
     <span class="icon" id="nav-ico-home"></span>Home
-    <span id="nav-notif-badge" class="nav-badge" style="display:none"
-      onclick="event.stopPropagation();location.hash='#/notifications'">0</span>
+    <span id="nav-notif-badge" class="nav-badge" style="display:none" aria-hidden="true">0</span>
   </button>
   <button class="nav-item" data-route="chat" onclick="location.hash='#/chat'"><span class="icon" id="nav-ico-chat"></span>Chat</button>
   <button class="nav-item" data-route="build" onclick="location.hash='#/build'"><span class="icon" id="nav-ico-build"></span>Build</button>
@@ -1331,6 +1444,53 @@ function setTheme(theme) {
 
 function syncThemeUi() {
   applyTheme(getTheme());
+}
+
+function appDisplayName(a) {
+  if (!a) return "App";
+  return (a.title || a.name || "App").trim();
+}
+
+function slugifyAppName(text) {
+  const stop = new Set([
+    "a", "an", "the", "to", "for", "my", "i", "want", "build", "make", "create",
+    "need", "help", "just", "me", "us", "always", "forget", "like", "would",
+    "could", "app", "tool", "something", "can", "get", "have", "some",
+  ]);
+  const words = String(text || "").toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/).filter(Boolean);
+  const clean = words.filter((w) => !stop.has(w)).slice(0, 3);
+  return clean.join("-") || "my-app";
+}
+
+function meaningfulNotifications(list) {
+  return (list || []).filter((n) => ((n.title || "") + (n.message || "")).trim());
+}
+
+function notifAppLabel(app) {
+  if (!app) return "";
+  return app.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function notifInitial(n) {
+  return (n.title || n.app || "?").charAt(0).toUpperCase();
+}
+
+function notifCardHtml(n) {
+  const unread = !n.read;
+  const appLabel = notifAppLabel(n.app);
+  return `<div class="notif-card${unread ? " unread" : " read"}" data-id="${n.id}">
+    <div class="notif-avatar" aria-hidden="true">${esc(notifInitial(n))}</div>
+    <div class="notif-content">
+      <div class="notif-top">
+        <span class="notif-title">${esc(n.title || "Update")}</span>
+        <time class="notif-time">${esc(formatTime(n.created_at))}</time>
+      </div>
+      ${n.message ? `<p class="notif-msg">${esc(n.message)}</p>` : ""}
+      ${appLabel ? `<span class="notif-app-tag">${esc(appLabel)}</span>` : ""}
+    </div>
+    ${unread ? '<span class="notif-dot" aria-hidden="true"></span>' : ""}
+    <span class="notif-dismiss-hint">Mark read</span>
+  </div>`;
 }
 
 const S = {
@@ -1550,15 +1710,17 @@ async function renderHome() {
     row.innerHTML = `<div style="color:var(--muted);font-size:14px;padding:0 4px">${hint}</div>`;
   } else {
     row.innerHTML = list.map(a => {
-      const initial = esc((a.name || "?").charAt(0).toUpperCase());
+      const label = appDisplayName(a);
+      const initial = esc(label.charAt(0).toUpperCase());
       const shared = a.scope === "shared" ? " shared" : "";
       return `<div class="app-chip${shared}" onclick="location.href='${a.url}'">
         <div class="app-chip-icon">${initial}</div>
-        <div class="app-chip-name">${esc(a.name)}</div>
+        <div class="app-chip-name">${esc(label)}</div>
         <div class="app-chip-meta">${a.scope === "shared" ? "Shared · " : ""}${esc(a.last_used || "Open")}</div>
       </div>`;
     }).join("");
   }
+  await renderHomeNotifications();
   applyRoleUi();
   if (S.role === "child") return;
   const { templates } = await api("GET", "/api/templates");
@@ -1596,7 +1758,7 @@ function renderAppCard(a) {
   const manage = !child;
   card.innerHTML = `
     ${shared ? '<span class="app-scope-badge">Shared</span>' : ""}
-    <div class="app-card-name">${esc(a.name)}</div>
+    <div class="app-card-name">${esc(appDisplayName(a))}</div>
     ${a.desc ? `<div class="app-card-desc">${esc(a.desc)}</div>` : ""}
     <div class="app-card-actions">
       ${a.url ? `<a class="btn btn-primary" style="font-size:14px;padding:8px 16px" href="${a.url}" target="_blank">Open</a>` : ""}
@@ -1606,14 +1768,14 @@ function renderAppCard(a) {
     </div>`;
   if (manage) card.querySelector("[data-improve]").onclick = () => openAppForEdit(a);
   if (manage) card.querySelector("[data-wipe]").onclick = async () => {
-    if (!confirm(`Clear all saved data for "${a.name}"? Schedules and app storage will be removed.`)) return;
+    if (!confirm(`Clear all saved data for "${appDisplayName(a)}"? Schedules and app storage will be removed.`)) return;
     const r = await api("POST", `/api/apps/${a.owner}/${a.name}/wipe-data`);
     if (r.ok) toast(`Cleared ${r.keys_deleted || 0} keys, ${r.schedules_deleted || 0} schedules`);
     else toast(r.error || "Could not clear data");
   };
   if (manage) {
     card.querySelector("[data-del]").onclick = async (ev) => {
-      if (!confirm(`Delete "${a.name}"?`)) return;
+      if (!confirm(`Delete "${appDisplayName(a)}"?`)) return;
       ev.target.disabled = true;
       await api("DELETE", `/api/apps/${a.owner}/${a.name}`);
       renderApps();
@@ -1750,20 +1912,81 @@ async function doLogout() {
 
 /* ── Notifications ─────────────────────────────────────────────────────────── */
 let _notifTimer = null;
+let _notifPollReady = false;
+
+function updateNotifBadge(count) {
+  const badge = document.getElementById("nav-notif-badge");
+  if (!badge) return;
+  if (count > 0) {
+    badge.style.display = "inline";
+    badge.textContent = count > 9 ? "9+" : String(count);
+    badge.removeAttribute("aria-hidden");
+  } else {
+    badge.style.display = "none";
+    badge.setAttribute("aria-hidden", "true");
+  }
+}
+
+async function renderHomeNotifications() {
+  const banner = document.getElementById("home-notif-banner");
+  if (!banner) return;
+  try {
+    const { notifications } = await api("GET", "/api/notifications?unread=1");
+    const list = meaningfulNotifications(notifications);
+    updateNotifBadge(list.length);
+    if (!list.length) {
+      banner.style.display = "none";
+      banner.hidden = true;
+      banner.innerHTML = "";
+      return;
+    }
+    banner.hidden = false;
+    banner.style.display = "block";
+    banner.innerHTML = `
+      <div class="home-notif-head">
+        <span>Updates</span>
+        <button type="button" class="btn-ghost" style="padding:4px 10px;font-size:13px;font-weight:600"
+          onclick="location.hash='#/notifications'">See all</button>
+      </div>
+      <div class="home-notif-list">
+      ${list.slice(0, 3).map((n) => `
+        <button type="button" class="home-notif-card" data-id="${n.id}"
+          onclick="openHomeNotification(${n.id})">
+          <span class="notif-avatar sm" aria-hidden="true">${esc(notifInitial(n))}</span>
+          <span class="home-notif-text">
+            <strong>${esc(n.title || "Update")}</strong>
+            <span>${esc(n.message || notifAppLabel(n.app) || "")}</span>
+          </span>
+        </button>`).join("")}
+      </div>`;
+  } catch (_) {
+    banner.style.display = "none";
+    banner.hidden = true;
+  }
+}
+
+async function openHomeNotification(id) {
+  await markNotifRead(id);
+  location.hash = "#/notifications";
+}
+
 async function pollNotifications() {
   try {
     const { notifications } = await api("GET", "/api/notifications?unread=1");
-    const list = notifications || [];
-    const badge = document.getElementById("nav-notif-badge");
-    if (badge) {
-      badge.style.display = list.length ? "inline" : "none";
-      badge.textContent = list.length > 9 ? "9+" : String(list.length);
+    const list = meaningfulNotifications(notifications);
+    if (!_notifPollReady) {
+      const maxId = list.reduce((m, n) => Math.max(m, n.id || 0), 0);
+      if (maxId) S.lastNotifId = maxId;
+      _notifPollReady = true;
+    } else {
+      const newest = list[0];
+      if (newest) S.lastNotifId = Math.max(S.lastNotifId, newest.id);
     }
-    const newest = list[0];
-    if (newest && newest.id > S.lastNotifId && S.lastNotifId > 0) {
-      /* toast optional */
+    updateNotifBadge(list.length);
+    const home = document.getElementById("v-home");
+    if (home && home.classList.contains("active")) {
+      await renderHomeNotifications();
     }
-    if (newest) S.lastNotifId = Math.max(S.lastNotifId, newest.id);
   } catch (_) {}
 }
 function startNotificationPoll() {
@@ -1777,18 +2000,15 @@ async function renderNotifications() {
   const { notifications } = await api("GET", "/api/notifications");
   const list = notifications || [];
   if (!list.length) {
-    feed.innerHTML = '<div class="no-apps">No notifications yet</div>';
+    feed.innerHTML = `<div class="notif-empty">
+      <div class="notif-empty-icon" aria-hidden="true">${iconHtml("bell")}</div>
+      <p class="notif-empty-title">All caught up</p>
+      <p class="notif-empty-sub">Reminders and alerts from your apps will appear here.</p>
+    </div>`;
     return;
   }
-  feed.innerHTML = list.map(n => `
-    <div class="notif-row${n.read ? "" : " unread"}" data-id="${n.id}">
-      <div class="notif-body">
-        <div class="notif-title">${esc(n.title || n.app)}</div>
-        <div class="notif-msg">${esc(n.message || "")}</div>
-        <div class="notif-time">${esc(n.app || "")} · ${formatTime(n.created_at)}</div>
-      </div>
-    </div>`).join("");
-  feed.querySelectorAll(".notif-row").forEach(el => setupNotifRowSwipe(el));
+  feed.innerHTML = list.map((n) => notifCardHtml(n)).join("");
+  feed.querySelectorAll(".notif-card").forEach((el) => setupNotifRowSwipe(el));
 }
 
 function setupNotifRowSwipe(el) {
@@ -3357,15 +3577,25 @@ function showPlanCard(plan, opts = {}) {
   const wrap = document.createElement("div");
   wrap.className = "plan-card-wrap";
   const items = (plan.features || []).map(f => `<li>${esc(f)}</li>`).join("");
+  const defaultName = (plan.title || "My app").trim();
   wrap.innerHTML = `<div class="plan-card">
-    <h3>${esc(plan.title || "App")}</h3>
+    <h3>${esc(plan.title || "App plan")}</h3>
     <p>${esc(plan.summary || "")}</p>
     ${items ? `<ul>${items}</ul>` : ""}
+    <label class="plan-name-label" for="plan-app-name">App name</label>
+    <input type="text" id="plan-app-name" class="setup-input plan-app-name" maxlength="48"
+      value="${attrEsc(defaultName)}" autocomplete="off">
+    <p class="plan-slug-hint">Folder on this device: <code id="plan-app-slug"></code></p>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
       <button type="button" class="btn btn-primary plan-build-btn">Build this →</button>
       ${opts.fromChat ? '<button type="button" class="btn btn-secondary plan-refine-btn">Refine plan with AI</button>' : ""}
     </div>
   </div>`;
+  const nameInput = wrap.querySelector("#plan-app-name");
+  const slugEl = wrap.querySelector("#plan-app-slug");
+  const syncSlug = () => { slugEl.textContent = slugifyAppName(nameInput.value); };
+  nameInput.addEventListener("input", syncSlug);
+  syncSlug();
   wrap.querySelector(".plan-build-btn").onclick = () => startBuild();
   const refineBtn = wrap.querySelector(".plan-refine-btn");
   if (refineBtn) refineBtn.onclick = () => refineBuildPlanFromChat();
@@ -3380,29 +3610,35 @@ async function openAppForEdit(app) {
   S.build = { app_name: app.name, app_path: context.path, owner: app.owner, url: app.url, label: app.name };
   location.hash = "#/build";
   clearBuildChat();
-  addBuildBubble("ws", `Updating ${app.name}. What should we change?`);
+  addBuildBubble("ws", `Updating ${appDisplayName(app)}. What should we change?`);
 }
 
 async function startBuild() {
   if (S.role === "child") { toast("Building is not available for child accounts"); return; }
   const desc = S.interview.plan?.summary || S.interview.desc;
   if (!desc) return;
+  const nameInput = document.getElementById("plan-app-name");
+  const displayName = (nameInput?.value || S.interview.plan?.title || "").trim() || "My app";
+  const appSlug = slugifyAppName(displayName);
+  const buildPlan = { ...(S.interview.plan || {}), title: displayName };
   const res = await api("POST", "/api/build/start", {
     description: desc,
     user: S.user,
-    scope: S.interview.plan?.scope || "personal",
+    scope: buildPlan.scope || "personal",
     session: S.session,
-    plan: S.interview.plan,
+    app_name: appSlug,
+    plan: buildPlan,
   });
   if (res.error) { addBuildBubble("ws", res.error); return; }
+  const label = res.title || res.label || displayName;
   S.build = {
-    app_name: res.app_name, app_path: res.app_path, label: res.label,
-    owner: (S.interview.plan?.scope === "shared" ? "shared" : S.user),
-    url: `/apps/${S.interview.plan?.scope === "shared" ? "shared" : S.user}/${res.app_name}/`,
+    app_name: res.app_name, app_path: res.app_path, label,
+    owner: (buildPlan.scope === "shared" ? "shared" : S.user),
+    url: `/apps/${buildPlan.scope === "shared" ? "shared" : S.user}/${res.app_name}/`,
   };
   document.getElementById("step-list").innerHTML = "";
   document.getElementById("thinking-row").style.display = "flex";
-  document.getElementById("build-title").textContent = `Building ${res.label || "app"}…`;
+  document.getElementById("build-title").textContent = `Building ${label}…`;
   location.hash = "#/building";
   listenToSSE();
 }

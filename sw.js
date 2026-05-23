@@ -1,4 +1,4 @@
-const CACHE = "lamp-shell-v12";
+const CACHE = "lamp-shell-v14";
 const PRECACHE = [
   "/",
   "/manifest.json",
@@ -64,24 +64,39 @@ self.addEventListener("fetch", (e) => {
 });
 
 let lastSeenId = 0;
+let notifBootstrapped = false;
+
+function meaningfulNotifications(list) {
+  return (list || []).filter((n) => ((n.title || "") + (n.message || "")).trim());
+}
 
 async function pollNotifications() {
   try {
     const r = await fetch("/api/notifications?unread=1", { credentials: "include" });
     if (!r.ok) return;
     const data = await r.json();
-    const list = data.notifications || [];
-    const unseen = list.filter((n) => n.id > lastSeenId);
-    for (const n of unseen) {
-      lastSeenId = Math.max(lastSeenId, n.id);
-      await self.registration.showNotification(n.title || n.app || "Lamp", {
-        body: n.message || "",
-        icon: "/icon-192.png",
-        tag: `lamp-${n.id}`,
-        data: { url: "/#/notifications" },
-      });
+    const list = meaningfulNotifications(data.notifications);
+    if (!notifBootstrapped) {
+      lastSeenId = list.reduce((m, n) => Math.max(m, n.id || 0), 0);
+      notifBootstrapped = true;
+    } else {
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const appVisible = clients.some((c) => c.visibilityState === "visible");
+      const unseen = list.filter((n) => n.id > lastSeenId);
+      if (!appVisible) {
+        for (const n of unseen) {
+          lastSeenId = Math.max(lastSeenId, n.id);
+          await self.registration.showNotification(n.title || "Lamp", {
+            body: n.message || n.app || "",
+            icon: "/icon-192.png",
+            tag: `lamp-${n.id}`,
+            data: { url: "/#/notifications" },
+          });
+        }
+      } else if (unseen.length) {
+        lastSeenId = Math.max(lastSeenId, ...unseen.map((n) => n.id));
+      }
     }
-    if (list.length) lastSeenId = Math.max(lastSeenId, list[0].id);
     const clients = await self.clients.matchAll({ type: "window" });
     clients.forEach((c) => c.postMessage({ type: "notif-count", count: list.length }));
   } catch (_) {}
