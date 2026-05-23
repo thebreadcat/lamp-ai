@@ -1,0 +1,25 @@
+{
+  "id": "medication-reminder",
+  "icon": "pill",
+  "title": "Medication Reminder",
+  "subtitle": "Never miss a dose",
+  "description": "Track medications and get reminders at the right times",
+  "intent": "remind",
+  "stack": "html",
+  "plan": {
+    "title": "Medication Reminder",
+    "summary": "App to track daily medications with timed reminders",
+    "scope": "personal",
+    "features": [
+      "Add medications with name, dose, and schedule",
+      "Morning and evening reminder notifications",
+      "Mark doses as taken with timestamp",
+      "Weekly adherence view"
+    ],
+    "acceptance": [
+      "User can add a medication with name and times",
+      "Dose logging persists via data API",
+      "Schedule registers with /api/schedules for notifications"
+    ]
+  }
+}

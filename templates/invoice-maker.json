@@ -1,0 +1,16 @@
+{
+  "id": "invoice-maker",
+  "icon": "invoice",
+  "title": "Invoice Maker",
+  "subtitle": "Bill professionally",
+  "description": "Create and print professional invoices",
+  "intent": "invoice",
+  "stack": "html",
+  "plan": {
+    "title": "Invoice Maker",
+    "summary": "Create invoices with line items and print",
+    "scope": "personal",
+    "features": ["Client and line items", "Calculate totals", "Print layout"],
+    "acceptance": ["Invoice data persists", "Print view works"]
+  }
+}

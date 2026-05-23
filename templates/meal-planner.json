@@ -1,0 +1,16 @@
+{
+  "id": "meal-planner",
+  "icon": "meal",
+  "title": "Meal Planner",
+  "subtitle": "Plan the week",
+  "description": "Plan weekly meals, auto-generate grocery list",
+  "intent": "notes",
+  "stack": "html",
+  "plan": {
+    "title": "Meal Planner",
+    "summary": "Weekly meal plan with optional grocery export",
+    "scope": "personal",
+    "features": ["7-day meal slots", "Recipe notes", "Export ingredients list"],
+    "acceptance": ["Meals persist per day", "Grocery list generates from plan"]
+  }
+}

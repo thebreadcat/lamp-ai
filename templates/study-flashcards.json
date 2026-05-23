@@ -1,0 +1,16 @@
+{
+  "id": "study-flashcards",
+  "icon": "study",
+  "title": "Study Flashcards",
+  "subtitle": "Learn faster",
+  "description": "Create and review flashcard decks",
+  "intent": "game",
+  "stack": "html",
+  "plan": {
+    "title": "Study Flashcards",
+    "summary": "Flashcard decks with flip and shuffle review",
+    "scope": "personal",
+    "features": ["Create decks and cards", "Review mode", "Track progress"],
+    "acceptance": ["Decks persist", "Review shows front/back"]
+  }
+}

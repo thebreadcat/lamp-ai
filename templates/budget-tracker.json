@@ -1,0 +1,16 @@
+{
+  "id": "budget-tracker",
+  "icon": "budget",
+  "title": "Budget Tracker",
+  "subtitle": "Know where it goes",
+  "description": "Track spending by category, monthly view",
+  "intent": "tracker",
+  "stack": "html",
+  "plan": {
+    "title": "Budget Tracker",
+    "summary": "Simple expense tracker with categories and monthly totals",
+    "scope": "personal",
+    "features": ["Log expenses with amount and category", "Monthly summary", "Category breakdown"],
+    "acceptance": ["Expenses persist via data API", "Monthly view shows totals"]
+  }
+}

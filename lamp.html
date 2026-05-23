@@ -1,0 +1,3584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#111111" id="meta-theme-color">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Lamp</title>
+<script>
+(function () {
+  var s = localStorage.getItem("lamp-theme");
+  var t = s === "light" || s === "dark" ? s
+    : (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme", t);
+  var m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.content = t === "light" ? "#f5f5f4" : "#0c0c0f";
+})();
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121216;
+  --surface: #1c1c22;
+  --surface-raised: #26262e;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --subtle: #d4d4d8;
+  --accent: #fbbf24;
+  --accent-l: rgba(251, 191, 36, 0.12);
+  --accent-d: #d97706;
+  --accent-glow: rgba(251, 191, 36, 0.28);
+  --warn: #fb7185;
+  --page-bg: #0c0c0f;
+  --code-bg: #27272a;
+  --badge-ok-bg: #14532d;
+  --badge-ok-fg: #86efac;
+  --badge-off-bg: #27272a;
+  --on-accent: #1a1208;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 4px 24px var(--accent-glow);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 0.18s var(--ease);
+  --t-med: 0.28s var(--ease);
+  --r: 14px;
+  --nav-h: 64px;
+  --nav-side-w: 220px;
+  --content-max: 1200px;
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f5f4;
+  --surface: #ffffff;
+  --surface-raised: #fafaf9;
+  --border: #d6d3d1;
+  --text: #1c1917;
+  --muted: #57534e;
+  --subtle: #44403c;
+  --accent: #d97706;
+  --accent-l: #fff7ed;
+  --accent-d: #b45309;
+  --warn: #dc2626;
+  --page-bg: #e7e5e4;
+  --code-bg: #e7e5e4;
+  --badge-ok-bg: #dcfce7;
+  --badge-ok-fg: #166534;
+  --badge-off-bg: #e7e5e4;
+  --on-accent: #ffffff;
+  --border-strong: #a8a29e;
+  --accent-glow: rgba(217, 119, 6, 0.2);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 4px 20px var(--accent-glow);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 0.18s var(--ease);
+  --t-med: 0.28s var(--ease);
+}
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+[data-theme="dark"] body {
+  background: linear-gradient(165deg, var(--page-bg) 0%, var(--bg) 42%, #16161c 100%);
+  background-attachment: fixed;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition: background-color var(--t-med), border-color var(--t-med), color var(--t-fast),
+      box-shadow var(--t-med) !important;
+  }
+}
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100%;
+  padding-bottom: var(--nav-h);
+}
+.page-content { width: 100%; }
+.view { display: none; flex-direction: column; min-height: calc(100vh - var(--nav-h)); }
+.view.active { display: flex; }
+.view.full { min-height: 100vh; padding-bottom: 0; }
+.view.full.active { display: flex; }
+
+/* nav */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px; height: var(--nav-h);
+  background: var(--surface); border-top: 1px solid var(--border);
+  display: none; align-items: stretch; z-index: 100;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+}
+[data-theme="dark"] .bottom-nav {
+  background: rgba(18, 18, 24, 0.82);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border-top-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+}
+.bottom-nav.visible { display: flex; }
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; font-size: 11px; color: var(--muted); text-decoration: none;
+  border: none; background: none; cursor: pointer; padding: 8px 0;
+  border-radius: 10px;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.nav-item.active { color: var(--accent); font-weight: 600; }
+[data-theme="dark"] .nav-item.active {
+  text-shadow: 0 0 20px var(--accent-glow);
+}
+.nav-item span.icon { font-size: 22px; line-height: 1; }
+.nav-item .icon-logo {
+  display: flex; align-items: center; justify-content: center; line-height: 0;
+}
+.ico {
+  width: 1.25em; height: 1.25em; display: inline-block; vertical-align: middle;
+  flex-shrink: 0; color: currentColor;
+}
+.nav-item .ico { width: 22px; height: 22px; }
+.hero-btn .ico { width: 20px; height: 20px; }
+.template-icon .ico { width: 28px; height: 28px; color: var(--accent); }
+.btn-icon .ico { width: 22px; height: 22px; display: block; }
+.send-btn .ico { width: 20px; height: 20px; }
+.done-icon .ico { width: 48px; height: 48px; color: var(--accent); }
+.theme-opt .ico { width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; }
+.ico-step { width: 18px; height: 18px; }
+.ico-step-done { color: #86efac; }
+.ico-step-spin { color: var(--accent); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-ghost .ico-inline { width: 16px; height: 16px; margin-right: 4px; vertical-align: -2px; }
+.app-scope-badge {
+  display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; padding: 2px 8px; border-radius: 6px;
+  background: var(--accent-l); color: var(--accent); margin-bottom: 8px;
+}
+.apps-section-title {
+  font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 16px 20px 8px;
+}
+.notif-row { position: relative; touch-action: pan-y; transition: transform 0.15s ease; }
+.notif-row.swiping { transition: none; }
+.notif-dismiss-hint {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  font-size: 12px; color: var(--muted); opacity: 0; pointer-events: none;
+}
+.convo-list.ptr-pulling { transition: none; }
+.ptr-indicator {
+  text-align: center; font-size: 13px; color: var(--muted); padding: 8px;
+  display: none; align-items: center; justify-content: center; gap: 6px;
+}
+.ptr-indicator.visible { display: flex; }
+.onboarding-overlay {
+  position: fixed; inset: 0; z-index: 200; background: rgba(0, 0, 0, 0.55);
+  display: none; align-items: flex-end; justify-content: center; padding: 20px;
+}
+.onboarding-overlay.open { display: flex; }
+.onboarding-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 24px; max-width: 400px; width: 100%; box-shadow: var(--shadow-md);
+}
+.onboarding-card h2 { font-size: 20px; margin-bottom: 8px; }
+.onboarding-card p { color: var(--muted); font-size: 15px; margin-bottom: 20px; line-height: 1.45; }
+.onboarding-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 16px; }
+.onboarding-dots span {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--border);
+}
+.onboarding-dots span.on { background: var(--accent); }
+.onboarding-actions { display: flex; gap: 10px; }
+.onboarding-actions .btn { flex: 1; }
+.toast-wrap {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(var(--nav-h) + 16px); z-index: 400; display: flex; flex-direction: column;
+  gap: 8px; align-items: center; pointer-events: none; max-width: min(90vw, 360px);
+}
+body:not(.has-nav) .toast-wrap { bottom: 24px; }
+.toast {
+  background: var(--surface); color: var(--text); border: 1px solid var(--border);
+  padding: 12px 18px; border-radius: 12px; font-size: 14px; font-weight: 500;
+  box-shadow: var(--shadow-md); animation: toast-in 0.22s var(--ease);
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.pin-user-initial {
+  display: block; width: 36px; height: 36px; line-height: 36px; border-radius: 50%;
+  background: var(--accent-l); color: var(--accent); font-weight: 800; font-size: 16px;
+  margin: 0 auto 6px;
+}
+.pin-user { flex-direction: column; min-width: 88px; padding-top: 10px; }
+.storage-apps { margin-top: 20px; }
+.storage-apps h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.storage-app-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+}
+.storage-app-row:last-child { border-bottom: none; }
+.storage-app-row span.meta { font-size: 12px; color: var(--muted); }
+.lamp-logo {
+  display: block; width: 26px; height: 26px; color: var(--text); flex-shrink: 0;
+}
+.nav-item.active .lamp-logo { color: var(--accent); }
+.nav-brand {
+  display: none; align-items: center; gap: 10px; width: calc(100% - 20px);
+  margin: 0 10px 8px; padding: 4px 10px 16px; border: none; background: none;
+  cursor: pointer; text-decoration: none; color: var(--text); flex-shrink: 0;
+}
+.nav-brand-text {
+  font-size: 24px; font-weight: 500; letter-spacing: -0.06em; color: var(--text);
+}
+.nav-badge {
+  position: absolute; top: 6px; margin-left: 28px;
+  background: var(--warn); color: #fff; font-size: 10px; font-weight: 700;
+  min-width: 16px; height: 16px; border-radius: 8px; line-height: 16px; text-align: center;
+}
+
+.header { padding: 20px 20px 0; display: flex; align-items: center; justify-content: space-between; }
+.wordmark { font-size: 20px; font-weight: 800; color: var(--accent); letter-spacing: -0.3px; }
+.greeting { font-size: 26px; font-weight: 800; padding: 8px 20px 0; letter-spacing: -0.4px; }
+.sub-greet { color: var(--muted); padding: 4px 20px 16px; font-size: 15px; line-height: 1.45; }
+
+.card {
+  background: var(--surface); border-radius: var(--r); border: 1px solid var(--border);
+  padding: 20px; margin: 12px 20px 0;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+[data-theme="dark"] .card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, var(--surface) 100%);
+}
+.hero-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: calc(100% - 40px); margin: 16px 20px; padding: 18px;
+  background: var(--accent); color: var(--on-accent); border: none; border-radius: var(--r);
+  font-size: 18px; font-weight: 700; cursor: pointer;
+  transition: transform var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
+}
+[data-theme="dark"] .hero-btn:not(.hero-btn-secondary) {
+  background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 55%, #d97706 100%);
+  color: #1c1408;
+  box-shadow: var(--shadow-glow);
+}
+.hero-btn:hover { filter: brightness(1.06); }
+.hero-btn:active { transform: scale(0.98); }
+.hero-btn-secondary {
+  background: var(--surface-raised); color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme="dark"] .hero-btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.hero-btn-secondary:hover {
+  border-color: var(--border-strong);
+  background: var(--accent-l);
+  box-shadow: var(--shadow-sm);
+}
+.home-actions { display: flex; flex-direction: column; gap: 10px; padding: 0 20px; }
+.section-title {
+  font-size: 13px; font-weight: 700; color: var(--subtle); text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 20px 20px 8px;
+}
+.apps-row {
+  display: flex; gap: 10px; padding: 0 20px 8px; overflow-x: auto;
+  scrollbar-width: none;
+}
+.apps-row::-webkit-scrollbar { display: none; }
+.app-chip {
+  flex: 0 0 140px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px; cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+}
+.app-chip-name { font-weight: 700; font-size: 15px; }
+.app-chip-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.app-chip:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+[data-theme="dark"] .app-chip:hover { border-color: rgba(251, 191, 36, 0.35); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 13px 22px; border-radius: 10px; font-size: 16px; font-weight: 600;
+  border: none; cursor: pointer; text-decoration: none; gap: 6px;
+}
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+[data-theme="dark"] .btn-primary {
+  background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 55%, #d97706 100%);
+  color: #1c1408;
+  box-shadow: var(--shadow-sm);
+}
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost { background: none; color: var(--muted); border: none; padding: 8px 12px; font-size: 14px; }
+.btn-ghost:hover { color: var(--subtle); }
+.btn-danger { background: none; color: var(--warn); border: 1px solid var(--border); }
+
+/* login / setup PIN */
+.pin-users {
+  display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 20px 8px;
+  justify-content: center; flex-shrink: 0;
+}
+.pin-user {
+  padding: 12px 20px; border-radius: 24px; border: 2px solid var(--border);
+  background: var(--surface); font-size: 16px; font-weight: 600; cursor: pointer;
+  min-height: 48px; touch-action: manipulation;
+}
+.pin-user.selected { border-color: var(--accent); color: var(--accent); }
+.pin-display {
+  text-align: center; font-size: 40px; letter-spacing: 0.35em; padding: 12px 16px 20px;
+  min-height: 64px; flex-shrink: 0;
+}
+.pin-pad {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(10px, 2.8vw, 14px);
+  width: 100%; max-width: min(100%, 400px); margin: 0 auto;
+  padding: 0 20px max(24px, env(safe-area-inset-bottom));
+  flex-shrink: 0;
+}
+.pin-key {
+  aspect-ratio: 1; width: 100%; min-height: 76px; max-height: 96px;
+  border-radius: 16px; border: 1px solid var(--border-strong);
+  background: var(--surface-raised); font-size: clamp(26px, 7vw, 32px); font-weight: 600;
+  cursor: pointer; color: var(--text); touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; justify-content: center;
+}
+.pin-key:active { background: var(--accent-l); transform: scale(0.97); }
+.pin-key .ico { width: 28px; height: 28px; }
+.view.full .setup-center { padding-top: clamp(24px, 6vh, 48px); }
+.view.full .pin-users { padding-top: 8px; }
+.shake { animation: shake 0.4s ease; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+.setup-center { padding: 40px 24px; text-align: center; max-width: 400px; margin: 0 auto; }
+.setup-center h1 { font-size: 28px; margin-bottom: 12px; }
+.setup-center p { color: var(--muted); margin-bottom: 24px; }
+.auth-brand {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  margin-bottom: 28px;
+}
+.auth-logo-mark { width: 72px; height: 72px; color: var(--text); margin-bottom: 12px; }
+.auth-logo-text {
+  font-size: 42px; font-weight: 500; letter-spacing: -0.06em; color: var(--text); line-height: 1;
+}
+.auth-tagline { color: var(--muted); font-size: 15px; margin-top: 8px; }
+.app-chip-icon {
+  width: 40px; height: 40px; border-radius: 12px; background: var(--accent-l);
+  color: var(--accent); display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 17px; margin-bottom: 10px;
+}
+.app-chip.shared .app-chip-icon { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+[data-theme="light"] .app-chip.shared .app-chip-icon { color: #4f46e5; background: #eef2ff; }
+.setup-input {
+  width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text); font-size: 17px; margin-bottom: 12px;
+}
+
+/* build interview */
+#v-build { padding-bottom: 100px; }
+.chat-body { flex: 1; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
+.bubble {
+  padding: 12px 16px; border-radius: 18px; font-size: 16px; max-width: 88%; line-height: 1.45;
+}
+.bubble-ws {
+  background: var(--surface); border: 1px solid var(--border); align-self: flex-start;
+  border-bottom-left-radius: 4px; box-shadow: var(--shadow-sm);
+}
+[data-theme="dark"] .bubble-ws {
+  background: var(--surface-raised);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.bubble-user {
+  background: var(--accent); color: var(--on-accent); align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  box-shadow: var(--shadow-sm);
+}
+[data-theme="dark"] .bubble-user {
+  background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+  color: #1c1408;
+}
+.chat-input-bar {
+  position: fixed; bottom: var(--nav-h); left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px; padding: 12px 16px; background: var(--bg);
+  border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-end;
+}
+[data-theme="dark"] .chat-input-bar {
+  background: rgba(12, 12, 15, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+#v-build .chat-input-bar { bottom: 0; }
+.chat-input {
+  flex: 1; padding: 11px 16px; border: 1.5px solid var(--border); border-radius: 24px;
+  font-size: 16px; background: var(--surface); color: var(--text); resize: none; max-height: 120px;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.chat-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-l);
+}
+[data-theme="dark"] .send-btn {
+  background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+  color: #1c1408;
+  box-shadow: var(--shadow-glow);
+}
+.send-btn {
+  width: 44px; height: 44px; border-radius: 50%; background: var(--accent); color: var(--on-accent);
+  border: none; cursor: pointer; font-size: 20px; flex-shrink: 0;
+  transition: transform var(--t-fast), box-shadow var(--t-fast);
+}
+.send-btn:active { transform: scale(0.94); }
+.voice-btn {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--muted);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+}
+.voice-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.voice-btn.listening {
+  color: var(--warn); border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 25%, transparent);
+  animation: voice-pulse 1.2s ease-in-out infinite;
+}
+@keyframes voice-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.btn-icon.voice-auto-on { color: var(--accent); }
+.bubble-voice-actions {
+  display: flex; gap: 6px; margin-top: 6px; align-self: flex-start;
+}
+.bubble-voice-actions .btn-ghost {
+  font-size: 12px; padding: 4px 10px; border-radius: 999px;
+}
+.bubble-voice-actions .btn-ghost.speaking { color: var(--accent); }
+.plan-card {
+  background: var(--accent-l); border: 1px solid var(--accent-d);
+  border-radius: var(--r); padding: 16px; font-size: 15px;
+}
+.plan-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--accent); }
+.plan-card ul { margin: 8px 0 12px 18px; }
+
+/* building / done */
+#v-building.view.active, #v-done.view.active {
+  min-height: calc(100vh - var(--nav-h));
+  padding-bottom: var(--nav-h);
+}
+.build-progress { padding-bottom: 24px; }
+.building-sub { color: var(--muted); font-size: 15px; line-height: 1.45; margin-bottom: 16px; }
+.step-list { display: flex; flex-direction: column; gap: 10px; }
+.step-row {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 14px; border-radius: var(--r);
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 15px; line-height: 1.45;
+}
+.step-row.step-active { border-color: var(--accent); background: var(--accent-l); }
+.step-row.step-done { opacity: 0.85; }
+.step-icon { flex-shrink: 0; width: 22px; font-size: 16px; line-height: 1.4; }
+.step-row.step-active .step-icon { color: var(--accent); }
+.step-row.step-done .step-icon { color: #86efac; }
+.step-icon { display: flex; align-items: center; }
+.step-text { flex: 1; min-width: 0; }
+.step-text .step-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px; background: var(--code-bg); color: var(--subtle);
+  padding: 2px 6px; border-radius: 4px; white-space: nowrap;
+}
+.step-text strong { color: var(--text); font-weight: 600; }
+.done-panel { text-align: center; padding-top: 16px; }
+.done-icon { margin-bottom: 8px; display: flex; justify-content: center; }
+.done-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+.app-cards { padding: 12px 20px; display: flex; flex-direction: column; gap: 10px; }
+.app-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+[data-theme="dark"] .app-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, var(--surface) 100%);
+}
+.app-card-name { font-size: 17px; font-weight: 700; }
+.app-card-desc { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.app-card-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.no-apps { text-align: center; color: var(--muted); padding: 48px 20px; line-height: 1.5; }
+.no-apps a { color: var(--accent); font-weight: 600; }
+.banner-warn {
+  margin: 12px 20px; padding: 14px 16px; background: var(--accent-l);
+  border: 1px solid var(--accent); border-radius: var(--r); font-size: 14px;
+}
+.error-msg { color: var(--warn); font-size: 14px; padding: 8px 20px; }
+
+/* chat */
+#v-chat.view.active {
+  display: flex; flex-direction: column;
+  height: calc(100vh - var(--nav-h));
+  min-height: 0; padding-bottom: 0;
+}
+.chat-shell { display: flex; flex: 1; min-height: 0; overflow: hidden; position: relative; }
+.chat-sidebar {
+  width: 100%; max-width: 300px; flex-shrink: 0;
+  display: flex; flex-direction: column; min-height: 0;
+  border-right: 1px solid var(--border); background: var(--bg);
+}
+[data-theme="dark"] .chat-sidebar {
+  background: rgba(14, 14, 18, 0.65);
+  border-right-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .chat-panel { background: transparent; }
+[data-theme="dark"] .convo-item.active {
+  background: rgba(251, 191, 36, 0.1);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.chat-sidebar-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 16px 10px; flex-shrink: 0;
+}
+.chat-sidebar-head .wordmark { font-size: 18px; }
+.chat-new-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 9px 16px; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  background: var(--accent); color: var(--on-accent);
+  transition: transform var(--t-fast), filter var(--t-fast), box-shadow var(--t-fast);
+}
+[data-theme="dark"] .chat-new-btn {
+  background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 55%, #d97706 100%);
+  color: #1c1408;
+  box-shadow: var(--shadow-glow);
+}
+.chat-new-btn:hover { filter: brightness(1.06); }
+.chat-new-btn:active { transform: scale(0.98); }
+.convo-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.convo-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
+}
+.convo-item:active { background: var(--surface); }
+.convo-item.active { background: var(--accent-l); }
+.convo-item-star { width: 18px; flex-shrink: 0; color: var(--accent); font-size: 14px; line-height: 1.4; }
+.convo-item-body { flex: 1; min-width: 0; }
+.convo-item-title {
+  font-weight: 600; font-size: 15px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.convo-item-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.chat-panel {
+  flex: 1; display: flex; flex-direction: column; min-height: 0; min-width: 0;
+  background: var(--bg);
+}
+.chat-panel-head {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  min-height: 52px;
+}
+.chat-back-btn {
+  display: none; align-self: center; padding: 8px 10px; border: none; background: var(--surface);
+  color: var(--accent); border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+  flex-shrink: 0;
+}
+.chat-panel-head-main {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
+}
+.chat-panel-title {
+  flex: 0 1 auto; font-weight: 700; font-size: 16px; line-height: 1.2; margin: 0;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.chat-model-wrap { flex-shrink: 0; display: none; align-items: center; }
+.chat-panel-actions {
+  display: flex; align-items: center; align-self: center; gap: 0; flex-shrink: 0;
+}
+.chat-panel-actions .btn-ghost {
+  align-self: center; padding: 8px 10px; font-size: 14px; line-height: 1;
+}
+.chat-model-btn {
+  display: inline-flex; align-items: center; gap: 4px; max-width: min(42vw, 160px);
+  padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted); font-size: 11px; font-weight: 600;
+  cursor: pointer; line-height: 1.2;
+}
+.chat-model-btn #chat-model-label {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.chat-model-btn.override { color: var(--accent); border-color: var(--accent-l); background: var(--accent-l); }
+.chat-model-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.model-sheet {
+  position: fixed; inset: 0; z-index: 200; display: flex; align-items: flex-end; justify-content: center;
+}
+.model-sheet[hidden] { display: none !important; }
+.model-sheet-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+.model-sheet-panel {
+  position: relative; width: 100%; max-width: 480px; max-height: 70vh;
+  background: var(--bg); border-radius: 16px 16px 0 0; padding: 16px 16px 24px;
+  display: flex; flex-direction: column; box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
+}
+.model-sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.model-sheet-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.model-sheet-default {
+  width: 100%; text-align: left; padding: 12px 14px; margin-bottom: 8px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.model-sheet-list { overflow-y: auto; flex: 1; min-height: 0; }
+.model-sheet-group { margin-bottom: 14px; }
+.model-sheet-group h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 6px; }
+.model-sheet-row {
+  display: block; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 4px;
+  border: none; border-radius: 8px; background: var(--surface); font-size: 14px; cursor: pointer;
+}
+.model-sheet-row:hover { background: var(--accent-l); }
+.model-sheet-row.active { outline: 2px solid var(--accent); }
+.bubble-system {
+  align-self: center; max-width: 90%; margin: 8px auto; padding: 6px 12px;
+  font-size: 12px; color: var(--muted); text-align: center; background: var(--surface);
+  border-radius: 999px; border: 1px solid var(--border);
+}
+.btn-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; padding: 0; border: none; background: transparent;
+  color: var(--muted); font-size: 0; line-height: 0; border-radius: 8px; cursor: pointer;
+  flex-shrink: 0;
+}
+.btn-icon .ico { width: 22px; height: 22px; display: block; }
+.btn-icon.starred { color: var(--accent); }
+.chat-panel-body { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.chat-empty {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); padding: 32px 24px; text-align: center; font-size: 15px;
+}
+#v-chat .chat-panel .chat-body {
+  flex: 1; overflow-y: auto; min-height: 0; display: flex;
+}
+#v-chat .chat-panel .chat-input-bar {
+  position: relative; bottom: auto; left: auto; transform: none;
+  width: 100%; max-width: none; flex-shrink: 0;
+}
+@media (max-width: 767px) {
+  .chat-sidebar, .chat-panel {
+    position: absolute; inset: 0; width: 100%; max-width: none;
+    border-right: none; transition: transform 0.22s ease;
+  }
+  .chat-sidebar { z-index: 2; transform: translateX(0); }
+  .chat-panel { z-index: 1; transform: translateX(100%); }
+  #v-chat.chat-show-panel .chat-sidebar { transform: translateX(-100%); }
+  #v-chat.chat-show-panel .chat-panel { transform: translateX(0); }
+  .chat-back-btn { display: inline-flex; align-items: center; }
+}
+@media (min-width: 768px) {
+  .chat-sidebar, .chat-panel { position: relative; transform: none !important; }
+}
+.md strong { font-weight: 700; }
+.md code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-size: 14px; }
+.md pre { background: var(--code-bg); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; }
+.code-block {
+  margin: 8px 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  background: var(--code-bg);
+}
+.code-block-head {
+  display: flex; justify-content: flex-end; padding: 6px 8px;
+  border-bottom: 1px solid var(--border); background: var(--surface);
+}
+.code-copy {
+  font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface-raised);
+  color: var(--muted); cursor: pointer;
+}
+.code-copy:hover { color: var(--text); border-color: var(--border-strong); }
+.code-block pre { margin: 0; padding: 12px; border-radius: 0; background: transparent; }
+.chat-typing {
+  color: var(--muted); font-size: 14px; display: flex; align-items: center; gap: 8px;
+}
+.typing-dots { display: inline-flex; gap: 4px; }
+.typing-dots span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+.build-idea-btn {
+  margin-top: 8px; padding: 10px 16px; background: var(--accent);
+  color: var(--on-accent); border: none; border-radius: 10px; font-weight: 600; cursor: pointer;
+}
+.template-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 20px 20px;
+}
+.template-card {
+  background: var(--surface-raised); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 16px; cursor: pointer; text-align: left; min-height: 44px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+}
+[data-theme="dark"] .template-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.template-card:hover {
+  border-color: var(--border-strong);
+  background: var(--accent-l);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+[data-theme="dark"] .template-card:hover {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.08);
+}
+.template-card:active { transform: translateY(0); }
+.template-icon { margin-bottom: 6px; display: flex; align-items: center; }
+.template-title { font-weight: 700; font-size: 15px; color: var(--text); }
+.template-sub { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.35; }
+
+/* notifications */
+.notif-row {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.notif-row.unread { background: var(--accent-l); }
+.notif-body { flex: 1; }
+.notif-title { font-weight: 700; font-size: 15px; }
+.notif-msg { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.notif-time { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+/* admin */
+.admin-tabs { display: flex; gap: 4px; padding: 12px 20px; overflow-x: auto; }
+.admin-tab {
+  padding: 8px 14px; border-radius: 20px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted); font-size: 14px; cursor: pointer;
+}
+.admin-tab.active { border-color: var(--accent); color: var(--accent); }
+.admin-panel { display: none; padding: 0 20px 24px; }
+.admin-panel.active { display: block; }
+.panel-loading {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 56px 24px; min-height: 180px; color: var(--muted); font-size: 14px;
+  text-align: center;
+}
+.panel-loading .ico-loading { width: 36px; height: 36px; color: var(--accent); animation: spin 0.85s linear infinite; }
+.panel-loading.inline {
+  flex-direction: row; min-height: 0; padding: 16px; justify-content: flex-start;
+}
+.panel-loading.compact {
+  min-height: 100px; padding: 32px 16px; gap: 10px; font-size: 13px;
+}
+.panel-loading.compact .ico-loading { width: 28px; height: 28px; }
+.panel-error { color: var(--warn); padding: 24px 0; font-size: 14px; text-align: center; }
+.admin-tabs.loading { opacity: 0.65; pointer-events: none;
+}
+.admin-row {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px; margin-bottom: 10px;
+}
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 14px; font-size: 14px;
+}
+.stat-box strong { display: block; font-size: 18px; color: var(--accent); margin-top: 4px; }
+.source-block { margin-bottom: 20px; }
+.source-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 8px;
+}
+.source-head h3 { font-size: 15px; font-weight: 700; }
+.badge {
+  font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px;
+}
+.badge.ok { background: var(--badge-ok-bg); color: var(--badge-ok-fg); }
+.badge.off { background: var(--badge-off-bg); color: var(--muted); }
+.badge.active { background: var(--accent-l); color: var(--accent); }
+.model-row {
+  display: flex; align-items: center; gap: 10px; padding: 12px 0;
+  border-bottom: 1px solid var(--border); font-size: 14px;
+}
+.model-row:last-child { border-bottom: none; }
+.model-info { flex: 1; min-width: 0; }
+.model-name { font-weight: 600; word-break: break-all; }
+.model-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.model-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.model-actions button { font-size: 12px; padding: 6px 10px; }
+.model-row.is-active { background: var(--accent-l); margin: 0 -8px; padding: 12px 8px; border-radius: 8px; }
+.section-label {
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted); margin: 20px 0 10px;
+}
+.catalog-row {
+  padding: 12px; border: 1px solid var(--border); border-radius: var(--r);
+  margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+}
+.catalog-row p { flex: 1; font-size: 13px; color: var(--muted); margin: 0; }
+.pull-log {
+  font-size: 12px; color: var(--muted); max-height: 140px; overflow: auto;
+  background: var(--code-bg); padding: 10px; border-radius: 8px; margin-top: 8px;
+  font-family: ui-monospace, monospace; white-space: pre-wrap;
+}
+.net {
+  padding: 12px; border: 1px solid var(--border); border-radius: 10px;
+  margin-bottom: 8px; cursor: pointer;
+}
+.net:hover, .net.sel { border-color: var(--accent); background: var(--accent-l); }
+.net strong { display: block; font-size: 15px; }
+.net span { font-size: 12px; color: var(--muted); }
+
+/* ── Desktop layout ─────────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  html, body { background: var(--page-bg); }
+  body.has-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 100vh;
+  }
+  body.has-nav #bottom-nav {
+    position: sticky;
+    top: 0;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    width: var(--nav-side-w);
+    min-width: var(--nav-side-w);
+    height: 100vh;
+    max-width: none;
+    flex-direction: column;
+    border-top: none;
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    order: -1;
+    padding: 16px 0;
+    gap: 4px;
+    display: flex;
+  }
+  body.has-nav #bottom-nav .nav-item {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 12px 20px;
+    font-size: 14px;
+    border-radius: 10px;
+    margin: 0 10px;
+    width: calc(100% - 20px);
+  }
+  body.has-nav #bottom-nav .nav-item:hover { background: var(--accent-l); color: var(--subtle); }
+  body.has-nav #bottom-nav .nav-item.active {
+    background: var(--accent-l);
+    color: var(--accent);
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.15);
+  }
+  [data-theme="dark"] body.has-nav #bottom-nav {
+    background: rgba(14, 14, 18, 0.9);
+    backdrop-filter: blur(20px) saturate(1.15);
+    -webkit-backdrop-filter: blur(20px) saturate(1.15);
+    border-right-color: rgba(255, 255, 255, 0.06);
+  }
+  body.has-nav #bottom-nav .nav-item span.icon { font-size: 20px; }
+  body.has-nav #bottom-nav .nav-item .icon-logo .lamp-logo { width: 22px; height: 22px; }
+  body.has-nav #bottom-nav .nav-badge { margin-left: auto; position: static; }
+  .nav-brand {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 18px;
+    margin-bottom: 8px;
+  }
+  .nav-brand .lamp-logo { width: 40px; height: 40px; }
+  .nav-brand-text { font-size: 28px; }
+
+  body.has-nav #app {
+    flex: 1;
+    max-width: none;
+    width: 0;
+    margin: 0;
+    padding-bottom: 0;
+    min-height: 100vh;
+  }
+  body.has-nav .view { min-height: 100vh; }
+  body.has-nav #v-chat.view.active { height: 100vh; }
+
+  .page-content {
+    max-width: var(--content-max);
+    margin: 0 auto;
+    padding: 8px 32px 32px;
+  }
+  .greeting { font-size: 32px; padding: 24px 0 0; }
+  .sub-greet { padding: 4px 0 20px; font-size: 16px; }
+  .home-actions {
+    flex-direction: row;
+    padding: 0;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .hero-btn {
+    flex: 1;
+    width: auto;
+    margin: 0;
+    min-height: 56px;
+  }
+  .section-title { padding: 24px 0 12px; }
+  .apps-row { padding: 0 0 12px; }
+  .template-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    padding: 0 0 24px;
+  }
+  .header { padding: 24px 32px 0; max-width: var(--content-max); margin: 0 auto; width: 100%; }
+  .banner-warn { margin: 12px 0; }
+  .card { margin: 12px 0 0; }
+  .app-cards { padding: 12px 32px; max-width: var(--content-max); margin: 0 auto; }
+  .admin-tabs, .admin-panel { max-width: var(--content-max); margin-left: auto; margin-right: auto; }
+  .admin-tabs { padding-left: 32px; padding-right: 32px; }
+  .admin-panel { padding-left: 32px; padding-right: 32px; }
+  #v-build { padding-bottom: 88px; }
+  body.has-nav .chat-input-bar {
+    left: var(--nav-side-w);
+    transform: none;
+    width: calc(100% - var(--nav-side-w));
+    max-width: none;
+  }
+  .pin-pad { max-width: 360px; }
+  .pin-key {
+    aspect-ratio: auto; min-height: 0; max-height: none; height: 68px;
+    font-size: 26px;
+  }
+  .setup-center { max-width: 440px; }
+}
+
+.nav-theme { margin-top: auto; }
+@media (max-width: 767px) {
+  .nav-theme .nav-theme-label { display: none; }
+  body.has-nav .nav-theme { margin-top: 0; }
+}
+.theme-setting { margin-top: 20px; }
+.theme-setting > strong { display: block; font-size: 15px; margin-bottom: 10px; }
+.theme-switch {
+  display: flex; gap: 8px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 4px;
+}
+.theme-opt {
+  flex: 1; padding: 10px 14px; border: none; border-radius: 8px; font-size: 14px;
+  font-weight: 600; cursor: pointer; background: transparent; color: var(--muted);
+}
+.theme-opt.active { background: var(--accent-l); color: var(--accent); }
+.theme-opt:hover:not(.active) { color: var(--text); }
+</style>
+</head>
+<body>
+<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <linearGradient id="lampLogoBeam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+    </linearGradient>
+    <symbol id="lamp-logo-icon" viewBox="0 0 900 900">
+      <path d="M470 170 L300 470 L610 470 Z" fill="url(#lampLogoBeam)"/>
+      <g fill="var(--accent)">
+        <path d="M455 250 L465 275 L490 285 L465 295 L455 320 L445 295 L420 285 L445 275 Z"/>
+        <path d="M380 340 L387 357 L405 364 L387 371 L380 388 L373 371 L355 364 L373 357 Z"/>
+        <path d="M525 330 L531 344 L545 350 L531 356 L525 370 L519 356 L505 350 L519 344 Z"/>
+      </g>
+      <g fill="currentColor">
+        <rect x="430" y="90" width="220" height="70" rx="35" transform="rotate(35 430 90)"/>
+        <circle cx="650" cy="260" r="32"/>
+        <circle cx="650" cy="260" r="12" fill="var(--surface)"/>
+        <rect x="600" y="300" width="40" height="160" rx="20" transform="rotate(28 600 300)"/>
+        <circle cx="570" cy="500" r="35"/>
+        <rect x="470" y="520" width="220" height="50" rx="20"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+<div id="app">
+
+  <!-- First-run setup -->
+  <div id="v-setup" class="view full">
+    <div class="setup-center">
+      <div class="auth-brand">
+        <svg class="auth-logo-mark" viewBox="0 0 900 900" aria-hidden="true"><use href="#lamp-logo-icon"/></svg>
+        <div class="auth-logo-text">lamp</div>
+      </div>
+      <h1>Welcome</h1>
+      <p>Create the first account — this person will be the admin for this home device.</p>
+      <input id="setup-name" class="setup-input" placeholder="Your name" autocomplete="name">
+      <p style="font-size:14px;color:var(--muted)">Choose a 4-digit PIN</p>
+      <div id="setup-pin-display" class="pin-display">····</div>
+      <div id="setup-pin-pad" class="pin-pad"></div>
+      <p id="setup-err" class="error-msg" style="display:none"></p>
+    </div>
+  </div>
+
+  <!-- Login -->
+  <div id="v-login" class="view full">
+    <div class="setup-center" style="padding-top:48px">
+      <div class="auth-brand">
+        <svg class="auth-logo-mark" viewBox="0 0 900 900" aria-hidden="true"><use href="#lamp-logo-icon"/></svg>
+        <div class="auth-logo-text">lamp</div>
+        <p class="auth-tagline">Every home needs a Lamp.</p>
+      </div>
+    </div>
+    <div id="login-users" class="pin-users"></div>
+    <div id="login-pin-display" class="pin-display">····</div>
+    <div id="login-pin-pad" class="pin-pad"></div>
+    <p id="login-err" class="error-msg" style="display:none;text-align:center"></p>
+  </div>
+
+  <!-- Home -->
+  <div id="v-home" class="view">
+    <div class="page-content">
+      <div class="greeting" id="home-greeting">Hello</div>
+      <div class="sub-greet" id="home-sub">What would you like to do?</div>
+      <div id="config-banner" class="banner-warn" style="display:none">
+        Lamp needs a language model. <button class="btn-ghost" onclick="location.hash='#/setup-model'">Set up →</button>
+      </div>
+      <div class="home-actions">
+        <button type="button" class="hero-btn hero-btn-secondary" id="hero-chat-btn" onclick="location.hash='#/chat'">Chat with Lamp</button>
+        <button type="button" class="hero-btn" id="hero-build-btn" onclick="location.hash='#/build'">Build something new</button>
+      </div>
+      <div class="section-title">Recent apps</div>
+      <div id="home-apps" class="apps-row"></div>
+      <div id="home-templates-wrap">
+        <div class="section-title" style="padding-top:8px">Quick start</div>
+        <div id="template-grid" class="template-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div id="v-chat" class="view">
+    <div class="chat-shell">
+      <aside class="chat-sidebar" id="chat-sidebar">
+        <div class="chat-sidebar-head">
+          <span class="wordmark">Chats</span>
+          <button type="button" class="chat-new-btn" onclick="newConversation()">New chat</button>
+        </div>
+        <div id="ptr-indicator" class="ptr-indicator"></div>
+        <div id="convo-list" class="convo-list"></div>
+      </aside>
+      <section class="chat-panel" id="chat-panel">
+        <div class="chat-panel-head">
+          <button type="button" class="chat-back-btn" id="chat-back-btn" onclick="showChatList()">Chats</button>
+          <div class="chat-panel-head-main">
+            <span class="chat-panel-title" id="chat-panel-title">Chat</span>
+            <div class="chat-model-wrap" id="chat-model-wrap">
+              <button type="button" class="chat-model-btn" id="chat-model-btn" onclick="toggleChatModelSheet()" disabled>
+                <span id="chat-model-label">Model</span>
+              </button>
+            </div>
+          </div>
+          <div class="chat-panel-actions">
+            <button type="button" class="btn-icon" id="chat-voice-auto-btn" onclick="toggleVoiceAutoRead()" title="Auto-read replies" aria-label="Auto-read" style="display:none"></button>
+            <button type="button" class="btn-icon" id="chat-star-btn" onclick="toggleStarChat()" title="Star" aria-label="Star"></button>
+            <button type="button" class="btn-icon" id="chat-rename-btn" onclick="renameCurrentChat()" title="Rename" aria-label="Rename"></button>
+            <button type="button" class="btn-ghost" onclick="deleteCurrentChat()">Delete</button>
+          </div>
+        </div>
+        <div class="chat-panel-body">
+          <div id="chat-empty" class="chat-empty">Select a chat or tap <strong>New chat</strong> to start.</div>
+          <div id="lamp-chat-body" class="chat-body" style="display:none"></div>
+        </div>
+        <div class="chat-input-bar" id="lamp-chat-input-bar" style="display:none">
+          <textarea id="lamp-chat-input" class="chat-input" rows="1" placeholder="Ask Lamp…"
+            onkeydown="lampChatKeydown(event)" oninput="autoResize(this)"></textarea>
+          <button type="button" class="voice-btn" id="chat-mic-btn" onclick="toggleDictation()" aria-label="Dictate" style="display:none"></button>
+          <button class="send-btn" id="lamp-chat-send" onclick="sendLampChat()" aria-label="Send"></button>
+        </div>
+      </section>
+    </div>
+    <div id="chat-model-sheet" class="model-sheet" hidden>
+      <div class="model-sheet-backdrop" onclick="closeChatModelSheet()"></div>
+      <div class="model-sheet-panel" role="dialog" aria-labelledby="chat-model-sheet-title">
+        <div class="model-sheet-head">
+          <strong id="chat-model-sheet-title">Model for this chat</strong>
+          <button type="button" class="btn-ghost" onclick="closeChatModelSheet()">Done</button>
+        </div>
+        <p class="model-sheet-hint">Pick a model for this conversation. Your full history is kept — the next reply uses the new model.</p>
+        <button type="button" class="model-sheet-default" id="chat-model-default-btn" onclick="useDefaultChatModel()">Use home default</button>
+        <div id="chat-model-list" class="model-sheet-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div id="v-notifications" class="view">
+    <div class="header">
+      <span class="wordmark">Notifications</span>
+      <button class="btn-ghost" onclick="markAllNotifsRead()">Clear all</button>
+    </div>
+    <div id="notif-feed"></div>
+  </div>
+
+  <!-- Admin -->
+  <div id="v-admin" class="view">
+    <div class="header"><span class="wordmark">Admin</span></div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="users" onclick="location.hash='#/admin/users'">Users</button>
+      <button class="admin-tab" data-tab="models" onclick="location.hash='#/admin/models'">Models</button>
+      <button class="admin-tab" data-tab="storage" onclick="location.hash='#/admin/storage'">Storage</button>
+      <button class="admin-tab" data-tab="system" onclick="location.hash='#/admin/system'">System</button>
+    </div>
+    <div id="admin-users" class="admin-panel active"></div>
+    <div id="admin-models" class="admin-panel"></div>
+    <div id="admin-storage" class="admin-panel"></div>
+    <div id="admin-system" class="admin-panel"></div>
+  </div>
+
+  <!-- Model setup (admin) -->
+  <div id="v-setup-model" class="view">
+    <div class="header">
+      <button class="btn-ghost" onclick="history.back()">← Back</button>
+      <span class="wordmark">Model setup</span>
+    </div>
+    <div class="card">
+      <p id="detect-status" style="color:var(--muted);margin-bottom:12px">Scanning for local AI services…</p>
+      <div id="detect-list" style="display:none;margin-bottom:16px"></div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px">Or enter manually:</p>
+      <input id="model-endpoint" class="setup-input" placeholder="http://localhost:11434/v1">
+      <input id="model-name" class="setup-input" placeholder="Model id e.g. qwen2.5:3b">
+      <input id="model-apikey" class="setup-input" type="password" placeholder="API key (optional)">
+      <button class="btn btn-primary" style="width:100%" onclick="saveModelConfig()">Save &amp; continue</button>
+      <p id="model-err" class="error-msg"></p>
+    </div>
+  </div>
+
+  <!-- Build (Workshop interview) -->
+  <div id="v-build" class="view">
+    <div class="header">
+      <span class="wordmark">Build</span>
+      <button class="btn-ghost" onclick="clearBuildChat()">New</button>
+    </div>
+    <div id="build-chat" class="chat-body"></div>
+    <div class="chat-input-bar">
+      <textarea id="build-input" class="chat-input" rows="1" placeholder="Describe what you want…"
+        onkeydown="buildKeydown(event)" oninput="autoResize(this)"></textarea>
+      <button id="build-send" class="send-btn" onclick="sendBuildChat()">↑</button>
+    </div>
+  </div>
+
+  <!-- Building progress -->
+  <div id="v-building" class="view">
+    <div class="header">
+      <button type="button" class="btn-ghost" onclick="location.hash='#/build'">← Build</button>
+      <span class="wordmark" id="build-title">Building…</span>
+    </div>
+    <div class="page-content build-progress">
+      <p class="building-sub" id="build-sub">This can take a few minutes with a local model.</p>
+      <div id="thinking-row" class="building-sub" style="display:flex;align-items:center;gap:8px">
+        <span class="typing-dots"><span></span><span></span><span></span></span> Working…
+      </div>
+      <div id="step-list" class="step-list"></div>
+    </div>
+  </div>
+
+  <!-- Done -->
+  <div id="v-done" class="view">
+    <div class="header">
+      <button type="button" class="btn-ghost" onclick="location.hash='#/'">← Home</button>
+      <span class="wordmark">Done</span>
+    </div>
+    <div class="page-content done-panel">
+      <div class="done-icon" id="done-icon-el"></div>
+      <div class="done-title" id="done-title">Your app is ready!</div>
+      <p class="building-sub" id="done-sub"></p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;max-width:320px;margin-left:auto;margin-right:auto;width:100%">
+        <a id="open-app-btn" class="btn btn-primary" href="#" target="_blank" style="display:none">Open app →</a>
+        <button type="button" class="btn btn-secondary" onclick="location.hash='#/apps'">View all apps</button>
+        <button type="button" class="btn btn-ghost" onclick="location.hash='#/build'; clearBuildChat()">Build another</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Apps library -->
+  <div id="v-apps" class="view">
+    <div class="header"><span class="wordmark">Apps</span></div>
+    <div id="app-cards" class="app-cards"></div>
+  </div>
+
+</div>
+
+<nav id="bottom-nav" class="bottom-nav">
+  <button type="button" class="nav-brand" onclick="location.hash='#/'" aria-label="Lamp home">
+    <svg class="lamp-logo" viewBox="0 0 900 900" aria-hidden="true"><use href="#lamp-logo-icon"/></svg>
+    <span class="nav-brand-text">lamp</span>
+  </button>
+  <button class="nav-item" data-route="home" onclick="location.hash='#/'" style="position:relative">
+    <span class="icon icon-logo"><svg class="lamp-logo" viewBox="0 0 900 900" aria-hidden="true"><use href="#lamp-logo-icon"/></svg></span>Home
+    <span id="nav-notif-badge" class="nav-badge" style="display:none"
+      onclick="event.stopPropagation();location.hash='#/notifications'">0</span>
+  </button>
+  <button class="nav-item" data-route="chat" onclick="location.hash='#/chat'"><span class="icon" id="nav-ico-chat"></span>Chat</button>
+  <button class="nav-item" data-route="build" onclick="location.hash='#/build'"><span class="icon" id="nav-ico-build"></span>Build</button>
+  <button class="nav-item" data-route="apps" onclick="location.hash='#/apps'"><span class="icon" id="nav-ico-apps"></span>Apps</button>
+  <button class="nav-item" id="nav-admin" data-route="admin" style="display:none" onclick="location.hash='#/admin'"><span class="icon" id="nav-ico-admin"></span>Admin</button>
+  <button type="button" class="nav-item nav-theme" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light or dark mode">
+    <span class="icon" id="theme-toggle-icon"></span><span class="nav-theme-label" id="theme-toggle-label">Light</span>
+  </button>
+</nav>
+
+<div id="onboarding" class="onboarding-overlay" role="dialog" aria-labelledby="onboard-title" aria-hidden="true">
+  <div class="onboarding-card">
+    <div class="onboarding-dots" id="onboard-dots"></div>
+    <h2 id="onboard-title">Welcome</h2>
+    <p id="onboard-body"></p>
+    <div class="onboarding-actions">
+      <button type="button" class="btn btn-ghost" id="onboard-skip">Skip</button>
+      <button type="button" class="btn btn-primary" id="onboard-next">Next</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Lamp UI icons — inlined so SW/offline cannot block load */
+const LAMP_ICONS = {
+  home: '<path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/>',
+  chat: '<path d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3c0 4.556 4.03 8.25 9 8.25s9-3.694 9-8.25-4.03-8.25-9-8.25-9 3.694-9 8.25z"/>',
+  build: '<path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>',
+  hammer: '<path d="M11.42 15.17l-4.655 4.654a2.25 2.25 0 01-3.182-3.182l4.655-4.655m2.121-7.07l1.414 1.414M7.05 8.464l1.414 1.414m0 0l7.071 7.071 2.829-2.829M9.879 16.12l-1.414-1.414"/>',
+  apps: '<path d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/>',
+  admin: '<path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>',
+  sun: '<path d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/>',
+  moon: '<path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/>',
+  star: '<path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>',
+  "star-filled": '<path fill="currentColor" stroke="none" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>',
+  pencil: '<path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>',
+  sparkles: '<path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/>',
+  check: '<path d="M4.5 12.75l6 6 9-13.5"/>',
+  spinner: '<path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/>',
+  "chevron-left": '<path d="M15.75 19.5L8.25 12l7.5-7.5"/>',
+  "arrow-up": '<path d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18"/>',
+  backspace: '<path d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>',
+  refresh: '<path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/>',
+  microphone: '<path d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m12 0V11.25a4.5 4.5 0 10-9 0v5.25m12 0a8.967 8.967 0 01-4.5 1.453M12 18.75V21"/>',
+  speaker: '<path d="M19.114 5.636a9 9 0 010 12.728M12.75 4.454v12.182a.75.75 0 01-1.128.648l-5.53-3.22a.75.75 0 01-.372-.648V7.778a.75.75 0 01.372-.648l5.53-3.22a.75.75 0 011.128.648z"/>',
+  stop: '<path d="M5.25 7.5A2.25 2.25 0 017.5 5.25h9a2.25 2.25 0 012.25 2.25v9a2.25 2.25 0 01-2.25 2.25h-9a2.25 2.25 0 01-2.25-2.25v-9z"/>',
+  journal: '<path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>',
+  timer: '<path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+  workout: '<path d="M6.75 9v2.25M17.25 9v2.25M3 18h18M5.25 6h13.5a1.5 1.5 0 011.5 1.5v9a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-9A1.5 1.5 0 015.25 6z"/>',
+  meal: '<path d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.87c1.355 0 2.697.055 4.024.165C17.155 8.51 18 9.473 18 10.608v2.513M9 15h6M9 18.75h6"/>',
+  study: '<path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>',
+  invoice: '<path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>',
+  chores: '<path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+  budget: '<path d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+  grocery: '<path d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/>',
+  pill: '<path d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8 0l2.228 2.228a1.875 1.875 0 01-2.652 2.652L15.3 19.8"/>',
+};
+const TEMPLATE_ICON_ALIASES = {
+  "📓": "journal", "⏱️": "timer", "🏋️": "workout", "🍽️": "meal", "📖": "study",
+  "🧾": "invoice", "✅": "chores", "💰": "budget", "🛒": "grocery", "💊": "pill", "📱": "apps",
+};
+const FILLED_ICONS = new Set(["star-filled"]);
+function resolveIconName(name) {
+  if (!name) return "apps";
+  const k = String(name).trim();
+  return TEMPLATE_ICON_ALIASES[k] || k;
+}
+function iconHtml(name, extraClass) {
+  const key = resolveIconName(name);
+  const inner = LAMP_ICONS[key] || LAMP_ICONS.apps;
+  const cls = extraClass ? `ico ${extraClass}` : "ico";
+  const stroke = FILLED_ICONS.has(key)
+    ? ""
+    : ' fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
+  return `<svg class="${cls}" viewBox="0 0 24 24"${stroke} aria-hidden="true">${inner}</svg>`;
+}
+function setIconEl(el, name, extraClass) {
+  if (el) el.innerHTML = iconHtml(name, extraClass);
+}
+function iconStepHtml(kind) {
+  if (kind === "check") return iconHtml("check", "ico-step ico-step-done");
+  return iconHtml("spinner", "ico-step ico-step-spin");
+}
+
+const THEME_KEY = "lamp-theme";
+const ONBOARD_KEY = "lamp_onboarded_v1";
+
+function getTheme() {
+  const t = document.documentElement.getAttribute("data-theme");
+  return t === "light" || t === "dark" ? t : "dark";
+}
+
+function applyTheme(theme) {
+  document.documentElement.classList.add("theme-transition");
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem(THEME_KEY, theme);
+  const meta = document.getElementById("meta-theme-color");
+  if (meta) meta.content = theme === "light" ? "#f5f5f4" : "#0c0c0f";
+  const manifestTheme = document.querySelector('meta[name="theme-color"][data-manifest]');
+  if (manifestTheme) manifestTheme.content = theme === "light" ? "#d97706" : "#fbbf24";
+  window.setTimeout(() => document.documentElement.classList.remove("theme-transition"), 320);
+  setIconEl(document.getElementById("theme-toggle-icon"), theme === "light" ? "moon" : "sun");
+  const label = document.getElementById("theme-toggle-label");
+  if (label) label.textContent = theme === "light" ? "Dark" : "Light";
+  document.querySelectorAll(".theme-opt").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.themePick === theme);
+  });
+}
+
+function updateStarBtn(starred) {
+  const starBtn = document.getElementById("chat-star-btn");
+  if (!starBtn) return;
+  setIconEl(starBtn, starred ? "star-filled" : "star");
+  starBtn.classList.toggle("starred", !!starred);
+  starBtn.title = starred ? "Unstar" : "Star";
+  starBtn.setAttribute("aria-label", starBtn.title);
+}
+
+function initStaticIcons() {
+  setIconEl(document.getElementById("nav-ico-chat"), "chat");
+  setIconEl(document.getElementById("nav-ico-build"), "hammer");
+  setIconEl(document.getElementById("nav-ico-apps"), "apps");
+  setIconEl(document.getElementById("nav-ico-admin"), "admin");
+  setIconEl(document.getElementById("lamp-chat-send"), "arrow-up");
+  setIconEl(document.getElementById("chat-rename-btn"), "pencil");
+  setIconEl(document.getElementById("done-icon-el"), "sparkles");
+  const heroChat = document.getElementById("hero-chat-btn");
+  const heroBuild = document.getElementById("hero-build-btn");
+  if (heroChat) heroChat.innerHTML = iconHtml("chat") + " Chat with Lamp";
+  if (heroBuild) heroBuild.innerHTML = iconHtml("hammer") + " Build something new";
+  const backBtn = document.getElementById("chat-back-btn");
+  if (backBtn) backBtn.innerHTML = iconHtml("chevron-left", "ico-inline") + " Chats";
+  updateStarBtn(false);
+  syncThemeUi();
+}
+
+function toggleTheme() {
+  applyTheme(getTheme() === "dark" ? "light" : "dark");
+}
+
+function setTheme(theme) {
+  if (theme === "light" || theme === "dark") applyTheme(theme);
+}
+
+function syncThemeUi() {
+  applyTheme(getTheme());
+}
+
+const S = {
+  user: null,
+  role: null,
+  session: Math.random().toString(36).slice(2),
+  interview: { messages: [], plan: null, desc: "", scope: "personal" },
+  editing: null,
+  build: { app_name: "", app_path: "", label: "", owner: "", url: null },
+  login: { selected: null, pin: "" },
+  setupPin: "",
+  chatConvoId: null,
+  chatStreaming: false,
+  chatModel: { model: null, endpoint: null, override: false },
+  lastNotifId: 0,
+};
+
+async function api(method, path, body, opts = {}) {
+  const r = await fetch(path, {
+    method,
+    credentials: "include",
+    headers: body ? { "Content-Type": "application/json" } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok && !data.error) data.error = r.statusText;
+  data._status = r.status;
+  if (r.status === 401 && !path.startsWith("/api/auth/")) {
+    S.user = null;
+    S.role = null;
+    hideOnboarding();
+    location.hash = "#/login";
+    return data;
+  }
+  const silent = opts.silent || path === "/api/auth/check";
+  if (!r.ok && data.error && method !== "GET" && !silent) toast(data.error);
+  return data;
+}
+
+function showView(id) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  const el = document.getElementById("v-" + id);
+  if (el) el.classList.add("active");
+  const nav = document.getElementById("bottom-nav");
+  const hideNav = ["login", "setup", "setup-model"].includes(id);
+  const showNav = !hideNav && S.user;
+  nav.classList.toggle("visible", showNav);
+  document.body.classList.toggle("has-nav", showNav);
+  const navRoute = (id === "building" || id === "done") ? "build" : id;
+  document.querySelectorAll(".nav-item[data-route]").forEach(n => {
+    n.classList.toggle("active", n.dataset.route === navRoute);
+  });
+  window.scrollTo(0, 0);
+}
+
+function parseRoute() {
+  const h = (location.hash || "#/").slice(2);
+  const parts = h.split("/").filter(Boolean);
+  return { screen: parts[0] || "home", param: parts[1] || null };
+}
+
+async function route() {
+  const { screen: r, param } = parseRoute();
+  const auth = await api("GET", "/api/auth/check");
+
+  if (auth.needs_setup) {
+    hideOnboarding();
+    if (r !== "setup") { showView("setup"); buildPinPad("setup"); return; }
+    showView("setup"); buildPinPad("setup"); return;
+  }
+
+  if (!auth.ok) {
+    hideOnboarding();
+    if (r !== "login") { showView("login"); await loadLoginUsers(); return; }
+    showView("login"); await loadLoginUsers(); return;
+  }
+
+  S.user = auth.user;
+  S.role = auth.role;
+  applyRoleUi();
+  updateGreeting();
+  startNotificationPoll();
+
+  if (r === "login" || r === "setup") { location.hash = "#/"; return route(); }
+
+  if (r === "setup-model") {
+    if (S.role !== "admin") { location.hash = "#/"; return route(); }
+    showView("setup-model");
+    await initModelSetup();
+    return;
+  }
+  if (r === "chat") {
+    showView("chat");
+    panelLoading(document.getElementById("convo-list"), "Loading chats…", true);
+    const cfg = await api("GET", "/api/config");
+    if (!cfg.configured) {
+      document.getElementById("convo-list").innerHTML =
+        '<div class="no-apps" style="padding:24px">Lamp needs a model first. <a href="#/setup-model" style="color:var(--accent)">Set up →</a></div>';
+      setChatPanelOpen(false);
+      showChatEmptyState(true);
+      return;
+    }
+    await initVoice();
+    await renderConvoList();
+    if (param) {
+      await openConversation(param);
+      return;
+    }
+    S.chatConvoId = null;
+    setChatPanelOpen(false);
+    showChatEmptyState(true);
+    if (!chatConvos.length) await newConversation();
+    return;
+  }
+  if (r === "notifications") { showView("notifications"); await renderNotifications(); return; }
+  if (r === "admin") {
+    if (S.role !== "admin") { location.hash = "#/"; return route(); }
+    showView("admin");
+    const tab = ["users", "models", "storage", "system"].includes(param) ? param : "users";
+    document.querySelectorAll(".admin-tab").forEach(t =>
+      t.classList.toggle("active", t.dataset.tab === tab));
+    await renderAdmin(tab);
+    return;
+  }
+  if (r === "build") {
+    if (S.role === "child") { location.hash = "#/"; return route(); }
+    showView("build");
+    const cfg = await api("GET", "/api/config");
+    if (!cfg.configured) {
+      document.getElementById("build-chat").innerHTML =
+        '<div class="no-apps">Configure a model first. <a href="#/setup-model" style="color:var(--accent)">Set up →</a></div>';
+      return;
+    }
+    const pendingBuild =
+      sessionStorage.getItem("lamp_build_idea") || sessionStorage.getItem("lamp_build_desc");
+    if (pendingBuild || !document.getElementById("build-chat").children.length) {
+      startBuildChat();
+    }
+    return;
+  }
+  if (r === "building") {
+    if (S.role === "child") { location.hash = "#/"; return route(); }
+    showView("building"); return;
+  }
+  if (r === "done") {
+    if (S.role === "child") { location.hash = "#/"; return route(); }
+    showView("done"); return;
+  }
+  if (r === "apps") { showView("apps"); await renderApps(); return; }
+  showView("home");
+  await renderHome();
+  maybeShowOnboarding();
+}
+
+function toast(msg, ms = 2800) {
+  let wrap = document.getElementById("toast-wrap");
+  if (!wrap) {
+    wrap = document.createElement("div");
+    wrap.id = "toast-wrap";
+    wrap.className = "toast-wrap";
+    document.body.appendChild(wrap);
+  }
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+function hideOnboarding() {
+  const o = document.getElementById("onboarding");
+  if (o) {
+    o.classList.remove("open");
+    o.setAttribute("aria-hidden", "true");
+  }
+}
+
+function applyRoleUi() {
+  const admin = S.role === "admin";
+  const child = S.role === "child";
+  const navAdmin = document.getElementById("nav-admin");
+  if (navAdmin) navAdmin.style.display = admin ? "flex" : "none";
+  const buildNav = document.querySelector('.nav-item[data-route="build"]');
+  if (buildNav) buildNav.style.display = child ? "none" : "";
+  const heroBuild = document.getElementById("hero-build-btn");
+  if (heroBuild) heroBuild.style.display = child ? "none" : "";
+  const tplWrap = document.getElementById("home-templates-wrap");
+  if (tplWrap) tplWrap.style.display = child ? "none" : "";
+  const modelWrap = document.getElementById("chat-model-wrap");
+  if (modelWrap && child) modelWrap.style.display = "none";
+}
+
+function updateGreeting() {
+  const h = new Date().getHours();
+  const t = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  document.getElementById("home-greeting").textContent = `${t}, ${S.user}`;
+  const sub = document.getElementById("home-sub");
+  if (S.role === "child") sub.textContent = "Chat with Lamp or open your apps.";
+  else sub.textContent = "Chat, build apps, or pick a template below.";
+}
+
+async function renderHome() {
+  const row = document.getElementById("home-apps");
+  const grid = document.getElementById("template-grid");
+  panelLoading(row, "Loading apps…", true);
+  if (S.role !== "child") panelLoading(grid, "Loading templates…", true);
+
+  const cfg = await api("GET", "/api/config");
+  document.getElementById("config-banner").style.display =
+    (S.role === "admin" && !cfg.configured) ? "block" : "none";
+  const { apps } = await api("GET", `/api/apps?user=${encodeURIComponent(S.user)}`);
+  const list = (apps || []).filter(a => a.has_app).slice(0, 6);
+  if (!list.length) {
+    const hint = S.role === "child"
+      ? "No apps yet — ask a parent to build one for you."
+      : "No apps yet — tap Build above.";
+    row.innerHTML = `<div style="color:var(--muted);font-size:14px;padding:0 4px">${hint}</div>`;
+  } else {
+    row.innerHTML = list.map(a => {
+      const initial = esc((a.name || "?").charAt(0).toUpperCase());
+      const shared = a.scope === "shared" ? " shared" : "";
+      return `<div class="app-chip${shared}" onclick="location.href='${a.url}'">
+        <div class="app-chip-icon">${initial}</div>
+        <div class="app-chip-name">${esc(a.name)}</div>
+        <div class="app-chip-meta">${a.scope === "shared" ? "Shared · " : ""}${esc(a.last_used || "Open")}</div>
+      </div>`;
+    }).join("");
+  }
+  applyRoleUi();
+  if (S.role === "child") return;
+  const { templates } = await api("GET", "/api/templates");
+  grid.innerHTML = (templates || []).map(t => `
+    <button class="template-card" data-tid="${esc(t.id)}">
+      <div class="template-icon">${iconHtml(resolveIconName(t.icon))}</div>
+      <div class="template-title">${esc(t.title)}</div>
+      <div class="template-sub">${esc(t.subtitle || "")}</div>
+    </button>`).join("");
+  grid.querySelectorAll(".template-card").forEach(btn => {
+    btn.onclick = () => startTemplate(btn.dataset.tid);
+  });
+}
+
+async function startTemplate(id) {
+  if (S.role === "child") return;
+  const tpl = await api("GET", `/api/templates/${encodeURIComponent(id)}`);
+  if (tpl.error) return;
+  if (!confirm(`Build ${tpl.title}?`)) return;
+  S.interview.plan = tpl.plan;
+  S.interview.desc = tpl.plan.summary;
+  S.interview.scope = tpl.plan.scope || "personal";
+  location.hash = "#/build";
+  showView("build");
+  document.getElementById("build-chat").innerHTML = "";
+  addBuildBubble("ws", `Building ${tpl.title} from template…`);
+  await startBuild();
+}
+
+function renderAppCard(a) {
+  const card = document.createElement("div");
+  card.className = "app-card";
+  const shared = a.scope === "shared";
+  const child = S.role === "child";
+  const manage = !child;
+  card.innerHTML = `
+    ${shared ? '<span class="app-scope-badge">Shared</span>' : ""}
+    <div class="app-card-name">${esc(a.name)}</div>
+    ${a.desc ? `<div class="app-card-desc">${esc(a.desc)}</div>` : ""}
+    <div class="app-card-actions">
+      ${a.url ? `<a class="btn btn-primary" style="font-size:14px;padding:8px 16px" href="${a.url}" target="_blank">Open</a>` : ""}
+      ${manage ? '<button class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-improve>Improve</button>' : ""}
+      ${manage ? '<button class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-wipe>Clear data</button>' : ""}
+      ${manage ? '<button class="btn btn-danger" style="font-size:14px;padding:8px 16px" data-del>Delete</button>' : ""}
+    </div>`;
+  if (manage) card.querySelector("[data-improve]").onclick = () => openAppForEdit(a);
+  if (manage) card.querySelector("[data-wipe]").onclick = async () => {
+    if (!confirm(`Clear all saved data for "${a.name}"? Schedules and app storage will be removed.`)) return;
+    const r = await api("POST", `/api/apps/${a.owner}/${a.name}/wipe-data`);
+    if (r.ok) toast(`Cleared ${r.keys_deleted || 0} keys, ${r.schedules_deleted || 0} schedules`);
+    else toast(r.error || "Could not clear data");
+  };
+  if (manage) {
+    card.querySelector("[data-del]").onclick = async (ev) => {
+      if (!confirm(`Delete "${a.name}"?`)) return;
+      ev.target.disabled = true;
+      await api("DELETE", `/api/apps/${a.owner}/${a.name}`);
+      renderApps();
+    };
+  }
+  return card;
+}
+
+async function renderApps() {
+  const cards = document.getElementById("app-cards");
+  panelLoading(cards, "Loading apps…", true);
+  const { apps } = await api("GET", `/api/apps?user=${encodeURIComponent(S.user)}`);
+  if (!apps || !apps.length) {
+    cards.innerHTML = `<div class="no-apps">No apps yet. <a href="#/build" style="color:var(--accent)">Build your first one!</a></div>`;
+    return;
+  }
+  const shared = apps.filter(a => a.scope === "shared");
+  const personal = apps.filter(a => a.scope !== "shared");
+  cards.innerHTML = "";
+  if (shared.length) {
+    const h = document.createElement("div");
+    h.className = "apps-section-title";
+    h.textContent = "Shared";
+    cards.appendChild(h);
+    shared.forEach(a => cards.appendChild(renderAppCard(a)));
+  }
+  if (personal.length) {
+    const h = document.createElement("div");
+    h.className = "apps-section-title";
+    h.textContent = shared.length ? "My apps" : "Apps";
+    cards.appendChild(h);
+    personal.forEach(a => cards.appendChild(renderAppCard(a)));
+  }
+}
+
+function buildPinPad(mode) {
+  const pad = document.getElementById(mode === "setup" ? "setup-pin-pad" : "login-pin-pad");
+  pad.innerHTML = "";
+  const keys = ["1","2","3","4","5","6","7","8","9","","0","back"];
+  keys.forEach(k => {
+    const b = document.createElement("button");
+    b.className = "pin-key";
+    b.type = "button";
+    if (!k) { b.style.visibility = "hidden"; return pad.appendChild(b); }
+    if (k === "back") {
+      b.innerHTML = iconHtml("backspace");
+      b.setAttribute("aria-label", "Backspace");
+      b.onclick = () => pinKey(mode, "back");
+    } else {
+      b.textContent = k;
+      b.onclick = () => pinKey(mode, k);
+    }
+    pad.appendChild(b);
+  });
+}
+
+function pinKey(mode, k) {
+  const isSetup = mode === "setup";
+  let pin = isSetup ? S.setupPin : S.login.pin;
+  if (k === "back" || k === "⌫") pin = pin.slice(0, -1);
+  else if (pin.length < 4) pin += k;
+  if (isSetup) S.setupPin = pin; else S.login.pin = pin;
+  const disp = document.getElementById(isSetup ? "setup-pin-display" : "login-pin-display");
+  disp.textContent = "•".repeat(pin.length) + "·".repeat(Math.max(0, 4 - pin.length));
+  if (pin.length === 4) {
+    if (isSetup) submitSetup();
+    else submitLogin();
+  }
+}
+
+async function loadLoginUsers() {
+  const el = document.getElementById("login-users");
+  panelLoading(el, "Loading accounts…", true);
+  const { users } = await api("GET", "/api/auth/users");
+  const list = users || [];
+  el.innerHTML = "";
+  if (list.length === 1 && !S.login.selected) {
+    S.login.selected = list[0].name;
+    S.login.pin = "";
+    document.getElementById("login-pin-display").textContent = "····";
+    document.getElementById("login-err").style.display = "none";
+  }
+  list.forEach(u => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "pin-user" + (S.login.selected === u.name ? " selected" : "");
+    const initial = (u.name || "?").charAt(0).toUpperCase();
+    b.innerHTML = `<span class="pin-user-initial">${esc(initial)}</span>${esc(u.name)}`;
+    b.onclick = () => {
+      S.login.selected = u.name;
+      S.login.pin = "";
+      document.getElementById("login-pin-display").textContent = "····";
+      document.getElementById("login-err").style.display = "none";
+      loadLoginUsers();
+    };
+    el.appendChild(b);
+  });
+}
+
+async function submitLogin() {
+  const err = document.getElementById("login-err");
+  err.style.display = "none";
+  if (!S.login.selected) {
+    err.textContent = "Pick your name first"; err.style.display = "block"; return;
+  }
+  const res = await api("POST", "/api/auth/login", { name: S.login.selected, pin: S.login.pin });
+  if (!res.ok) {
+    err.textContent = "Wrong PIN — try again";
+    err.style.display = "block";
+    document.getElementById("v-login").classList.add("shake");
+    setTimeout(() => document.getElementById("v-login").classList.remove("shake"), 400);
+    S.login.pin = "";
+    document.getElementById("login-pin-display").textContent = "····";
+    return;
+  }
+  location.hash = "#/";
+}
+
+async function submitSetup() {
+  const name = document.getElementById("setup-name").value.trim();
+  const err = document.getElementById("setup-err");
+  err.style.display = "none";
+  if (!name) { err.textContent = "Enter a name"; err.style.display = "block"; return; }
+  const res = await api("POST", "/api/auth/setup", { name, pin: S.setupPin });
+  if (!res.ok) { err.textContent = res.error || "Setup failed"; err.style.display = "block"; S.setupPin = ""; return; }
+  location.hash = "#/";
+}
+
+async function doLogout() {
+  await api("POST", "/api/auth/logout");
+  S.user = null;
+  location.hash = "#/login";
+}
+
+/* ── Notifications ─────────────────────────────────────────────────────────── */
+let _notifTimer = null;
+async function pollNotifications() {
+  try {
+    const { notifications } = await api("GET", "/api/notifications?unread=1");
+    const list = notifications || [];
+    const badge = document.getElementById("nav-notif-badge");
+    if (badge) {
+      badge.style.display = list.length ? "inline" : "none";
+      badge.textContent = list.length > 9 ? "9+" : String(list.length);
+    }
+    const newest = list[0];
+    if (newest && newest.id > S.lastNotifId && S.lastNotifId > 0) {
+      /* toast optional */
+    }
+    if (newest) S.lastNotifId = Math.max(S.lastNotifId, newest.id);
+  } catch (_) {}
+}
+function startNotificationPoll() {
+  if (_notifTimer) return;
+  pollNotifications();
+  _notifTimer = setInterval(pollNotifications, 30000);
+}
+async function renderNotifications() {
+  const feed = document.getElementById("notif-feed");
+  panelLoading(feed, "Loading notifications…", true);
+  const { notifications } = await api("GET", "/api/notifications");
+  const list = notifications || [];
+  if (!list.length) {
+    feed.innerHTML = '<div class="no-apps">No notifications yet</div>';
+    return;
+  }
+  feed.innerHTML = list.map(n => `
+    <div class="notif-row${n.read ? "" : " unread"}" data-id="${n.id}">
+      <div class="notif-body">
+        <div class="notif-title">${esc(n.title || n.app)}</div>
+        <div class="notif-msg">${esc(n.message || "")}</div>
+        <div class="notif-time">${esc(n.app || "")} · ${formatTime(n.created_at)}</div>
+      </div>
+    </div>`).join("");
+  feed.querySelectorAll(".notif-row").forEach(el => setupNotifRowSwipe(el));
+}
+
+function setupNotifRowSwipe(el) {
+  let startX = 0;
+  let dx = 0;
+  el.addEventListener("click", () => {
+    if (Math.abs(dx) > 40) return;
+    markNotifRead(parseInt(el.dataset.id, 10));
+  });
+  el.addEventListener("touchstart", e => {
+    startX = e.touches[0].clientX;
+    dx = 0;
+    el.classList.add("swiping");
+  }, { passive: true });
+  el.addEventListener("touchmove", e => {
+    dx = e.touches[0].clientX - startX;
+    if (dx < 0) el.style.transform = `translateX(${Math.max(dx, -120)}px)`;
+  }, { passive: true });
+  el.addEventListener("touchend", () => {
+    el.classList.remove("swiping");
+    if (dx < -72) {
+      markNotifRead(parseInt(el.dataset.id, 10));
+      el.style.transform = "";
+      return;
+    }
+    el.style.transform = "";
+    dx = 0;
+  });
+}
+async function markNotifRead(id) {
+  await api("POST", `/api/notifications/${id}/read`);
+  await pollNotifications();
+  await renderNotifications();
+}
+async function markAllNotifsRead() {
+  const feed = document.getElementById("notif-feed");
+  panelLoading(feed, "Clearing…", true);
+  const { notifications } = await api("GET", "/api/notifications?unread=1");
+  for (const n of (notifications || [])) {
+    await api("POST", `/api/notifications/${n.id}/read`, null, { silent: true });
+  }
+  await pollNotifications();
+  await renderNotifications();
+}
+function formatUptime(seconds) {
+  const sec = Number(seconds) || 0;
+  if (!sec) return "—";
+  const d = Math.floor(sec / 86400);
+  const h = Math.floor((sec % 86400) / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (d) return `${d}d ${h}h`;
+  if (h) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function formatTime(createdAt) {
+  if (!createdAt) return "";
+  try {
+    const d = new Date(createdAt.replace("Z", ""));
+    const mins = Math.floor((Date.now() - d) / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return mins + "m ago";
+    if (mins < 1440) return Math.floor(mins / 60) + "h ago";
+    return d.toLocaleDateString();
+  } catch (_) { return createdAt; }
+}
+
+/* ── Lamp chat ─────────────────────────────────────────────────────────────── */
+const CHAT_MOBILE_MQ = window.matchMedia("(max-width: 767px)");
+let chatConvos = [];
+
+function isChatMobile() { return CHAT_MOBILE_MQ.matches; }
+
+function setChatPanelOpen(open) {
+  document.getElementById("v-chat").classList.toggle("chat-show-panel", open);
+}
+
+function showChatEmptyState(show) {
+  document.getElementById("chat-empty").style.display = show ? "flex" : "none";
+  document.getElementById("lamp-chat-body").style.display = show ? "none" : "flex";
+  document.getElementById("lamp-chat-input-bar").style.display = show ? "none" : "flex";
+  const hideChrome = show ? "hidden" : "visible";
+  document.getElementById("chat-star-btn").style.visibility = hideChrome;
+  const voiceAuto = document.getElementById("chat-voice-auto-btn");
+  if (voiceAuto) voiceAuto.style.visibility = hideChrome;
+  const modelWrap = document.getElementById("chat-model-wrap");
+  if (modelWrap) modelWrap.style.display = (show || S.role === "child") ? "none" : "flex";
+}
+
+function updateChatPanelChrome() {
+  const c = chatConvos.find(x => x.id === S.chatConvoId);
+  const title = (c && c.title) ? c.title : "New chat";
+  document.getElementById("chat-panel-title").textContent = title;
+  updateStarBtn(!!(c && c.starred));
+}
+
+function showChatList() {
+  S.chatConvoId = null;
+  setChatPanelOpen(false);
+  showChatEmptyState(true);
+  location.hash = "#/chat";
+}
+
+CHAT_MOBILE_MQ.addEventListener("change", () => {
+  if (document.getElementById("v-chat").classList.contains("active")) {
+    setChatPanelOpen(!!S.chatConvoId);
+  }
+});
+
+function formatInlineMd(text) {
+  let s = esc(text);
+  s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+  s = s.replace(/^### (.+)$/gm, "<h4>$1</h4>");
+  s = s.replace(/^## (.+)$/gm, "<h3>$1</h3>");
+  s = s.replace(/\n/g, "<br>");
+  return s;
+}
+
+function renderMarkdown(text) {
+  const re = /```[\w]*\n?([\s\S]*?)```/g;
+  let html = "";
+  let last = 0;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) html += formatInlineMd(text.slice(last, m.index));
+    const code = m[1].trim();
+    html += `<div class="code-block"><div class="code-block-head">` +
+      `<button type="button" class="code-copy" onclick="copyCodeBlock(this)">Copy</button></div>` +
+      `<pre><code>${esc(code)}</code></pre></div>`;
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) html += formatInlineMd(text.slice(last));
+  return html || formatInlineMd(text);
+}
+
+function copyCodeBlock(btn) {
+  const pre = btn.closest(".code-block")?.querySelector("pre");
+  if (!pre) return;
+  const text = pre.textContent || "";
+  navigator.clipboard.writeText(text).then(() => toast("Copied")).catch(() => toast("Copy failed"));
+}
+
+function setChatTyping(on) {
+  const body = document.getElementById("lamp-chat-body");
+  const existing = document.getElementById("chat-typing");
+  if (!on) {
+    existing?.remove();
+    return;
+  }
+  if (existing) return;
+  const el = document.createElement("div");
+  el.id = "chat-typing";
+  el.className = "bubble bubble-ws chat-typing";
+  el.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span> Lamp is typing…';
+  body.appendChild(el);
+  body.scrollTop = body.scrollHeight;
+}
+function parseAppIdea(content) {
+  const m = content.match(/```json\s*(\{[\s\S]*?\})\s*```/);
+  if (m) {
+    try {
+      const d = JSON.parse(m[1]);
+      if (d.app_idea) {
+        return {
+          description: d.description || "",
+          title: d.title,
+          features: d.features,
+        };
+      }
+    } catch (_) {}
+  }
+  return null;
+}
+function stripAppIdeaJson(content) {
+  return content.replace(/```json[\s\S]*?```/g, "").trim();
+}
+
+function showChatMessagesLoading() {
+  document.getElementById("chat-empty").style.display = "none";
+  const body = document.getElementById("lamp-chat-body");
+  body.style.display = "flex";
+  document.getElementById("lamp-chat-input-bar").style.display = "flex";
+  document.getElementById("chat-star-btn").style.visibility = "visible";
+  const modelWrap = document.getElementById("chat-model-wrap");
+  if (modelWrap) modelWrap.style.display = S.role === "child" ? "none" : "flex";
+  panelLoading(body, "Loading messages…", true);
+}
+
+async function renderConvoList() {
+  const el = document.getElementById("convo-list");
+  panelLoading(el, "Loading chats…", true);
+  const { conversations } = await api("GET", "/api/chat/conversations");
+  chatConvos = conversations || [];
+  if (!chatConvos.length) {
+    el.innerHTML = '<div class="no-apps" style="padding:24px">No chats yet. Tap <strong>New chat</strong> to start.</div>';
+    return;
+  }
+  el.innerHTML = chatConvos.map(c => `
+    <div class="convo-item ${c.id === S.chatConvoId ? "active" : ""}" data-id="${esc(c.id)}">
+      <span class="convo-item-star">${c.starred ? iconHtml("star-filled", "ico") : ""}</span>
+      <div class="convo-item-body">
+        <div class="convo-item-title">${esc(c.title || "New chat")}</div>
+        <div class="convo-item-meta">${formatTime(c.updated_at)}</div>
+      </div>
+    </div>`).join("");
+  el.querySelectorAll(".convo-item").forEach(item => {
+    item.onclick = () => { location.hash = "#/chat/" + item.dataset.id; };
+  });
+  updateChatPanelChrome();
+}
+
+async function newConversation() {
+  const res = await api("POST", "/api/chat/conversations", {});
+  if (res.id) {
+    chatConvos.unshift({
+      id: res.id,
+      title: res.title,
+      starred: !!res.starred,
+      updated_at: res.updated_at,
+    });
+    location.hash = "#/chat/" + res.id;
+  }
+}
+
+async function openConversation(id) {
+  const exists = chatConvos.some(c => c.id === id);
+  if (!exists) {
+    await renderConvoList();
+    if (!chatConvos.some(c => c.id === id)) {
+      showChatList();
+      return;
+    }
+  }
+  S.chatConvoId = id;
+  setChatPanelOpen(true);
+  showChatMessagesLoading();
+  await renderConvoList();
+  updateChatPanelChrome();
+  const res = await api("GET", `/api/chat/conversations/${encodeURIComponent(id)}/messages`);
+  if (res.error || res._status === 404) {
+    showChatList();
+    return;
+  }
+  if (res.chat_model) updateChatModelUi(res.chat_model);
+  const messages = res.messages;
+  const body = document.getElementById("lamp-chat-body");
+  body.innerHTML = "";
+  if (!(messages || []).length) {
+    addLampBubble("assistant", "Hi! Ask me anything — homework, lists, ideas, or say what app you'd like to build.");
+  }
+  (messages || []).forEach(m => {
+    if (m.role === "user") addLampBubble("user", m.content);
+    else if (m.role === "assistant") addLampBubble("assistant", m.content, true);
+    else if (m.role === "system") addLampBubble("system", m.content, true);
+  });
+  showChatEmptyState(false);
+  updateChatModelUi();
+}
+
+async function toggleStarChat() {
+  if (!S.chatConvoId) return;
+  const c = chatConvos.find(x => x.id === S.chatConvoId);
+  const starred = !(c && c.starred);
+  const res = await api("PUT", `/api/chat/conversations/${encodeURIComponent(S.chatConvoId)}`, { starred });
+  if (res.ok) {
+    if (c) c.starred = starred;
+    else chatConvos.push({ id: S.chatConvoId, starred, title: res.title, updated_at: res.updated_at });
+    await renderConvoList();
+    updateChatPanelChrome();
+  }
+}
+
+async function renameCurrentChat() {
+  if (!S.chatConvoId) return;
+  const c = chatConvos.find(x => x.id === S.chatConvoId);
+  const next = prompt("Rename chat", (c && c.title) || "New chat");
+  if (next === null) return;
+  const title = next.trim();
+  const res = await api("PUT", `/api/chat/conversations/${encodeURIComponent(S.chatConvoId)}`, { title });
+  if (res.ok) {
+    const row = chatConvos.find(x => x.id === S.chatConvoId);
+    if (row) row.title = res.title || title || null;
+    await renderConvoList();
+    updateChatPanelChrome();
+  }
+}
+
+async function deleteCurrentChat() {
+  if (!S.chatConvoId || !confirm("Delete this conversation?")) return;
+  await api("DELETE", `/api/chat/conversations/${encodeURIComponent(S.chatConvoId)}`);
+  S.chatConvoId = null;
+  setChatPanelOpen(false);
+  showChatEmptyState(true);
+  location.hash = "#/chat";
+  await renderConvoList();
+}
+
+function shortModelName(model) {
+  if (!model) return "Model";
+  const s = String(model);
+  return s.includes("/") ? s.split("/").pop() : s;
+}
+
+function updateChatModelUi(meta) {
+  if (meta) {
+    S.chatModel = {
+      model: meta.model || null,
+      endpoint: meta.endpoint || null,
+      override: !!meta.override,
+    };
+  }
+  const wrap = document.getElementById("chat-model-wrap");
+  const btn = document.getElementById("chat-model-btn");
+  const label = document.getElementById("chat-model-label");
+  if (wrap) {
+    wrap.style.display = (S.role === "child" || !S.chatConvoId) ? "none" : "flex";
+  }
+  if (!btn || !label) return;
+  const name = shortModelName(S.chatModel.model);
+  label.textContent = S.chatModel.override ? name : `Default · ${name}`;
+  btn.classList.toggle("override", S.chatModel.override);
+  btn.disabled = S.chatStreaming || !S.chatConvoId;
+}
+
+function toggleChatModelSheet() {
+  if (S.role === "child" || !S.chatConvoId || S.chatStreaming) return;
+  const sheet = document.getElementById("chat-model-sheet");
+  sheet.hidden = false;
+  loadChatModelPicker();
+}
+
+function closeChatModelSheet() {
+  const sheet = document.getElementById("chat-model-sheet");
+  if (sheet) sheet.hidden = true;
+}
+
+async function loadChatModelPicker() {
+  const list = document.getElementById("chat-model-list");
+  if (!list) return;
+  list.innerHTML = `<div class="panel-loading compact">${iconHtml("spinner", "ico ico-loading")}<span>Finding models…</span></div>`;
+  const { models } = await api("GET", "/api/detect");
+  const activeModel = S.chatModel.model;
+  const activeUrl = S.chatModel.endpoint;
+  const groups = {};
+  (models || []).forEach(m => {
+    const key = m.label || "Available";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(m);
+  });
+  const keys = Object.keys(groups).sort();
+  if (!keys.length) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px">No models found. Set up Ollama or LM Studio, or configure a model in Admin.</p>';
+    return;
+  }
+  list.innerHTML = keys.map(label => `
+    <div class="model-sheet-group">
+      <h4>${esc(label)}</h4>
+      ${groups[label].map(m => {
+        const active = m.model === activeModel && m.url === activeUrl;
+        return `<button type="button" class="model-sheet-row${active ? " active" : ""}"
+          data-url="${attrEsc(m.url)}" data-model="${attrEsc(m.model)}">${esc(shortModelName(m.model))}</button>`;
+      }).join("")}
+    </div>`).join("");
+  list.querySelectorAll(".model-sheet-row").forEach(btn => {
+    btn.onclick = () => pickChatModel(btn.dataset.url, btn.dataset.model);
+  });
+  const defBtn = document.getElementById("chat-model-default-btn");
+  if (defBtn) defBtn.style.fontWeight = S.chatModel.override ? "600" : "700";
+}
+
+async function pickChatModel(endpoint, model) {
+  if (!S.chatConvoId) return;
+  closeChatModelSheet();
+  showChatMessagesLoading();
+  const r = await api("PUT", `/api/chat/conversations/${encodeURIComponent(S.chatConvoId)}`, {
+    endpoint, model,
+  }, { silent: true });
+  if (!r.ok) {
+    toast(r.error || "Could not switch model");
+    await openConversation(S.chatConvoId);
+    return;
+  }
+  toast(`Using ${shortModelName(model)} in this chat`);
+  await openConversation(S.chatConvoId);
+}
+
+async function useDefaultChatModel() {
+  if (!S.chatConvoId || !S.chatModel.override) {
+    closeChatModelSheet();
+    return;
+  }
+  closeChatModelSheet();
+  showChatMessagesLoading();
+  const r = await api("PUT", `/api/chat/conversations/${encodeURIComponent(S.chatConvoId)}`, {
+    use_default: true,
+  }, { silent: true });
+  if (!r.ok) {
+    toast(r.error || "Could not reset model");
+    await openConversation(S.chatConvoId);
+    return;
+  }
+  toast("Using home default model");
+  await openConversation(S.chatConvoId);
+}
+
+/* ── Voice — Whisper STT (local server) + browser TTS ──────────────────────── */
+const VOICE_AUTO_KEY = "lamp_voice_auto_read";
+const VOICE_MAX_RECORD_MS = 90000;
+let _recognition = null;
+let _sttEngine = null; // "whisper" | "browser" | null
+let _dictating = false;
+let _dictateManualStop = false;
+let _dictateBase = "";
+let _speakingWrap = null;
+let _mediaRecorder = null;
+let _recordChunks = [];
+let _recordStream = null;
+let _recordStartedAt = 0;
+let _recordMaxTimer = null;
+let _transcribing = false;
+let _voiceErrToastAt = 0;
+
+function voiceToastOnce(msg) {
+  const now = Date.now();
+  if (now - _voiceErrToastAt < 5000) return;
+  _voiceErrToastAt = now;
+  toast(msg);
+}
+
+function voiceSttSupported() {
+  return !!_sttEngine;
+}
+
+function voiceBrowserSttSupported() {
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+}
+
+function voiceTtsSupported() {
+  return !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+}
+
+function isVoiceAutoRead() {
+  return localStorage.getItem(VOICE_AUTO_KEY) === "1";
+}
+
+function plainTextForVoice(content) {
+  let t = stripAppIdeaJson(content || "");
+  t = t.replace(/```[\s\S]*?```/g, " ");
+  t = t.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+  t = t.replace(/[#*_>`~]/g, "");
+  return t.replace(/\s+/g, " ").trim();
+}
+
+function recorderMimeType() {
+  if (typeof MediaRecorder === "undefined") return "";
+  for (const t of ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"]) {
+    if (MediaRecorder.isTypeSupported(t)) return t;
+  }
+  return "";
+}
+
+function setupBrowserRecognition() {
+  if (!voiceBrowserSttSupported()) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  _recognition = new SR();
+  _recognition.continuous = false;
+  _recognition.interimResults = true;
+  _recognition.lang = navigator.language || "en-US";
+  _recognition.onresult = (e) => {
+    let interim = "";
+    let final = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      const chunk = r[0].transcript;
+      if (r.isFinal) final += chunk;
+      else interim += chunk;
+    }
+    const input = document.getElementById("lamp-chat-input");
+    if (!input) return;
+    input.value = (_dictateBase + final + interim).trimStart();
+    autoResize(input);
+  };
+  _recognition.onerror = (e) => {
+    const err = e.error || "";
+    if (err === "aborted" || err === "no-speech") {
+      stopDictation(true);
+      return;
+    }
+    if (err === "not-allowed") {
+      voiceToastOnce("Microphone permission denied");
+    } else if (err === "network") {
+      voiceToastOnce("Browser dictation needs network — install Whisper locally instead");
+    } else {
+      voiceToastOnce("Voice input failed — try Whisper (see README)");
+    }
+    stopDictation(true);
+  };
+  _recognition.onend = () => {
+    if (_dictating) stopDictation(true);
+  };
+}
+
+function voiceUiEnabled() {
+  return window.isSecureContext === true;
+}
+
+async function initVoice() {
+  const mic = document.getElementById("chat-mic-btn");
+  const autoBtn = document.getElementById("chat-voice-auto-btn");
+  if (!voiceUiEnabled()) {
+    _sttEngine = null;
+    if (mic) mic.style.display = "none";
+    if (autoBtn) autoBtn.style.display = "none";
+    stopDictation(true);
+    stopSpeaking();
+    return;
+  }
+  let status = { whisper_available: false, stt_engine: "browser" };
+  try {
+    status = await api("GET", "/api/voice/status");
+  } catch (_) {}
+  const canRecord = !!recorderMimeType() && !!navigator.mediaDevices?.getUserMedia;
+  if (status.whisper_available && canRecord) {
+    _sttEngine = "whisper";
+  } else if (canRecord) {
+    _sttEngine = "whisper";
+    if (!status.whisper_available) {
+      console.info("Whisper not installed — mic will record but transcription may fail");
+    }
+  } else if (voiceBrowserSttSupported()) {
+    _sttEngine = "browser";
+    setupBrowserRecognition();
+  } else {
+    _sttEngine = null;
+  }
+  if (mic) {
+    if (_sttEngine) {
+      mic.style.display = "flex";
+      mic.innerHTML = iconHtml("microphone", "ico");
+      mic.title = _sttEngine === "whisper"
+        ? "Record message (Whisper)"
+        : "Dictate (browser)";
+    } else {
+      mic.style.display = "none";
+    }
+  }
+  if (voiceTtsSupported() && autoBtn) {
+    autoBtn.style.display = "inline-flex";
+    syncVoiceAutoReadBtn();
+  } else if (autoBtn) {
+    autoBtn.style.display = "none";
+  }
+}
+
+function syncVoiceAutoReadBtn() {
+  const btn = document.getElementById("chat-voice-auto-btn");
+  if (!btn) return;
+  btn.innerHTML = iconHtml("speaker", "ico");
+  btn.classList.toggle("voice-auto-on", isVoiceAutoRead());
+  btn.title = isVoiceAutoRead() ? "Auto-read on" : "Auto-read off";
+}
+
+function toggleVoiceAutoRead() {
+  if (!voiceUiEnabled()) return;
+  localStorage.setItem(VOICE_AUTO_KEY, isVoiceAutoRead() ? "0" : "1");
+  syncVoiceAutoReadBtn();
+  toast(isVoiceAutoRead() ? "Lamp will read replies aloud" : "Auto-read off");
+}
+
+function setMicUi(listening, transcribing) {
+  const mic = document.getElementById("chat-mic-btn");
+  if (!mic) return;
+  mic.classList.toggle("listening", !!listening);
+  mic.disabled = !!transcribing || S.chatStreaming;
+  if (transcribing) {
+    mic.innerHTML = iconHtml("spinner", "ico ico-loading");
+    mic.setAttribute("aria-label", "Transcribing…");
+  } else if (listening) {
+    mic.innerHTML = iconHtml("stop", "ico");
+    mic.setAttribute("aria-label", "Stop recording");
+  } else {
+    mic.innerHTML = iconHtml("microphone", "ico");
+    mic.setAttribute("aria-label", _sttEngine === "whisper" ? "Record message" : "Dictate");
+  }
+}
+
+function toggleDictation() {
+  if (!voiceUiEnabled() || _transcribing) return;
+  if (_dictating) stopDictation(false);
+  else startDictation();
+}
+
+function startDictation() {
+  if (!voiceUiEnabled() || !voiceSttSupported() || S.chatStreaming) return;
+  stopSpeaking();
+  const input = document.getElementById("lamp-chat-input");
+  _dictateBase = input ? (input.value.trim() ? input.value.trim() + " " : "") : "";
+  if (_sttEngine === "whisper") startWhisperRecord();
+  else startBrowserDictation();
+}
+
+function startBrowserDictation() {
+  if (!_recognition) return;
+  _dictating = true;
+  _dictateManualStop = false;
+  setMicUi(true, false);
+  try {
+    _recognition.start();
+  } catch (_) {
+    stopDictation(true);
+    voiceToastOnce("Could not start microphone");
+  }
+}
+
+async function startWhisperRecord() {
+  if (!voiceUiEnabled()) return;
+  const mime = recorderMimeType();
+  if (!mime || !navigator.mediaDevices?.getUserMedia) {
+    toast("Recording not supported in this browser");
+    return;
+  }
+  try {
+    _recordStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    if (e && e.name === "NotAllowedError") toast("Microphone permission denied");
+    else toast("Could not access microphone");
+    return;
+  }
+  _recordChunks = [];
+  _mediaRecorder = new MediaRecorder(_recordStream, { mimeType: mime });
+  _mediaRecorder.ondataavailable = (e) => {
+    if (e.data && e.data.size) _recordChunks.push(e.data);
+  };
+  _mediaRecorder.onstop = () => finishWhisperRecord(mime);
+  _mediaRecorder.onerror = () => {
+    toast("Recording failed");
+    stopDictation(true);
+  };
+  _dictating = true;
+  _dictateManualStop = false;
+  _recordStartedAt = Date.now();
+  setMicUi(true, false);
+  _mediaRecorder.start(250);
+  _recordMaxTimer = setTimeout(() => {
+    if (_dictating) {
+      toast("Max recording length reached");
+      stopDictation(false);
+    }
+  }, VOICE_MAX_RECORD_MS);
+}
+
+function stopWhisperHardware() {
+  if (_recordMaxTimer) {
+    clearTimeout(_recordMaxTimer);
+    _recordMaxTimer = null;
+  }
+  if (_mediaRecorder && _mediaRecorder.state !== "inactive") {
+    try { _mediaRecorder.stop(); } catch (_) {}
+  }
+  if (_recordStream) {
+    _recordStream.getTracks().forEach(t => t.stop());
+    _recordStream = null;
+  }
+  _mediaRecorder = null;
+}
+
+async function finishWhisperRecord(mime) {
+  const blob = new Blob(_recordChunks, { type: mime.split(";")[0] });
+  _recordChunks = [];
+  if (!blob.size || Date.now() - _recordStartedAt < 400) {
+    toast("Recording too short");
+    setMicUi(false, false);
+    return;
+  }
+  _transcribing = true;
+  setMicUi(false, true);
+  const lang = (navigator.language || "en").split("-")[0];
+  try {
+    const r = await fetch("/api/chat/transcribe", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": mime.split(";")[0],
+        "X-Lamp-Language": lang,
+      },
+      body: blob,
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.text) {
+      voiceToastOnce(data.error || "Install Whisper: pip install openai-whisper && brew install ffmpeg");
+      return;
+    }
+    const input = document.getElementById("lamp-chat-input");
+    if (input) {
+      const prefix = _dictateBase || "";
+      input.value = (prefix + data.text).trim();
+      autoResize(input);
+      input.focus();
+    }
+  } catch (_) {
+    toast("Could not reach Lamp for transcription");
+  } finally {
+    _transcribing = false;
+    setMicUi(false, false);
+  }
+}
+
+function stopDictation(silent) {
+  _dictateManualStop = true;
+  _dictating = false;
+  if (_sttEngine === "whisper") {
+    stopWhisperHardware();
+    if (!silent && !_transcribing) setMicUi(false, false);
+    return;
+  }
+  setMicUi(false, false);
+  if (_recognition) {
+    try { _recognition.stop(); } catch (_) {}
+  }
+}
+
+function stopSpeaking() {
+  if (!voiceUiEnabled() || !voiceTtsSupported()) return;
+  window.speechSynthesis.cancel();
+  if (_speakingWrap) {
+    const btn = _speakingWrap.querySelector(".voice-speak-btn");
+    if (btn) {
+      btn.classList.remove("speaking");
+      btn.innerHTML = iconHtml("speaker", "ico-inline") + " Listen";
+    }
+    _speakingWrap = null;
+  }
+}
+
+function speakPlainText(text, wrap) {
+  if (!voiceUiEnabled() || !voiceTtsSupported() || !text) return;
+  stopSpeaking();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 1;
+  u.lang = navigator.language || "en-US";
+  if (wrap) {
+    _speakingWrap = wrap;
+    const btn = wrap.querySelector(".voice-speak-btn");
+    if (btn) {
+      btn.classList.add("speaking");
+      btn.innerHTML = iconHtml("stop", "ico-inline") + " Stop";
+      btn.onclick = () => stopSpeaking();
+    }
+  }
+  u.onend = u.onerror = () => stopSpeaking();
+  window.speechSynthesis.speak(u);
+}
+
+function attachBubbleVoiceActions(wrap, rawContent) {
+  if (!voiceUiEnabled() || !voiceTtsSupported() || !wrap) return;
+  const plain = plainTextForVoice(rawContent);
+  if (!plain) return;
+  wrap.dataset.voiceText = plain;
+  if (wrap.querySelector(".bubble-voice-actions")) return;
+  const actions = document.createElement("div");
+  actions.className = "bubble-voice-actions";
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "btn-ghost voice-speak-btn";
+  btn.innerHTML = iconHtml("speaker", "ico-inline") + " Listen";
+  btn.onclick = () => {
+    if (_speakingWrap === wrap) stopSpeaking();
+    else speakPlainText(wrap.dataset.voiceText || plain, wrap);
+  };
+  actions.appendChild(btn);
+  wrap.appendChild(actions);
+}
+
+function addSystemBubble(text) {
+  const body = document.getElementById("lamp-chat-body");
+  const el = document.createElement("div");
+  el.className = "bubble-system";
+  el.textContent = text;
+  body.appendChild(el);
+  body.scrollTop = body.scrollHeight;
+}
+
+function addLampBubble(role, content, fromHistory = false) {
+  const body = document.getElementById("lamp-chat-body");
+  if (role === "system") {
+    addSystemBubble(content);
+    return;
+  }
+  const wrap = document.createElement("div");
+  wrap.style.display = "flex";
+  wrap.style.flexDirection = "column";
+  const display = role === "assistant" ? stripAppIdeaJson(content) : content;
+  const b = document.createElement("div");
+  b.className = "bubble " + (role === "user" ? "bubble-user" : "bubble-ws");
+  if (role === "assistant") {
+    b.className += " md";
+    b.innerHTML = renderMarkdown(display);
+    const idea = parseAppIdea(content);
+    if (idea && idea.description && S.role !== "child") {
+      const btn = document.createElement("button");
+      btn.className = "build-idea-btn";
+      btn.textContent = "Build this app";
+      btn.onclick = () => goBuildFromChat(idea);
+      wrap.appendChild(b);
+      wrap.appendChild(btn);
+      attachBubbleVoiceActions(wrap, content);
+      body.appendChild(wrap);
+      body.scrollTop = body.scrollHeight;
+      return;
+    }
+    attachBubbleVoiceActions(wrap, content);
+  } else {
+    b.textContent = display;
+  }
+  wrap.appendChild(b);
+  body.appendChild(wrap);
+  body.scrollTop = body.scrollHeight;
+}
+
+function goBuildFromChat(idea) {
+  if (S.role === "child") return;
+  const payload = typeof idea === "string" ? { description: idea } : (idea || {});
+  const desc = (payload.description || "").trim();
+  if (!desc) return;
+  sessionStorage.setItem("lamp_build_idea", JSON.stringify({
+    description: desc,
+    title: payload.title,
+    features: payload.features,
+  }));
+  sessionStorage.removeItem("lamp_build_desc");
+  const onBuild = (location.hash || "#/").replace(/^#/, "").startsWith("/build");
+  if (onBuild) route();
+  else location.hash = "#/build";
+}
+
+function lampChatKeydown(e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendLampChat(); }
+}
+
+async function sendLampChat() {
+  if (S.chatStreaming || !S.chatConvoId) return;
+  stopDictation(true);
+  stopSpeaking();
+  const input = document.getElementById("lamp-chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  addLampBubble("user", text);
+  S.chatStreaming = true;
+  document.getElementById("lamp-chat-send").disabled = true;
+  updateChatModelUi();
+
+  setChatTyping(true);
+  let assistantEl = null;
+  let wrap = null;
+
+  let fullText = "";
+  try {
+    const r = await fetch("/api/chat/messages", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ convo_id: S.chatConvoId, content: text }),
+    });
+    const reader = r.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop() || "";
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).trim();
+        if (!payload) continue;
+        try {
+          const msg = JSON.parse(payload);
+          if (msg.t === "token") {
+            if (!assistantEl) {
+              setChatTyping(false);
+              assistantEl = document.createElement("div");
+              assistantEl.className = "bubble bubble-ws md";
+              wrap = document.createElement("div");
+              wrap.appendChild(assistantEl);
+              document.getElementById("lamp-chat-body").appendChild(wrap);
+            }
+            fullText += msg.text;
+            assistantEl.innerHTML = renderMarkdown(stripAppIdeaJson(fullText));
+            document.getElementById("lamp-chat-body").scrollTop =
+              document.getElementById("lamp-chat-body").scrollHeight;
+          } else if (msg.t === "done") {
+            setChatTyping(false);
+            if (!assistantEl) {
+              assistantEl = document.createElement("div");
+              assistantEl.className = "bubble bubble-ws md";
+              wrap = document.createElement("div");
+              wrap.appendChild(assistantEl);
+              document.getElementById("lamp-chat-body").appendChild(wrap);
+            }
+            fullText = msg.raw || msg.reply || fullText;
+            assistantEl.innerHTML = renderMarkdown(stripAppIdeaJson(msg.reply || fullText));
+            if (msg.app_idea && msg.app_idea.description && S.role !== "child") {
+              const btn = document.createElement("button");
+              btn.className = "build-idea-btn";
+              btn.textContent = "Build this app";
+              btn.onclick = () => goBuildFromChat(msg.app_idea);
+              wrap.appendChild(btn);
+            }
+            if (wrap) attachBubbleVoiceActions(wrap, msg.raw || msg.reply || fullText);
+            if (voiceUiEnabled() && isVoiceAutoRead()) {
+              const spoken = plainTextForVoice(msg.reply || fullText);
+              if (spoken) speakPlainText(spoken, wrap);
+            }
+          }
+        } catch (_) {}
+      }
+    }
+    await renderConvoList();
+  } catch (e) {
+    setChatTyping(false);
+    if (assistantEl) {
+      assistantEl.textContent = "Couldn't reach Lamp. Is the model running?";
+    } else {
+      addLampBubble("assistant", "Couldn't reach Lamp. Is the model running?");
+    }
+  }
+  setChatTyping(false);
+  S.chatStreaming = false;
+  document.getElementById("lamp-chat-send").disabled = false;
+  updateChatModelUi();
+}
+
+/* ── Admin ─────────────────────────────────────────────────────────────────── */
+function adminTab(tab) {
+  location.hash = "#/admin/" + tab;
+}
+
+function panelLoading(el, text, compact) {
+  if (!el) return;
+  const cls = "panel-loading" + (compact ? " compact" : "");
+  el.innerHTML = `<div class="${cls}" role="status" aria-live="polite" aria-busy="true">
+    ${iconHtml("spinner", "ico ico-loading")}
+    <span>${esc(text || "Loading…")}</span>
+  </div>`;
+}
+
+function adminLoadingMessage(tab) {
+  return ({
+    users: "Loading users…",
+    models: "Loading models…",
+    storage: "Reading disk usage…",
+    system: "Loading system info…",
+  })[tab] || "Loading…";
+}
+
+function setAdminTabsLoading(on) {
+  document.querySelector(".admin-tabs")?.classList.toggle("loading", !!on);
+}
+
+async function renderAdmin(tab) {
+  document.querySelectorAll(".admin-panel").forEach(p => p.classList.remove("active"));
+  const panel = document.getElementById("admin-" + tab);
+  if (!panel) return;
+  panel.classList.add("active");
+  panelLoading(panel, adminLoadingMessage(tab));
+  setAdminTabsLoading(true);
+  try {
+    if (tab === "users") await renderAdminUsers(panel);
+    else if (tab === "models") await renderModelsAdmin(panel);
+    else if (tab === "storage") await renderAdminStorage(panel);
+    else if (tab === "system") await renderAdminSystem(panel);
+  } catch (_) {
+    panel.innerHTML = `<p class="panel-error">Couldn't load this section. Try again.</p>`;
+  } finally {
+    setAdminTabsLoading(false);
+  }
+}
+
+async function renderAdminUsers(panel) {
+    const { users } = await api("GET", "/api/admin/users");
+    panel.innerHTML = (users || []).map(u => `
+      <div class="admin-row">
+        <strong>${esc(u.name)}</strong> · ${esc(u.role)}
+        <div style="font-size:13px;color:var(--muted);margin-top:6px">
+          ${u.app_count} apps · ${u.chat_count} chats
+          ${u.last_login ? " · " + formatTime(u.last_login) : ""}
+        </div>
+        ${u.name !== S.user ? `
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <select class="setup-input" style="width:auto;min-width:100px;margin:0;padding:6px 10px;font-size:13px"
+              data-role-user="${attrEsc(u.name)}">
+              <option value="user"${u.role === "user" ? " selected" : ""}>User</option>
+              <option value="child"${u.role === "child" ? " selected" : ""}>Child</option>
+              <option value="admin"${u.role === "admin" ? " selected" : ""}>Admin</option>
+            </select>
+            <button class="btn btn-secondary" style="font-size:12px;padding:6px 10px"
+              data-reset-user="${attrEsc(u.name)}">Reset PIN</button>
+            <button class="btn btn-danger" style="font-size:12px;padding:6px 10px"
+              data-del-user="${attrEsc(u.name)}">Delete</button>
+          </div>` : ""}
+      </div>`).join("") + `
+      <div class="card" style="margin-top:16px">
+        <h3 style="margin-bottom:12px">Add user</h3>
+        <input id="new-user-name" class="setup-input" placeholder="Name">
+        <input id="new-user-pin" class="setup-input" placeholder="4-digit PIN" maxlength="4">
+        <select id="new-user-role" class="setup-input">
+          <option value="user">User</option>
+          <option value="child">Child</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button class="btn btn-primary" style="width:100%" onclick="addUser()">Add</button>
+      </div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:16px" onclick="doLogout()">Sign out</button>`;
+    panel.querySelectorAll("[data-reset-user]").forEach(btn => {
+      btn.onclick = () => {
+        const pin = prompt("New 4-digit PIN for " + btn.dataset.resetUser);
+        if (!pin || pin.length < 4) return;
+        resetUserPin(btn.dataset.resetUser, pin);
+      };
+    });
+    panel.querySelectorAll("[data-del-user]").forEach(btn => {
+      btn.onclick = () => deleteUser(btn.dataset.delUser);
+    });
+    panel.querySelectorAll("[data-role-user]").forEach(sel => {
+      sel.onchange = () => changeUserRole(sel.dataset.roleUser, sel.value);
+    });
+}
+
+async function renderAdminStorage(panel) {
+    const s = await api("GET", "/api/admin/storage");
+    const b = s.breakdown || {};
+    const fmt = n => (n / 1048576).toFixed(1) + " MB";
+    const apps = s.apps_list || [];
+    const appsHtml = apps.length ? `
+      <div class="storage-apps">
+        <h3>Apps on disk</h3>
+        ${apps.slice(0, 20).map(a => `
+          <div class="storage-app-row">
+            <div>
+              <strong>${esc(a.name)}</strong>
+              <span class="meta"> · ${esc(a.scope === "shared" ? "Shared" : a.owner)}</span>
+            </div>
+            <span>${fmt(a.bytes || 0)}</span>
+          </div>`).join("")}
+        ${apps.length > 20 ? `<p style="font-size:12px;color:var(--muted);margin-top:8px">+ ${apps.length - 20} more</p>` : ""}
+      </div>` : "";
+    panel.innerHTML = `
+      <div class="stat-grid">
+        <div class="stat-box">Free<strong>${fmt((s.disk || {}).free || 0)}</strong></div>
+        <div class="stat-box">Used<strong>${fmt((s.disk || {}).used || 0)}</strong></div>
+        <div class="stat-box">Apps<strong>${fmt(b.apps || 0)}</strong></div>
+        <div class="stat-box">Database<strong>${fmt(b.database || 0)}</strong></div>
+      </div>
+      ${appsHtml}
+      <button class="btn btn-secondary" style="width:100%;margin-top:12px" onclick="cleanupBackups()">Clear old backups (30d)</button>
+      <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="cleanupChats()">Clear chats older than 90 days</button>
+      <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="vacuumDb()">Vacuum database</button>`;
+}
+
+async function renderAdminSystem(panel) {
+    const s = await api("GET", "/api/admin/system");
+    const ram = s.ram || {};
+    panel.innerHTML = `
+      <div class="stat-grid">
+        <div class="stat-box">Ollama<strong>${s.ollama && s.ollama.ok ? "OK" : "Down"}</strong></div>
+        <div class="stat-box">Ticker<strong>${s.ticker && s.ticker.alive ? "Alive" : "—"}</strong></div>
+        <div class="stat-box">RAM<strong>${ram.available_mb != null ? ram.available_mb + " / " + ram.total_mb + " MB free" : "—"}</strong></div>
+        <div class="stat-box">CPU temp<strong>${s.temp_c != null ? s.temp_c + "°C" : "—"}</strong></div>
+        <div class="stat-box">Uptime<strong>${formatUptime(s.uptime_seconds)}</strong></div>
+        <div class="stat-box">IP<strong>${esc((s.network || {}).ip || "")}</strong></div>
+        <div class="stat-box">Host<strong>${esc((s.network || {}).hostname || "")}</strong></div>
+        <div class="stat-box">Model<strong style="font-size:13px">${esc((s.ollama || {}).model || "—")}</strong></div>
+        <div class="stat-box">Whisper<strong>${(s.voice && s.voice.whisper_available) ? "OK · " + esc(s.voice.model || "tiny") : "Not installed"}</strong></div>
+      </div>
+      <div class="theme-setting">
+        <strong>Appearance</strong>
+        <div class="theme-switch">
+          <button type="button" class="theme-opt" data-theme-pick="light" onclick="setTheme('light')">${iconHtml("sun")} Light</button>
+          <button type="button" class="theme-opt" data-theme-pick="dark" onclick="setTheme('dark')">${iconHtml("moon")} Dark</button>
+        </div>
+      </div>
+      <p style="margin-top:16px;font-size:13px;color:var(--muted)">
+        Lamp ${esc((s.versions || {}).lamp)} · Workshop ${esc((s.versions || {}).workshop)} · Tortoise ${esc((s.versions || {}).tortoise)}
+      </p>`;
+    syncThemeUi();
+}
+
+async function addUser() {
+  const name = document.getElementById("new-user-name").value.trim();
+  const pin = document.getElementById("new-user-pin").value.trim();
+  const role = document.getElementById("new-user-role").value;
+  const panel = document.getElementById("admin-users");
+  panelLoading(panel, "Adding user…");
+  await api("POST", "/api/admin/users", { name, pin, role });
+  await renderAdmin("users");
+}
+async function resetUserPin(name, pin) {
+  await api("PUT", `/api/admin/users/${encodeURIComponent(name)}`, { pin });
+  toast("PIN updated for " + name);
+}
+async function changeUserRole(name, role) {
+  const panel = document.getElementById("admin-users");
+  panelLoading(panel, "Updating role…");
+  const r = await api("PUT", `/api/admin/users/${encodeURIComponent(name)}`, { role }, { silent: true });
+  if (r.ok) await renderAdmin("users");
+  else {
+    toast(r.error || "Could not update role");
+    await renderAdmin("users");
+  }
+}
+async function deleteUser(name) {
+  if (!confirm(`Delete ${name} and all their apps/chats?`)) return;
+  const panel = document.getElementById("admin-users");
+  panelLoading(panel, "Deleting user…");
+  await api("DELETE", `/api/admin/users/${encodeURIComponent(name)}`);
+  await renderAdmin("users");
+}
+function modelMetaLine(m) {
+  const parts = [];
+  if (m.size_human) parts.push(m.size_human);
+  if (m.parameter_size) parts.push(m.parameter_size);
+  if (m.family) parts.push(m.family);
+  if (m.quantization) parts.push(m.quantization);
+  return parts.join(" · ") || (m.owned_by ? m.owned_by : "");
+}
+
+async function refreshModelsAdmin() {
+  const panel = document.getElementById("admin-models");
+  panelLoading(panel, "Refreshing models…");
+  setAdminTabsLoading(true);
+  try {
+    await renderModelsAdmin(panel);
+  } finally {
+    setAdminTabsLoading(false);
+  }
+}
+
+async function renderModelsAdmin(panel) {
+  const m = await api("GET", "/api/admin/models");
+  const cur = m.current || {};
+  let html = `
+    <div class="admin-row" style="margin-bottom:16px">
+      <div style="font-size:13px;color:var(--muted)">Active model</div>
+      <div style="font-size:17px;font-weight:700;margin-top:4px">${esc(cur.model || "—")}</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;word-break:break-all">${esc(cur.endpoint || "not configured")}</div>
+      <button type="button" class="btn btn-ghost" style="margin-top:10px;padding:6px 0" onclick="refreshModelsAdmin()">${iconHtml("refresh", "ico-inline")} Refresh list</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px">
+      ${m.total_models || 0} models across ${(m.sources || []).length} sources
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      ${(m.recommendations || []).map(x =>
+        `<button type="button" class="btn btn-secondary" style="font-size:12px;padding:6px 12px"
+          data-rec-model="${attrEsc(x)}">${esc(x)}</button>`).join("")}
+    </div>`;
+
+  for (const src of (m.sources || [])) {
+    const badge = src.online
+      ? `<span class="badge ok">${src.model_count} online</span>`
+      : `<span class="badge off">offline</span>`;
+    html += `<div class="source-block">
+      <div class="source-head">
+        <h3>${esc(src.label)}</h3>${badge}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;word-break:break-all">${esc(src.endpoint)}</div>`;
+    if (!src.online) {
+      html += `<p style="font-size:13px;color:var(--muted)">Not reachable — start this service on the device.</p>`;
+    } else if (!src.models.length) {
+      html += `<p style="font-size:13px;color:var(--muted)">No models reported.</p>`;
+    } else {
+      for (const mod of src.models) {
+        const isActive = cur.endpoint === src.endpoint && cur.model === mod.id;
+        const meta = modelMetaLine(mod);
+        html += `<div class="model-row${isActive ? " is-active" : ""}">
+          <div class="model-info">
+            <div class="model-name">${esc(mod.name)}${isActive ? ' <span class="badge active">in use</span>' : ""}</div>
+            ${meta ? `<div class="model-meta">${esc(meta)}</div>` : ""}
+          </div>
+          <div class="model-actions">
+            <button class="btn btn-primary" data-endpoint="${attrEsc(src.endpoint)}" data-model="${attrEsc(mod.id)}">Use</button>
+            ${src.kind === "ollama" ? `<button class="btn btn-danger" data-del-model="${attrEsc(mod.id)}">Del</button>` : ""}
+          </div>
+        </div>`;
+      }
+    }
+    html += `</div>`;
+  }
+
+  html += `
+    <div class="section-label">Download (Ollama)</div>
+    <input id="catalog-search" class="setup-input" placeholder="Search models e.g. llama, qwen…" onkeydown="if(event.key==='Enter')searchCatalog()">
+    <button class="btn btn-secondary" style="width:100%;margin-bottom:8px" onclick="searchCatalog()">Search catalog</button>
+    <div id="catalog-list"></div>
+    <input id="pull-model" class="setup-input" placeholder="Or type name: qwen2.5:3b" style="margin-top:12px">
+    <button class="btn btn-primary" style="width:100%" onclick="pullModel()">Pull / download</button>
+    <div id="pull-log" class="pull-log" style="display:none"></div>
+
+    <div class="section-label">Import from URL</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:8px">
+      Ollama name (qwen2.5:3b) or Hugging Face URL — pulls via <code>ollama pull hf.co/…</code> when supported.
+    </p>
+    <input id="import-url" class="setup-input" placeholder="qwen2.5:3b or https://huggingface.co/org/model">
+    <button class="btn btn-secondary" style="width:100%" onclick="importModelUrl()">Import</button>
+    <p id="import-hint" style="font-size:13px;color:var(--muted);margin-top:8px"></p>`;
+
+  panel.innerHTML = html;
+  panel.querySelectorAll("[data-rec-model]").forEach(btn => {
+    btn.onclick = () => {
+      document.getElementById("pull-model").value = btn.dataset.recModel;
+      pullModel();
+    };
+  });
+  panel.querySelectorAll("[data-endpoint][data-model]").forEach(btn => {
+    btn.onclick = () => useModel(btn.dataset.endpoint, btn.dataset.model);
+  });
+  panel.querySelectorAll("[data-del-model]").forEach(btn => {
+    btn.onclick = () => deleteOllamaModel(btn.dataset.delModel);
+  });
+  searchCatalog();
+}
+
+async function useModel(endpoint, model) {
+  const panel = document.getElementById("admin-models");
+  panelLoading(panel, "Switching model…");
+  const r = await api("POST", "/api/admin/models/switch", { endpoint, model }, { silent: true });
+  if (r.ok) await renderModelsAdmin(panel);
+  else {
+    toast(r.error || "Failed to switch");
+    await renderModelsAdmin(panel);
+  }
+}
+
+async function deleteOllamaModel(name) {
+  if (!confirm(`Remove Ollama model "${name}"?`)) return;
+  const panel = document.getElementById("admin-models");
+  panelLoading(panel, "Removing model…");
+  const r = await api("DELETE", `/api/admin/models/${encodeURIComponent(name)}`, null, { silent: true });
+  if (r.ok) await renderModelsAdmin(panel);
+  else {
+    toast(r.error || "Delete failed");
+    await renderModelsAdmin(panel);
+  }
+}
+
+async function searchCatalog() {
+  const q = (document.getElementById("catalog-search")?.value || "").trim();
+  const el = document.getElementById("catalog-list");
+  if (!el) return;
+  el.innerHTML = `<div class="panel-loading inline">${iconHtml("spinner", "ico ico-loading")}<span>Searching catalog…</span></div>`;
+  const { models, source } = await api("GET", `/api/admin/models/catalog?q=${encodeURIComponent(q)}`);
+  if (!models || !models.length) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px">No matches. Try another name or type one above.</p>';
+    return;
+  }
+  el.innerHTML = `<p style="font-size:12px;color:var(--muted);margin-bottom:8px">Source: ${esc(source || "catalog")}</p>` +
+    models.map(c => `
+      <div class="catalog-row">
+        <div style="flex:1">
+          <strong>${esc(c.name)}</strong>
+          <p>${esc(c.description || "")}</p>
+        </div>
+        <button class="btn btn-secondary" data-pull-name="${attrEsc(c.name)}">Pull</button>
+      </div>`).join("");
+  el.querySelectorAll("[data-pull-name]").forEach(btn => {
+    btn.onclick = () => {
+      document.getElementById("pull-model").value = btn.dataset.pullName;
+      pullModel();
+    };
+  });
+}
+
+async function pullModel() {
+  const model = document.getElementById("pull-model")?.value.trim();
+  if (!model) return;
+  const log = document.getElementById("pull-log");
+  log.style.display = "block";
+  log.textContent = `Pulling ${model}…\n`;
+  const r = await fetch("/api/admin/models/pull", {
+    method: "POST", credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model }),
+  });
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split("\n");
+    buf = lines.pop() || "";
+    for (const line of lines) {
+      if (!line.startsWith("data:")) continue;
+      try {
+        const msg = JSON.parse(line.slice(5).trim());
+        if (msg.t === "log") log.textContent += msg.text + "\n";
+        if (msg.t === "done") log.textContent += msg.ok ? "\nDone.\n" : "\nFailed.\n";
+        if (msg.t === "error") log.textContent += msg.msg + "\n";
+      } catch (_) {}
+    }
+  }
+  await refreshModelsAdmin();
+}
+
+async function importModelUrl() {
+  const url = document.getElementById("import-url")?.value.trim();
+  const hint = document.getElementById("import-hint");
+  if (!url) return;
+  const r = await api("POST", "/api/admin/models/import-url", { url });
+  if (r.action === "pull" && r.model) {
+    hint.style.color = "var(--accent)";
+    hint.textContent = `Pulling ${r.model}…`;
+    document.getElementById("pull-model").value = r.model;
+    await pullModel();
+    return;
+  }
+  if (r.ok) {
+    hint.style.color = "#86efac";
+    hint.textContent = r.message || "OK";
+  } else {
+    hint.style.color = "var(--warn)";
+    hint.textContent = r.error || r.parsed?.hint || "Import not supported yet";
+  }
+}
+async function cleanupBackups() {
+  const panel = document.getElementById("admin-storage");
+  panelLoading(panel, "Cleaning old backups…");
+  await api("POST", "/api/admin/storage/cleanup", { target: "backups", days: 30 });
+  toast("Backups cleaned");
+  await renderAdmin("storage");
+}
+async function cleanupChats() {
+  if (!confirm("Delete all chat conversations older than 90 days?")) return;
+  const panel = document.getElementById("admin-storage");
+  panelLoading(panel, "Cleaning old chats…");
+  const r = await api("POST", "/api/admin/storage/cleanup", { target: "chats", days: 90 });
+  toast("Removed " + (r.deleted_count ?? r.freed_bytes ?? 0) + " old conversation(s)");
+  await renderAdmin("storage");
+}
+async function vacuumDb() {
+  const panel = document.getElementById("admin-storage");
+  panelLoading(panel, "Vacuuming database…");
+  const r = await api("POST", "/api/admin/storage/vacuum");
+  toast(`Vacuum done: ${(r.size_before/1048576).toFixed(1)}MB → ${(r.size_after/1048576).toFixed(1)}MB`);
+  await renderAdmin("storage");
+}
+
+let _modelSetupPick = null;
+
+async function initModelSetup() {
+  const cfg = await api("GET", "/api/config");
+  if (cfg.endpoint) document.getElementById("model-endpoint").value = cfg.endpoint;
+  if (cfg.model) document.getElementById("model-name").value = cfg.model;
+  const status = document.getElementById("detect-status");
+  const list = document.getElementById("detect-list");
+  list.style.display = "none";
+  status.style.display = "block";
+  status.innerHTML = `<div class="panel-loading inline">${iconHtml("spinner", "ico ico-loading")}<span>Scanning for Ollama, LM Studio, and other local services…</span></div>`;
+  try {
+    const { models } = await api("GET", "/api/detect");
+    status.style.display = "none";
+    if (!models || !models.length) {
+      status.style.display = "block";
+      status.innerHTML = "No local services found — enter your endpoint below.";
+      return;
+    }
+    list.style.display = "block";
+    list.innerHTML = models.map((m, i) => `
+      <div class="net" data-i="${i}">
+        <strong>${esc(m.model)}</strong>
+        <span>${esc(m.label)}</span>
+      </div>`).join("");
+    window._detectModels = models;
+    list.querySelectorAll(".net").forEach(el => {
+      el.onclick = () => {
+        list.querySelectorAll(".net").forEach(n => n.classList.remove("sel"));
+        el.classList.add("sel");
+        const m = window._detectModels[parseInt(el.dataset.i, 10)];
+        document.getElementById("model-endpoint").value = m.url;
+        document.getElementById("model-name").value = m.model;
+        _modelSetupPick = m;
+      };
+    });
+    list.firstChild?.click();
+  } catch (_) {
+    status.style.display = "block";
+    status.innerHTML = "Could not scan — enter endpoint manually.";
+  }
+}
+
+async function saveModelConfig() {
+  const endpoint = document.getElementById("model-endpoint").value.trim();
+  const model = document.getElementById("model-name").value.trim();
+  const api_key = document.getElementById("model-apikey").value.trim();
+  const err = document.getElementById("model-err");
+  err.textContent = "";
+  if (!endpoint || !model) {
+    err.textContent = "Endpoint and model are required";
+    return;
+  }
+  const res = await api("POST", "/api/setup", { endpoint, model, api_key: api_key || null });
+  if (res.error) { err.textContent = res.error; return; }
+  location.hash = "#/";
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/** Format Tortoise build step text — tags and backticks as styled code, not raw HTML. */
+function formatBuildStep(text) {
+  let s = esc(String(text || ""));
+  s = s.replace(/`([^`]+)`/g, "<code class=\"step-code\">$1</code>");
+  s = s.replace(/&lt;(\/?[\w][\w-]*)&gt;/g, "<code class=\"step-code\">&lt;$1&gt;</code>");
+  s = s.replace(/\b(Step \d+ complete)\b/gi, "<strong>$1</strong>");
+  return s;
+}
+function attrEsc(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+}
+
+/* ── Build interview (from Workshop) ───────────────────────────────────────── */
+function readPendingBuildIdea() {
+  const raw = sessionStorage.getItem("lamp_build_idea");
+  const legacy = sessionStorage.getItem("lamp_build_desc");
+  sessionStorage.removeItem("lamp_build_idea");
+  sessionStorage.removeItem("lamp_build_desc");
+  if (raw) {
+    try {
+      const idea = JSON.parse(raw);
+      const desc = (idea.description || "").trim();
+      if (desc) return idea;
+    } catch (_) {}
+  }
+  if (legacy && legacy.trim()) return { description: legacy.trim() };
+  return null;
+}
+
+async function continueBuildFromChatIdea(idea) {
+  const desc = (idea.description || "").trim();
+  if (!desc) return;
+  S.interview.desc = desc;
+  S.interview.messages = [{ role: "user", content: desc }];
+  addBuildBubble("user", desc);
+  const input = document.getElementById("build-input");
+  if (input) {
+    input.value = desc;
+    autoResize(input);
+  }
+  const plan = {
+    title: idea.title || "App from chat",
+    summary: desc,
+    scope: idea.scope || "personal",
+    features: idea.features || [],
+  };
+  S.interview.plan = plan;
+  S.interview.scope = plan.scope;
+  addBuildBubble("ws", "Your chat idea is ready to build — review and tap Build when you're set.");
+  showPlanCard(plan, { fromChat: true });
+}
+
+async function refineBuildPlanFromChat() {
+  const desc = (S.interview.desc || "").trim();
+  if (!desc) return;
+  addBuildBubble("ws", "Refining the build plan with AI…");
+  document.getElementById("build-send").disabled = true;
+  const res = await api("POST", "/api/agent/chat", {
+    messages: S.interview.messages,
+    user: S.user,
+    app_context: S.editing || undefined,
+  });
+  if (res.error) {
+    addBuildBubble("ws", "Couldn't reach the model: " + res.error);
+    document.getElementById("build-send").disabled = false;
+    return;
+  }
+  S.interview.messages.push({ role: "assistant", content: res.reply });
+  addBuildBubble("ws", res.reply);
+  if (res.ready && res.plan) {
+    S.interview.plan = res.plan;
+    S.interview.desc = res.plan.summary || desc;
+    showPlanCard(res.plan, { fromChat: true });
+  }
+  document.getElementById("build-send").disabled = false;
+}
+
+function startBuildChat() {
+  document.getElementById("build-chat").innerHTML = "";
+  S.interview = { messages: [], plan: null, desc: "", scope: "personal" };
+  S.editing = null;
+  const pending = readPendingBuildIdea();
+  if (pending) {
+    addBuildBubble("ws", "Here's what you wanted to build from chat:");
+    continueBuildFromChatIdea(pending);
+    return;
+  }
+  addBuildBubble("ws", `Hi ${S.user}! What would you like to build? I'll suggest a plan before we write any code.`);
+}
+
+function clearBuildChat() { startBuildChat(); }
+
+function addBuildBubble(who, text) {
+  const body = document.getElementById("build-chat");
+  const msg = document.createElement("div");
+  msg.style.display = "flex";
+  msg.style.flexDirection = "column";
+  const b = document.createElement("div");
+  b.className = "bubble " + (who === "ws" ? "bubble-ws" : "bubble-user");
+  b.textContent = text;
+  msg.appendChild(b);
+  body.appendChild(msg);
+  body.scrollTop = body.scrollHeight;
+}
+
+function buildKeydown(e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendBuildChat(); }
+}
+function autoResize(el) {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 120) + "px";
+}
+
+async function sendBuildChat() {
+  const input = document.getElementById("build-input");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = ""; input.style.height = "auto";
+  addBuildBubble("user", text);
+  S.interview.messages.push({ role: "user", content: text });
+  document.getElementById("build-send").disabled = true;
+  addBuildBubble("ws", "Thinking…");
+  const thinking = document.getElementById("build-chat").lastChild;
+
+  const res = await api("POST", "/api/agent/chat", {
+    messages: S.interview.messages,
+    user: S.user,
+    app_context: S.editing || undefined,
+  });
+  thinking.remove();
+  if (res.error) {
+    addBuildBubble("ws", "Couldn't reach the model: " + res.error);
+    document.getElementById("build-send").disabled = false;
+    return;
+  }
+  S.interview.messages.push({ role: "assistant", content: res.reply });
+  addBuildBubble("ws", res.reply);
+  if (res.ready && res.plan) {
+    S.interview.plan = res.plan;
+    S.interview.desc = res.plan.summary || text;
+    showPlanCard(res.plan);
+  }
+  document.getElementById("build-send").disabled = false;
+}
+
+function showPlanCard(plan, opts = {}) {
+  const body = document.getElementById("build-chat");
+  const existing = body.querySelector(".plan-card-wrap");
+  existing?.remove();
+  const wrap = document.createElement("div");
+  wrap.className = "plan-card-wrap";
+  const items = (plan.features || []).map(f => `<li>${esc(f)}</li>`).join("");
+  wrap.innerHTML = `<div class="plan-card">
+    <h3>${esc(plan.title || "App")}</h3>
+    <p>${esc(plan.summary || "")}</p>
+    ${items ? `<ul>${items}</ul>` : ""}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+      <button type="button" class="btn btn-primary plan-build-btn">Build this →</button>
+      ${opts.fromChat ? '<button type="button" class="btn btn-secondary plan-refine-btn">Refine plan with AI</button>' : ""}
+    </div>
+  </div>`;
+  wrap.querySelector(".plan-build-btn").onclick = () => startBuild();
+  const refineBtn = wrap.querySelector(".plan-refine-btn");
+  if (refineBtn) refineBtn.onclick = () => refineBuildPlanFromChat();
+  body.appendChild(wrap);
+  body.scrollTop = body.scrollHeight;
+}
+
+async function openAppForEdit(app) {
+  const { context, error } = await api("GET", `/api/app/${app.owner}/${app.name}/context`);
+  if (error) { toast(error); return; }
+  S.editing = context;
+  S.build = { app_name: app.name, app_path: context.path, owner: app.owner, url: app.url, label: app.name };
+  location.hash = "#/build";
+  clearBuildChat();
+  addBuildBubble("ws", `Updating ${app.name}. What should we change?`);
+}
+
+async function startBuild() {
+  if (S.role === "child") { toast("Building is not available for child accounts"); return; }
+  const desc = S.interview.plan?.summary || S.interview.desc;
+  if (!desc) return;
+  const res = await api("POST", "/api/build/start", {
+    description: desc,
+    user: S.user,
+    scope: S.interview.plan?.scope || "personal",
+    session: S.session,
+    plan: S.interview.plan,
+  });
+  if (res.error) { addBuildBubble("ws", res.error); return; }
+  S.build = {
+    app_name: res.app_name, app_path: res.app_path, label: res.label,
+    owner: (S.interview.plan?.scope === "shared" ? "shared" : S.user),
+    url: `/apps/${S.interview.plan?.scope === "shared" ? "shared" : S.user}/${res.app_name}/`,
+  };
+  document.getElementById("step-list").innerHTML = "";
+  document.getElementById("thinking-row").style.display = "flex";
+  document.getElementById("build-title").textContent = `Building ${res.label || "app"}…`;
+  location.hash = "#/building";
+  listenToSSE();
+}
+
+let _buildES = null;
+function listenToSSE() {
+  if (_buildES) _buildES.close();
+  const es = new EventSource(`/api/build/stream?session=${S.session}`);
+  _buildES = es;
+  let lastStep = null;
+  es.onmessage = e => {
+    const msg = JSON.parse(e.data);
+    if (msg.t === "step") {
+      document.getElementById("thinking-row").style.display = "none";
+      if (lastStep) {
+        lastStep.classList.remove("step-active");
+        lastStep.classList.add("step-done");
+        lastStep.querySelector(".step-icon").innerHTML = iconStepHtml("check");
+      }
+      const row = document.createElement("div");
+      row.className = "step-row step-active";
+      row.innerHTML = `<span class="step-icon" aria-hidden="true">${iconStepHtml("spin")}</span><span class="step-text">${formatBuildStep(msg.msg)}</span>`;
+      document.getElementById("step-list").appendChild(row);
+      row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      lastStep = row;
+    } else if (msg.t === "done") {
+      es.close();
+      document.getElementById("thinking-row").style.display = "none";
+      if (lastStep) {
+        lastStep.classList.remove("step-active");
+        lastStep.classList.add("step-done");
+        lastStep.querySelector(".step-icon").innerHTML = iconStepHtml("check");
+      }
+      document.getElementById("done-title").textContent = `Your ${S.build.label} is ready!`;
+      const btn = document.getElementById("open-app-btn");
+      if (S.build.url) { btn.href = S.build.url; btn.style.display = "flex"; }
+      location.hash = "#/done";
+      route();
+    } else if (msg.t === "error") {
+      es.close();
+      document.getElementById("step-list").innerHTML += `<p class="error-msg">${esc(msg.msg)}</p>`;
+    }
+  };
+}
+
+const ONBOARD_STEPS = [
+  { title: "Chat with Lamp", body: "Ask questions, get help around the house, and turn ideas into apps with one tap." },
+  { title: "Build something new", body: "Describe what you want — Lamp interviews you, then builds a working mini-app on this device." },
+  { title: "Quick start templates", body: "Pick a template on the home screen for groceries, chores, timers, and more — no interview needed." },
+];
+let onboardStep = 0;
+
+function maybeShowOnboarding() {
+  if (localStorage.getItem(ONBOARD_KEY)) return;
+  const overlay = document.getElementById("onboarding");
+  if (!overlay) return;
+  onboardStep = 0;
+  renderOnboardStep();
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+}
+
+function finishOnboarding() {
+  localStorage.setItem(ONBOARD_KEY, "1");
+  hideOnboarding();
+}
+
+function renderOnboardStep() {
+  const step = ONBOARD_STEPS[onboardStep];
+  document.getElementById("onboard-title").textContent = step.title;
+  document.getElementById("onboard-body").textContent = step.body;
+  document.getElementById("onboard-dots").innerHTML = ONBOARD_STEPS.map((_, i) =>
+    `<span class="${i === onboardStep ? "on" : ""}"></span>`).join("");
+  document.getElementById("onboard-next").textContent =
+    onboardStep >= ONBOARD_STEPS.length - 1 ? "Get started" : "Next";
+}
+
+document.getElementById("onboard-skip").onclick = finishOnboarding;
+document.getElementById("onboard-next").onclick = () => {
+  if (onboardStep >= ONBOARD_STEPS.length - 1) finishOnboarding();
+  else { onboardStep++; renderOnboardStep(); }
+};
+
+function setupConvoPullRefresh() {
+  const list = document.getElementById("convo-list");
+  const ptr = document.getElementById("ptr-indicator");
+  if (!list || !ptr || list.dataset.ptr) return;
+  list.dataset.ptr = "1";
+  let startY = 0;
+  let pulling = false;
+  let releaseReady = false;
+  list.addEventListener("touchstart", e => {
+    if (list.scrollTop > 2) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+    releaseReady = false;
+  }, { passive: true });
+  list.addEventListener("touchmove", e => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 0 && list.scrollTop <= 0) {
+      releaseReady = dy > 70;
+      ptr.classList.add("visible");
+      ptr.innerHTML = iconHtml("refresh", "ico") + (releaseReady ? " Release to refresh" : " Pull to refresh");
+    }
+  }, { passive: true });
+  list.addEventListener("touchend", async () => {
+    if (!pulling) return;
+    pulling = false;
+    const go = releaseReady;
+    releaseReady = false;
+    ptr.classList.remove("visible");
+    ptr.innerHTML = "";
+    if (go) await renderConvoList();
+  });
+}
+
+window.addEventListener("hashchange", route);
+initStaticIcons();
+setupConvoPullRefresh();
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").then((reg) => {
+    reg.update();
+  }).catch(() => {});
+  navigator.serviceWorker.addEventListener("message", e => {
+    if (e.data && e.data.type === "notif-count") {
+      const badge = document.getElementById("nav-notif-badge");
+      if (badge) {
+        badge.style.display = e.data.count ? "inline" : "none";
+        badge.textContent = e.data.count > 9 ? "9+" : String(e.data.count);
+      }
+    }
+  });
+}
+buildPinPad("login");
+initVoice();
+route();
+</script>
+</body>
+</html>

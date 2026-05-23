@@ -1,0 +1,17 @@
+[
+  {"name": "qwen2.5:1.5b", "description": "Alibaba Qwen 2.5 — smallest, great for 2GB Pi"},
+  {"name": "qwen2.5:3b", "description": "Alibaba Qwen 2.5 — balanced for 4GB"},
+  {"name": "qwen2.5:7b", "description": "Alibaba Qwen 2.5 — stronger, needs 8GB RAM"},
+  {"name": "llama3.2:1b", "description": "Meta Llama 3.2 1B — very light"},
+  {"name": "llama3.2:3b", "description": "Meta Llama 3.2 3B"},
+  {"name": "llama3.1:8b", "description": "Meta Llama 3.1 8B"},
+  {"name": "phi3:mini", "description": "Microsoft Phi-3 mini"},
+  {"name": "phi3", "description": "Microsoft Phi-3 medium"},
+  {"name": "gemma2:2b", "description": "Google Gemma 2 2B"},
+  {"name": "gemma2:9b", "description": "Google Gemma 2 9B"},
+  {"name": "mistral:7b", "description": "Mistral 7B"},
+  {"name": "codellama:7b", "description": "Meta Code Llama 7B"},
+  {"name": "deepseek-r1:7b", "description": "DeepSeek R1 7B reasoning"},
+  {"name": "deepseek-coder:6.7b", "description": "DeepSeek Coder"},
+  {"name": "nomic-embed-text", "description": "Embeddings (not for chat)"}
+]

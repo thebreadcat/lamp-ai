@@ -1,0 +1,16 @@
+{
+  "id": "pomodoro-timer",
+  "icon": "timer",
+  "title": "Pomodoro Timer",
+  "subtitle": "Stay focused",
+  "description": "Focus timer with session tracking",
+  "intent": "timer",
+  "stack": "html",
+  "plan": {
+    "title": "Pomodoro Timer",
+    "summary": "25/5 pomodoro timer with session count",
+    "scope": "personal",
+    "features": ["Start/pause timer", "Work and break phases", "Session history"],
+    "acceptance": ["Timer runs accurately", "Sessions log to data API"]
+  }
+}

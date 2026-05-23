@@ -1,0 +1,3 @@
+# Optional — local speech-to-text for Lamp chat (see README Voice section)
+# Also requires ffmpeg: brew install ffmpeg  (macOS) / apt install ffmpeg (Pi)
+openai-whisper

@@ -1,0 +1,16 @@
+{
+  "id": "workout-log",
+  "icon": "workout",
+  "title": "Workout Log",
+  "subtitle": "Track gains",
+  "description": "Log exercises, track progress over time",
+  "intent": "tracker",
+  "stack": "html",
+  "plan": {
+    "title": "Workout Log",
+    "summary": "Exercise log with sets, reps, and history",
+    "scope": "personal",
+    "features": ["Log workouts by date", "Exercise library", "Progress chart"],
+    "acceptance": ["Workouts persist", "History view by exercise"]
+  }
+}

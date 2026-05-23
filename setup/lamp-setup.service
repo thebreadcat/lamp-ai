@@ -1,0 +1,15 @@
+[Unit]
+Description=Lamp first-boot provisioning (one-time)
+After=network-online.target NetworkManager.service
+Wants=network-online.target
+ConditionPathExists=!/var/lib/lamp/setup-complete
+
+[Service]
+Type=oneshot
+ExecStart=/opt/lamp/setup/first-boot.sh
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.DS_Store
+.env
+*.local
+
+# Runtime / secrets (live under ~/.workshop/ — never commit copies here)
+.env.*
+config.json
+!vendor/workshop/config.example.json
+*.db
+.workshop/
+
+# Local tortoise clone (use submodule or TORTOISE_PATH)
+vendor/workshop/vendor/tortoise/
+
+# Pi bring-up runbook (local progress notes, device-specific)
+PI-RUNBOOK.md

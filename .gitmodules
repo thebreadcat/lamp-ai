@@ -1,0 +1,3 @@
+[submodule "vendor/workshop"]
+	path = vendor/workshop
+	url = https://github.com/thebreadcat/workshop.git

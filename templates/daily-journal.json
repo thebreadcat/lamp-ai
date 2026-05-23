@@ -1,0 +1,16 @@
+{
+  "id": "daily-journal",
+  "icon": "journal",
+  "title": "Daily Journal",
+  "subtitle": "Capture the day",
+  "description": "Private daily journal with date entries",
+  "intent": "notes",
+  "stack": "html",
+  "plan": {
+    "title": "Daily Journal",
+    "summary": "Private journal with one entry per day",
+    "scope": "personal",
+    "features": ["Pick date", "Write entry", "Browse past entries"],
+    "acceptance": ["Entries persist by date", "Calendar navigation works"]
+  }
+}

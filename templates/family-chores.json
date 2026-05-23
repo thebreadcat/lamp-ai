@@ -1,0 +1,16 @@
+{
+  "id": "family-chores",
+  "icon": "chores",
+  "title": "Family Chores",
+  "subtitle": "Everyone pitches in",
+  "description": "Assign and track household tasks",
+  "intent": "todo",
+  "stack": "html",
+  "plan": {
+    "title": "Family Chores",
+    "summary": "Household chore list with assignee and completion",
+    "scope": "personal",
+    "features": ["Add chores with assignee", "Mark complete", "Weekly reset option"],
+    "acceptance": ["Chores persist", "Completed state saves"]
+  }
+}

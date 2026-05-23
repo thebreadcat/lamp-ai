@@ -1,0 +1,16 @@
+{
+  "id": "grocery-list",
+  "icon": "grocery",
+  "title": "Grocery List",
+  "subtitle": "Shop smarter",
+  "description": "Shopping list with categories, printable",
+  "intent": "shopping",
+  "stack": "html",
+  "plan": {
+    "title": "Grocery List",
+    "summary": "Shared-style grocery list with categories and print view",
+    "scope": "personal",
+    "features": ["Add items with category", "Check off while shopping", "Print-friendly layout"],
+    "acceptance": ["Items persist after refresh", "Print mode via ?print=1"]
+  }
+}
