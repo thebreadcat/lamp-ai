@@ -157,8 +157,9 @@ def wipe_app_data(app_slug: str) -> dict:
     conn = wdb.get_conn()
     keys = conn.execute("DELETE FROM app_data WHERE app=?", (app_slug,)).rowcount
     sched = conn.execute("DELETE FROM schedules WHERE app=?", (app_slug,)).rowcount
+    notifs = conn.execute("DELETE FROM notifications WHERE app=?", (app_slug,)).rowcount
     conn.commit()
-    return {"keys_deleted": keys, "schedules_deleted": sched}
+    return {"keys_deleted": keys, "schedules_deleted": sched, "notifications_deleted": notifs}
 
 
 def vacuum_db() -> tuple:

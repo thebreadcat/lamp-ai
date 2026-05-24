@@ -489,6 +489,16 @@ class LampHandler(WorkshopHandler):
         if path == "/api/admin/system":
             self.js(lamp_admin.system_status(cfg, tortoise_version() or "?"))
             return
+        if path == "/api/admin/reminders":
+            from ticker import _find_app_dir
+            base = apps_dir(cfg)
+            schedules = db.schedule_list()
+            for s in schedules:
+                s["app_missing"] = bool(
+                    s.get("app") and _find_app_dir(base, s["app"]) is None
+                )
+            self.js({"schedules": schedules})
+            return
         self.js({"error": "not found"}, 404)
 
     def _admin_post(self, body: dict, user: dict):
@@ -722,6 +732,13 @@ class LampHandler(WorkshopHandler):
             self.js({"error": "admin only"}, 403)
             return
 
+        if user.get("role") == "child" and (
+            p.startswith("/api/schedules")
+            or p == "/api/notifications/clear"
+        ):
+            self.js({"error": "not allowed for child accounts"}, 403)
+            return
+
         return super().do_POST()
 
     def _post_with_body(self, path: str, body: dict):
@@ -779,6 +796,13 @@ class LampHandler(WorkshopHandler):
         if p.startswith("/api/apps/") and user.get("role") == "child":
             self.js({"error": "not allowed for child accounts"}, 403)
             return
+        if user.get("role") == "child" and (
+            p.startswith("/api/schedules") or p.startswith("/api/notifications/")
+        ):
+            m = re.match(r"^/api/notifications/(\d+)$", p)
+            if not m:
+                self.js({"error": "not allowed for child accounts"}, 403)
+                return
         return super().do_DELETE()
 
 

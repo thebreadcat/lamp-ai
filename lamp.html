@@ -248,6 +248,71 @@ html, body {
 .notif-empty-icon .ico { width: 26px; height: 26px; }
 .notif-empty-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
 .notif-empty-sub { font-size: 14px; color: var(--muted); line-height: 1.45; max-width: 260px; margin: 0 auto; }
+.notif-toolbar {
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px 12px;
+  border-bottom: 1px solid var(--border); margin-bottom: 8px;
+}
+.notif-del-btn {
+  flex-shrink: 0; width: 32px; height: 32px; border: none; border-radius: 8px;
+  background: transparent; color: var(--muted); font-size: 20px; line-height: 1;
+  cursor: pointer; margin: -4px -4px 0 0;
+}
+.notif-del-btn:hover { background: var(--surface-raised); color: var(--warn); }
+.reminder-banner {
+  margin: 12px 20px; padding: 14px 16px; border-radius: var(--r);
+  border: 1px solid rgba(251, 191, 36, 0.35); background: var(--accent-l);
+  font-size: 14px; line-height: 1.45;
+}
+.reminder-row {
+  margin: 0 20px 10px; padding: 14px 16px; border-radius: var(--r);
+  border: 1px solid var(--border); background: var(--surface);
+}
+.reminder-row.off { opacity: 0.65; }
+.reminder-row.orphan { border-color: rgba(239, 68, 68, 0.35); }
+.reminder-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  margin-bottom: 8px;
+}
+.reminder-app { font-weight: 700; font-size: 15px; }
+.reminder-meta { font-size: 13px; color: var(--muted); line-height: 1.4; margin-bottom: 10px; }
+.reminder-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.reminder-toggle {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+  color: var(--subtle); cursor: pointer;
+}
+.reminder-toggle input { accent-color: var(--accent); }
+.apps-toolbar {
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px 16px;
+}
+.account-page { padding: 0 20px 32px; max-width: var(--content-max); margin: 0 auto; }
+.account-hero {
+  text-align: center; padding: 28px 16px 24px;
+  border-bottom: 1px solid var(--border); margin-bottom: 8px;
+}
+.account-avatar {
+  width: 72px; height: 72px; margin: 0 auto 12px; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 800; color: var(--accent);
+  background: var(--accent-l); border: 1px solid rgba(251, 191, 36, 0.3);
+}
+.account-hero h2 { font-size: 22px; margin: 0 0 4px; }
+.account-role { font-size: 14px; color: var(--muted); margin: 0; }
+.account-menu { display: flex; flex-direction: column; gap: 2px; }
+.account-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; padding: 14px 16px; border: none; border-radius: var(--r);
+  background: var(--surface); color: var(--text); font-size: 15px; text-align: left;
+  cursor: pointer; border: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.account-row:hover { border-color: var(--border-strong); }
+.account-row .meta { font-size: 13px; color: var(--muted); }
+.account-row.danger { color: var(--warn); justify-content: center; font-weight: 600; }
+.account-section-label {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 16px 4px 8px;
+}
 .convo-list.ptr-pulling { transition: none; }
 .ptr-indicator {
   text-align: center; font-size: 13px; color: var(--muted); padding: 8px;
@@ -1255,9 +1320,25 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   <div id="v-notifications" class="view">
     <div class="header">
       <span class="wordmark">Notifications</span>
-      <button class="btn-ghost" onclick="markAllNotifsRead()">Clear all</button>
+    </div>
+    <div class="notif-toolbar" id="notif-toolbar">
+      <button type="button" class="btn-ghost" onclick="markAllNotifsRead()">Mark all read</button>
+      <button type="button" class="btn-ghost" onclick="deleteAllNotifs()">Delete all</button>
+      <button type="button" class="btn-ghost" id="notif-reminders-link" style="display:none"
+        onclick="location.hash='#/reminders'">Manage reminders</button>
     </div>
     <div id="notif-feed"></div>
+  </div>
+
+  <div id="v-reminders" class="view">
+    <div class="header">
+      <button type="button" class="btn-ghost" onclick="history.back()">← Back</button>
+      <span class="wordmark">Reminders</span>
+    </div>
+    <p style="padding:0 20px 12px;font-size:14px;color:var(--muted);margin:0">
+      Scheduled alerts from your apps. Turn off or delete any you don’t want.
+    </p>
+    <div id="reminder-feed"></div>
   </div>
 
   <!-- Admin -->
@@ -1266,11 +1347,13 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="users" onclick="location.hash='#/admin/users'">Users</button>
       <button class="admin-tab" data-tab="models" onclick="location.hash='#/admin/models'">Models</button>
+      <button class="admin-tab" data-tab="reminders" onclick="location.hash='#/admin/reminders'">Reminders</button>
       <button class="admin-tab" data-tab="storage" onclick="location.hash='#/admin/storage'">Storage</button>
       <button class="admin-tab" data-tab="system" onclick="location.hash='#/admin/system'">System</button>
     </div>
     <div id="admin-users" class="admin-panel active"></div>
     <div id="admin-models" class="admin-panel"></div>
+    <div id="admin-reminders" class="admin-panel"></div>
     <div id="admin-storage" class="admin-panel"></div>
     <div id="admin-system" class="admin-panel"></div>
   </div>
@@ -1340,9 +1423,20 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
     </div>
   </div>
 
+  <!-- Account (all users) -->
+  <div id="v-account" class="view">
+    <div class="header"><span class="wordmark">Account</span></div>
+    <div id="account-page" class="account-page"></div>
+  </div>
+
   <!-- Apps library -->
   <div id="v-apps" class="view">
     <div class="header"><span class="wordmark">Apps</span></div>
+    <div class="apps-toolbar" id="apps-toolbar" style="display:none">
+      <button type="button" class="btn btn-secondary" onclick="location.hash='#/reminders'">
+        Manage reminders &amp; alerts
+      </button>
+    </div>
     <div id="app-cards" class="app-cards"></div>
   </div>
 
@@ -1360,10 +1454,8 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   <button class="nav-item" data-route="chat" onclick="location.hash='#/chat'"><span class="icon" id="nav-ico-chat"></span>Chat</button>
   <button class="nav-item" data-route="build" onclick="location.hash='#/build'"><span class="icon" id="nav-ico-build"></span>Build</button>
   <button class="nav-item" data-route="apps" onclick="location.hash='#/apps'"><span class="icon" id="nav-ico-apps"></span>Apps</button>
+  <button class="nav-item" data-route="account" onclick="location.hash='#/account'"><span class="icon" id="nav-ico-account"></span>Account</button>
   <button class="nav-item" id="nav-admin" data-route="admin" style="display:none" onclick="location.hash='#/admin'"><span class="icon" id="nav-ico-admin"></span>Admin</button>
-  <button type="button" class="nav-item nav-theme" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light or dark mode">
-    <span class="icon" id="theme-toggle-icon"></span><span class="nav-theme-label" id="theme-toggle-label">Light</span>
-  </button>
 </nav>
 
 <div id="onboarding" class="onboarding-overlay" role="dialog" aria-labelledby="onboard-title" aria-hidden="true">
@@ -1421,6 +1513,7 @@ function initStaticIcons() {
   setIconEl(document.getElementById("nav-ico-build"), "hammer");
   setIconEl(document.getElementById("nav-ico-apps"), "apps");
   setIconEl(document.getElementById("nav-ico-admin"), "admin");
+  setIconEl(document.getElementById("nav-ico-account"), "account");
   setIconEl(document.getElementById("lamp-chat-send"), "arrow-up");
   setIconEl(document.getElementById("chat-rename-btn"), "pencil");
   setIconEl(document.getElementById("done-icon-el"), "sparkles");
@@ -1478,7 +1571,8 @@ function notifInitial(n) {
 function notifCardHtml(n) {
   const unread = !n.read;
   const appLabel = notifAppLabel(n.app);
-  return `<div class="notif-card${unread ? " unread" : " read"}" data-id="${n.id}">
+  const appAttr = n.app ? ` data-app="${attrEsc(n.app)}"` : "";
+  return `<div class="notif-card${unread ? " unread" : " read"}" data-id="${n.id}"${appAttr}>
     <div class="notif-avatar" aria-hidden="true">${esc(notifInitial(n))}</div>
     <div class="notif-content">
       <div class="notif-top">
@@ -1488,6 +1582,8 @@ function notifCardHtml(n) {
       ${n.message ? `<p class="notif-msg">${esc(n.message)}</p>` : ""}
       ${appLabel ? `<span class="notif-app-tag">${esc(appLabel)}</span>` : ""}
     </div>
+    <button type="button" class="notif-del-btn" aria-label="Delete notification"
+      onclick="event.stopPropagation(); deleteNotif(${n.id})">×</button>
     ${unread ? '<span class="notif-dot" aria-hidden="true"></span>' : ""}
     <span class="notif-dismiss-hint">Mark read</span>
   </div>`;
@@ -1587,8 +1683,11 @@ async function route() {
     panelLoading(document.getElementById("convo-list"), "Loading chats…", true);
     const cfg = await api("GET", "/api/config");
     if (!cfg.configured) {
+      const setupHint = S.role === "child"
+        ? "Chat isn’t ready yet. Ask a grown-up to set up Lamp on this device."
+        : 'Lamp needs a model first. <a href="#/setup-model" style="color:var(--accent)">Set up →</a>';
       document.getElementById("convo-list").innerHTML =
-        '<div class="no-apps" style="padding:24px">Lamp needs a model first. <a href="#/setup-model" style="color:var(--accent)">Set up →</a></div>';
+        `<div class="no-apps" style="padding:24px">${setupHint}</div>`;
       setChatPanelOpen(false);
       showChatEmptyState(true);
       return;
@@ -1605,11 +1704,18 @@ async function route() {
     if (!chatConvos.length) await newConversation();
     return;
   }
+  if (r === "account") { showView("account"); renderAccount(); return; }
   if (r === "notifications") { showView("notifications"); await renderNotifications(); return; }
+  if (r === "reminders") {
+    if (S.role === "child") { location.hash = "#/"; return route(); }
+    showView("reminders");
+    await renderReminders("reminder-feed");
+    return;
+  }
   if (r === "admin") {
     if (S.role !== "admin") { location.hash = "#/"; return route(); }
     showView("admin");
-    const tab = ["users", "models", "storage", "system"].includes(param) ? param : "users";
+    const tab = ["users", "models", "reminders", "storage", "system"].includes(param) ? param : "users";
     document.querySelectorAll(".admin-tab").forEach(t =>
       t.classList.toggle("active", t.dataset.tab === tab));
     await renderAdmin(tab);
@@ -1674,7 +1780,11 @@ function applyRoleUi() {
   const navAdmin = document.getElementById("nav-admin");
   if (navAdmin) navAdmin.style.display = admin ? "flex" : "none";
   const buildNav = document.querySelector('.nav-item[data-route="build"]');
-  if (buildNav) buildNav.style.display = child ? "none" : "";
+  if (buildNav) buildNav.style.display = child ? "none" : "flex";
+  const appsToolbar = document.getElementById("apps-toolbar");
+  if (appsToolbar) appsToolbar.style.display = child ? "none" : "flex";
+  const notifRemLink = document.getElementById("notif-reminders-link");
+  if (notifRemLink) notifRemLink.style.display = child ? "none" : "inline-block";
   const heroBuild = document.getElementById("hero-build-btn");
   if (heroBuild) heroBuild.style.display = child ? "none" : "";
   const tplWrap = document.getElementById("home-templates-wrap");
@@ -1770,7 +1880,7 @@ function renderAppCard(a) {
   if (manage) card.querySelector("[data-wipe]").onclick = async () => {
     if (!confirm(`Clear all saved data for "${appDisplayName(a)}"? Schedules and app storage will be removed.`)) return;
     const r = await api("POST", `/api/apps/${a.owner}/${a.name}/wipe-data`);
-    if (r.ok) toast(`Cleared ${r.keys_deleted || 0} keys, ${r.schedules_deleted || 0} schedules`);
+    if (r.ok) toast(`Cleared data (${r.schedules_deleted || 0} reminders removed)`);
     else toast(r.error || "Could not clear data");
   };
   if (manage) {
@@ -1788,12 +1898,16 @@ async function renderApps() {
   const cards = document.getElementById("app-cards");
   panelLoading(cards, "Loading apps…", true);
   const { apps } = await api("GET", `/api/apps?user=${encodeURIComponent(S.user)}`);
-  if (!apps || !apps.length) {
-    cards.innerHTML = `<div class="no-apps">No apps yet. <a href="#/build" style="color:var(--accent)">Build your first one!</a></div>`;
+  const list = (apps || []).filter((a) => a.has_app);
+  if (!list.length) {
+    const msg = S.role === "child"
+      ? "No apps yet. Ask a grown-up to build one or share an app with you."
+      : 'No apps yet. <a href="#/build" style="color:var(--accent)">Build your first one!</a>';
+    cards.innerHTML = `<div class="no-apps">${msg}</div>`;
     return;
   }
-  const shared = apps.filter(a => a.scope === "shared");
-  const personal = apps.filter(a => a.scope !== "shared");
+  const shared = list.filter(a => a.scope === "shared");
+  const personal = list.filter(a => a.scope !== "shared");
   cards.innerHTML = "";
   if (shared.length) {
     const h = document.createElement("div");
@@ -1904,9 +2018,67 @@ async function submitSetup() {
   location.hash = "#/";
 }
 
+function roleLabel(role) {
+  if (role === "child") return "Child account";
+  if (role === "admin") return "Administrator";
+  return "Family member";
+}
+
+function renderAccount() {
+  const page = document.getElementById("account-page");
+  if (!page || !S.user) return;
+  const initial = esc(S.user.charAt(0).toUpperCase());
+  const child = S.role === "child";
+  const admin = S.role === "admin";
+  const themeLabel = document.documentElement.getAttribute("data-theme") === "light" ? "Dark mode" : "Light mode";
+  const themeIcon = document.documentElement.getAttribute("data-theme") === "light" ? "moon" : "sun";
+  let menu = `
+    <p class="account-section-label">Shortcuts</p>
+    <button type="button" class="account-row" onclick="location.hash='#/notifications'">
+      <span>Notifications</span>${iconHtml("bell")}
+    </button>
+    <button type="button" class="account-row" onclick="location.hash='#/apps'">
+      <span>${child ? "My apps" : "Apps"}</span>${iconHtml("apps")}
+    </button>`;
+  if (!child) {
+    menu += `
+    <button type="button" class="account-row" onclick="location.hash='#/reminders'">
+      <span>Reminders &amp; alerts</span>${iconHtml("bell")}
+    </button>`;
+  }
+  if (admin) {
+    menu += `
+    <button type="button" class="account-row" onclick="location.hash='#/admin'">
+      <span>Admin settings</span>${iconHtml("admin")}
+    </button>`;
+  }
+  menu += `
+    <p class="account-section-label">Appearance</p>
+    <button type="button" class="account-row" onclick="toggleTheme(); renderAccount();">
+      <span>${themeLabel}</span>${iconHtml(themeIcon)}
+    </button>
+    <p class="account-section-label">Session</p>
+    <button type="button" class="account-row danger" onclick="confirmLogout()">Sign out</button>`;
+  page.innerHTML = `
+    <div class="account-hero">
+      <div class="account-avatar" aria-hidden="true">${initial}</div>
+      <h2>${esc(S.user)}</h2>
+      <p class="account-role">${esc(roleLabel(S.role))}</p>
+      ${child ? '<p class="account-role" style="margin-top:8px">You can chat and use apps. Building is for grown-ups on this device.</p>' : ""}
+    </div>
+    <div class="account-menu">${menu}</div>`;
+}
+
+function confirmLogout() {
+  if (!confirm("Sign out of Lamp on this device?")) return;
+  doLogout();
+}
+
 async function doLogout() {
   await api("POST", "/api/auth/logout");
   S.user = null;
+  S.role = null;
+  if (_notifTimer) { clearInterval(_notifTimer); _notifTimer = null; }
   location.hash = "#/login";
 }
 
@@ -2046,12 +2218,131 @@ async function markNotifRead(id) {
 async function markAllNotifsRead() {
   const feed = document.getElementById("notif-feed");
   panelLoading(feed, "Clearing…", true);
-  const { notifications } = await api("GET", "/api/notifications?unread=1");
-  for (const n of (notifications || [])) {
-    await api("POST", `/api/notifications/${n.id}/read`, null, { silent: true });
-  }
+  await api("POST", "/api/notifications/clear", { mark_read: true });
   await pollNotifications();
   await renderNotifications();
+}
+async function deleteAllNotifs() {
+  if (!confirm("Delete all notifications? This cannot be undone.")) return;
+  const feed = document.getElementById("notif-feed");
+  panelLoading(feed, "Deleting…", true);
+  const r = await api("POST", "/api/notifications/clear", {});
+  toast(`Deleted ${r.deleted || 0} notification(s)`);
+  await pollNotifications();
+  await renderNotifications();
+}
+async function deleteNotif(id) {
+  await api("DELETE", `/api/notifications/${id}`);
+  await pollNotifications();
+  const feed = document.getElementById("notif-feed");
+  if (feed && document.getElementById("v-notifications").classList.contains("active")) {
+    await renderNotifications();
+  }
+}
+async function deleteNotifsForApp(app) {
+  if (!confirm(`Delete all notifications from ${notifAppLabel(app)}?`)) return;
+  const r = await api("POST", "/api/notifications/clear", { app });
+  toast(`Deleted ${r.deleted || 0}`);
+  await pollNotifications();
+  await renderNotifications();
+}
+
+function scheduleHuman(s) {
+  const every = (s.every || "day").replace(/_/g, " ");
+  const at = s.at_time ? ` at ${s.at_time}` : "";
+  const msg = s.message ? ` — “${s.message}”` : "";
+  return `${every}${at}${msg}`;
+}
+
+function reminderRowHtml(s) {
+  const on = s.enabled !== 0 && s.enabled !== false;
+  const orphan = !!s.app_missing;
+  const appLabel = notifAppLabel(s.app);
+  return `<div class="reminder-row${on ? "" : " off"}${orphan ? " orphan" : ""}" data-id="${attrEsc(s.id)}">
+    <div class="reminder-head">
+      <span class="reminder-app">${esc(appLabel)}</span>
+      ${orphan ? '<span style="font-size:12px;color:var(--warn)">App removed</span>' : ""}
+    </div>
+    <div class="reminder-meta">${esc(scheduleHuman(s))}</div>
+    <div class="reminder-actions">
+      <label class="reminder-toggle">
+        <input type="checkbox" ${on ? "checked" : ""} onchange="toggleSchedule('${attrEsc(s.id)}', this.checked)">
+        On
+      </label>
+      <button type="button" class="btn btn-secondary" style="font-size:13px;padding:6px 12px"
+        onclick="deleteSchedule('${attrEsc(s.id)}')">Delete</button>
+      <button type="button" class="btn btn-ghost" style="font-size:13px;padding:6px 12px"
+        onclick="stopAppReminders('${attrEsc(s.app)}')">Stop all for app</button>
+    </div>
+  </div>`;
+}
+
+async function renderReminders(feedId) {
+  const feed = document.getElementById(
+    feedId ||
+      (document.getElementById("v-reminders")?.classList.contains("active")
+        ? "reminder-feed"
+        : "admin-reminders")
+  );
+  if (!feed) return;
+  panelLoading(feed, "Loading reminders…", true);
+  const { schedules } = await api("GET", "/api/schedules");
+  const list = schedules || [];
+  const orphans = list.filter((s) => s.app_missing);
+  let html = "";
+  if (orphans.length) {
+    html += `<div class="reminder-banner">
+      <strong>${orphans.length} reminder(s)</strong> belong to apps that were deleted.
+      They won’t fire anymore, but you can remove them from the list.
+      <button type="button" class="btn btn-secondary" style="margin-top:10px;width:100%"
+        onclick="purgeOrphanReminders()">Remove orphan reminders</button>
+    </div>`;
+  }
+  if (!list.length) {
+    html += `<div class="notif-empty" style="margin-top:12px">
+      <div class="notif-empty-icon" aria-hidden="true">${iconHtml("bell")}</div>
+      <p class="notif-empty-title">No scheduled reminders</p>
+      <p class="notif-empty-sub">Apps can register reminders when you build them (e.g. daily wake-up). They’ll show up here.</p>
+    </div>`;
+  } else {
+    html += list.map((s) => reminderRowHtml(s)).join("");
+  }
+  feed.innerHTML = html;
+}
+
+async function refreshRemindersViews() {
+  if (document.getElementById("v-reminders")?.classList.contains("active")) {
+    await renderReminders("reminder-feed");
+  }
+  if (document.getElementById("admin-reminders")?.classList.contains("active")) {
+    await renderReminders("admin-reminders");
+  }
+}
+
+async function toggleSchedule(id, enabled) {
+  await api("POST", "/api/schedules/toggle", { id, enabled });
+  toast(enabled ? "Reminder turned on" : "Reminder turned off");
+  await refreshRemindersViews();
+}
+
+async function deleteSchedule(id) {
+  if (!confirm("Delete this reminder permanently?")) return;
+  await api("DELETE", `/api/schedules/${encodeURIComponent(id)}`);
+  toast("Reminder deleted");
+  await refreshRemindersViews();
+}
+
+async function stopAppReminders(app) {
+  if (!confirm(`Turn off all reminders for ${notifAppLabel(app)}?`)) return;
+  const r = await api("POST", "/api/schedules/stop-app", { app });
+  toast(`Turned off ${r.disabled || 0} reminder(s)`);
+  await refreshRemindersViews();
+}
+
+async function purgeOrphanReminders() {
+  const r = await api("POST", "/api/schedules/purge-orphans", {});
+  toast(`Removed ${r.removed || 0} orphan reminder(s)`);
+  await refreshRemindersViews();
 }
 function formatUptime(seconds) {
   const sec = Number(seconds) || 0;
@@ -2968,6 +3259,7 @@ function adminLoadingMessage(tab) {
     models: "Loading models…",
     storage: "Reading disk usage…",
     system: "Loading system info…",
+    reminders: "Loading reminders…",
   })[tab] || "Loading…";
 }
 
@@ -2985,6 +3277,7 @@ async function renderAdmin(tab) {
   try {
     if (tab === "users") await renderAdminUsers(panel);
     else if (tab === "models") await renderModelsAdmin(panel);
+    else if (tab === "reminders") await renderReminders("admin-reminders");
     else if (tab === "storage") await renderAdminStorage(panel);
     else if (tab === "system") await renderAdminSystem(panel);
   } catch (_) {
@@ -3028,7 +3321,9 @@ async function renderAdminUsers(panel) {
         </select>
         <button class="btn btn-primary" style="width:100%" onclick="addUser()">Add</button>
       </div>
-      <button class="btn btn-ghost" style="width:100%;margin-top:16px" onclick="doLogout()">Sign out</button>`;
+      <p style="margin-top:16px;font-size:13px;color:var(--muted);text-align:center">
+        To sign out, open <a href="#/account" style="color:var(--accent)">Account</a> in the bottom nav.
+      </p>`;
     panel.querySelectorAll("[data-reset-user]").forEach(btn => {
       btn.onclick = () => {
         const pin = prompt("New 4-digit PIN for " + btn.dataset.resetUser);
@@ -3689,12 +3984,18 @@ const ONBOARD_STEPS = [
   { title: "Build something new", body: "Describe what you want — Lamp interviews you, then builds a working mini-app on this device." },
   { title: "Quick start templates", body: "Pick a template on the home screen for groceries, chores, timers, and more — no interview needed." },
 ];
+const ONBOARD_STEPS_CHILD = [
+  { title: "Chat with Lamp", body: "Tap Chat to ask questions and get help — like a friendly assistant at home." },
+  { title: "Your apps", body: "Open apps from Home or the Apps tab. A parent can build and share apps for you." },
+];
 let onboardStep = 0;
+let onboardStepsActive = ONBOARD_STEPS;
 
 function maybeShowOnboarding() {
   if (localStorage.getItem(ONBOARD_KEY)) return;
   const overlay = document.getElementById("onboarding");
   if (!overlay) return;
+  onboardStepsActive = S.role === "child" ? ONBOARD_STEPS_CHILD : ONBOARD_STEPS;
   onboardStep = 0;
   renderOnboardStep();
   overlay.classList.add("open");
@@ -3707,18 +4008,19 @@ function finishOnboarding() {
 }
 
 function renderOnboardStep() {
-  const step = ONBOARD_STEPS[onboardStep];
+  const steps = onboardStepsActive;
+  const step = steps[onboardStep];
   document.getElementById("onboard-title").textContent = step.title;
   document.getElementById("onboard-body").textContent = step.body;
-  document.getElementById("onboard-dots").innerHTML = ONBOARD_STEPS.map((_, i) =>
+  document.getElementById("onboard-dots").innerHTML = steps.map((_, i) =>
     `<span class="${i === onboardStep ? "on" : ""}"></span>`).join("");
   document.getElementById("onboard-next").textContent =
-    onboardStep >= ONBOARD_STEPS.length - 1 ? "Get started" : "Next";
+    onboardStep >= steps.length - 1 ? "Get started" : "Next";
 }
 
 document.getElementById("onboard-skip").onclick = finishOnboarding;
 document.getElementById("onboard-next").onclick = () => {
-  if (onboardStep >= ONBOARD_STEPS.length - 1) finishOnboarding();
+  if (onboardStep >= onboardStepsActive.length - 1) finishOnboarding();
   else { onboardStep++; renderOnboardStep(); }
 };
 

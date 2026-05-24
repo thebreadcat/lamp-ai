@@ -34,6 +34,8 @@ const LAMP_ICONS = {
   grocery: ["solid", "cart-shopping"],
   pill: ["solid", "pills"],
   users: ["solid", "users"],
+  user: ["solid", "user"],
+  account: ["solid", "circle-user"],
   "arrow-right": ["solid", "arrow-right"],
 };
 
