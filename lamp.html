@@ -363,9 +363,23 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 .storage-app-row {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
   padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+  flex-wrap: wrap;
 }
 .storage-app-row:last-child { border-bottom: none; }
 .storage-app-row span.meta { font-size: 12px; color: var(--muted); }
+.storage-app-row.orphan { border-left: 3px solid var(--warn); padding-left: 10px; }
+.storage-orphan-tag {
+  font-size: 11px; font-weight: 700; color: var(--warn);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.storage-app-row .btn-remove-app {
+  font-size: 12px; padding: 6px 10px; flex-shrink: 0;
+}
+.storage-orphan-banner {
+  margin: 12px 0; padding: 12px 14px; border-radius: var(--r);
+  border: 1px solid rgba(248, 113, 113, 0.35); background: rgba(248, 113, 113, 0.08);
+  font-size: 14px; line-height: 1.45;
+}
 .lamp-logo {
   display: block; width: 26px; height: 26px; color: var(--text); flex-shrink: 0;
 }
@@ -656,9 +670,32 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 [data-theme="dark"] .app-card {
   background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, var(--surface) 100%);
 }
+.app-card-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; margin-bottom: 2px;
+}
+.app-card-head-text { flex: 1; min-width: 0; }
 .app-card-name { font-size: 17px; font-weight: 700; }
 .app-card-desc { color: var(--muted); font-size: 14px; margin-top: 4px; }
+.app-card-edit {
+  flex-shrink: 0; width: 40px; height: 40px; padding: 0;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--surface-raised); color: var(--muted); cursor: pointer;
+}
+.app-card-edit:hover { color: var(--accent); border-color: var(--accent); }
 .app-card-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.app-meta-field { margin-bottom: 14px; }
+.app-meta-field label {
+  display: block; font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+}
+.app-meta-field input,
+.app-meta-field textarea {
+  width: 100%; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); font-size: 15px; font-family: inherit;
+}
+.app-meta-field textarea { min-height: 88px; resize: vertical; }
 .no-apps { text-align: center; color: var(--muted); padding: 48px 20px; line-height: 1.5; }
 .no-apps a { color: var(--accent); font-weight: 600; }
 .banner-warn {
@@ -1095,6 +1132,23 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   }
   .nav-brand .lamp-logo { width: 40px; height: 40px; }
   .nav-brand-text { font-size: 28px; }
+  .nav-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .nav-footer {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 10px;
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+  }
 
   body.has-nav #app {
     flex: 1;
@@ -1155,10 +1209,9 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   .setup-center { max-width: 440px; }
 }
 
-.nav-theme { margin-top: auto; }
+/* Mobile: flatten nav groups so all tabs share one bottom row */
 @media (max-width: 767px) {
-  .nav-theme .nav-theme-label { display: none; }
-  body.has-nav .nav-theme { margin-top: 0; }
+  .nav-main, .nav-footer { display: contents; }
 }
 .theme-setting { margin-top: 20px; }
 .theme-setting > strong { display: block; font-size: 15px; margin-bottom: 10px; }
@@ -1442,20 +1495,44 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 
 </div>
 
+<div id="app-meta-sheet" class="model-sheet" hidden>
+  <div class="model-sheet-backdrop" onclick="closeAppMetaSheet()"></div>
+  <div class="model-sheet-panel" role="dialog" aria-labelledby="app-meta-sheet-title">
+    <div class="model-sheet-head">
+      <strong id="app-meta-sheet-title">Edit app</strong>
+      <button type="button" class="btn-ghost" onclick="closeAppMetaSheet()">Cancel</button>
+    </div>
+    <p class="model-sheet-hint">Change how this app appears in your library. The folder name stays the same.</p>
+    <div class="app-meta-field">
+      <label for="app-meta-title">Name</label>
+      <input type="text" id="app-meta-title" maxlength="80" autocomplete="off">
+    </div>
+    <div class="app-meta-field">
+      <label for="app-meta-desc">Description</label>
+      <textarea id="app-meta-desc" maxlength="500" placeholder="What does this app do?"></textarea>
+    </div>
+    <button type="button" class="btn btn-primary" style="width:100%" onclick="saveAppMeta()">Save</button>
+  </div>
+</div>
+
 <nav id="bottom-nav" class="bottom-nav">
   <button type="button" class="nav-brand" onclick="location.hash='#/'" aria-label="Lamp home">
     <svg class="lamp-logo" viewBox="0 0 900 900" aria-hidden="true"><use href="#lamp-logo-icon"/></svg>
     <span class="nav-brand-text">lamp</span>
   </button>
-  <button class="nav-item" data-route="home" onclick="location.hash='#/'" style="position:relative">
-    <span class="icon" id="nav-ico-home"></span>Home
-    <span id="nav-notif-badge" class="nav-badge" style="display:none" aria-hidden="true">0</span>
-  </button>
-  <button class="nav-item" data-route="chat" onclick="location.hash='#/chat'"><span class="icon" id="nav-ico-chat"></span>Chat</button>
-  <button class="nav-item" data-route="build" onclick="location.hash='#/build'"><span class="icon" id="nav-ico-build"></span>Build</button>
-  <button class="nav-item" data-route="apps" onclick="location.hash='#/apps'"><span class="icon" id="nav-ico-apps"></span>Apps</button>
-  <button class="nav-item" data-route="account" onclick="location.hash='#/account'"><span class="icon" id="nav-ico-account"></span>Account</button>
-  <button class="nav-item" id="nav-admin" data-route="admin" style="display:none" onclick="location.hash='#/admin'"><span class="icon" id="nav-ico-admin"></span>Admin</button>
+  <div class="nav-main">
+    <button class="nav-item" data-route="home" onclick="location.hash='#/'" style="position:relative">
+      <span class="icon" id="nav-ico-home"></span>Home
+      <span id="nav-notif-badge" class="nav-badge" style="display:none" aria-hidden="true">0</span>
+    </button>
+    <button class="nav-item" data-route="chat" onclick="location.hash='#/chat'"><span class="icon" id="nav-ico-chat"></span>Chat</button>
+    <button class="nav-item" data-route="build" onclick="location.hash='#/build'"><span class="icon" id="nav-ico-build"></span>Build</button>
+    <button class="nav-item" data-route="apps" onclick="location.hash='#/apps'"><span class="icon" id="nav-ico-apps"></span>Apps</button>
+  </div>
+  <div class="nav-footer">
+    <button class="nav-item" id="nav-account" data-route="account" onclick="location.hash='#/account'"><span class="icon" id="nav-ico-account"></span>Account</button>
+    <button class="nav-item" id="nav-admin" data-route="admin" style="display:none" onclick="location.hash='#/admin'"><span class="icon" id="nav-ico-admin"></span>Admin</button>
+  </div>
 </nav>
 
 <div id="onboarding" class="onboarding-overlay" role="dialog" aria-labelledby="onboard-title" aria-hidden="true">
@@ -1475,6 +1552,7 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 
 const THEME_KEY = "lamp-theme";
 const ONBOARD_KEY = "lamp_onboarded_v1";
+const LAMP_UI_BUILD = "2026-05-26";
 
 function getTheme() {
   const t = document.documentElement.getAttribute("data-theme");
@@ -1860,22 +1938,66 @@ async function startTemplate(id) {
   await startBuild();
 }
 
+let _appMetaTarget = null;
+
+function openAppMetaEditor(a) {
+  _appMetaTarget = a;
+  document.getElementById("app-meta-title").value = appDisplayName(a);
+  document.getElementById("app-meta-desc").value = a.desc || "";
+  document.getElementById("app-meta-sheet").hidden = false;
+}
+
+function closeAppMetaSheet() {
+  const sheet = document.getElementById("app-meta-sheet");
+  if (sheet) sheet.hidden = true;
+  _appMetaTarget = null;
+}
+
+async function saveAppMeta() {
+  if (!_appMetaTarget) return;
+  const a = _appMetaTarget;
+  const title = document.getElementById("app-meta-title").value.trim();
+  const desc = document.getElementById("app-meta-desc").value.trim();
+  if (!title) {
+    toast("Name is required");
+    return;
+  }
+  const r = await api("PUT", `/api/apps/${a.owner}/${a.name}/meta`, { title, desc });
+  if (!r.ok) {
+    toast(r.error || "Could not save");
+    return;
+  }
+  closeAppMetaSheet();
+  toast("App updated");
+  await renderApps();
+  if (location.hash === "#/" || location.hash === "") await renderHome();
+}
+
 function renderAppCard(a) {
   const card = document.createElement("div");
   card.className = "app-card";
   const shared = a.scope === "shared";
   const child = S.role === "child";
   const manage = !child;
+  const descHtml = a.desc
+    ? `<div class="app-card-desc">${esc(a.desc)}</div>`
+    : `<div class="app-card-desc" style="font-style:italic">No description</div>`;
   card.innerHTML = `
     ${shared ? '<span class="app-scope-badge">Shared</span>' : ""}
-    <div class="app-card-name">${esc(appDisplayName(a))}</div>
-    ${a.desc ? `<div class="app-card-desc">${esc(a.desc)}</div>` : ""}
+    <div class="app-card-head">
+      <div class="app-card-head-text">
+        <div class="app-card-name">${esc(appDisplayName(a))}</div>
+        ${descHtml}
+      </div>
+      ${manage ? `<button type="button" class="app-card-edit" data-edit title="Edit name and description" aria-label="Edit name and description">${iconHtml("pencil")}</button>` : ""}
+    </div>
     <div class="app-card-actions">
       ${a.url ? `<a class="btn btn-primary" style="font-size:14px;padding:8px 16px" href="${a.url}" target="_blank">Open</a>` : ""}
       ${manage ? '<button class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-improve>Improve</button>' : ""}
       ${manage ? '<button class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-wipe>Clear data</button>' : ""}
       ${manage ? '<button class="btn btn-danger" style="font-size:14px;padding:8px 16px" data-del>Delete</button>' : ""}
     </div>`;
+  if (manage) card.querySelector("[data-edit]").onclick = () => openAppMetaEditor(a);
   if (manage) card.querySelector("[data-improve]").onclick = () => openAppForEdit(a);
   if (manage) card.querySelector("[data-wipe]").onclick = async () => {
     if (!confirm(`Clear all saved data for "${appDisplayName(a)}"? Schedules and app storage will be removed.`)) return;
@@ -3322,7 +3444,7 @@ async function renderAdminUsers(panel) {
         <button class="btn btn-primary" style="width:100%" onclick="addUser()">Add</button>
       </div>
       <p style="margin-top:16px;font-size:13px;color:var(--muted);text-align:center">
-        To sign out, open <a href="#/account" style="color:var(--accent)">Account</a> in the bottom nav.
+        To sign out, open <a href="#/account" style="color:var(--accent)">Account</a> in the nav (sidebar on desktop, bottom bar on phone).
       </p>`;
     panel.querySelectorAll("[data-reset-user]").forEach(btn => {
       btn.onclick = () => {
@@ -3339,23 +3461,76 @@ async function renderAdminUsers(panel) {
     });
 }
 
+function storageAppRowHtml(a, fmt) {
+  const orphan = !!a.orphan;
+  const ownerLabel = a.scope === "shared" ? "Shared" : a.owner;
+  const btnClass = orphan ? "btn btn-danger btn-remove-app" : "btn btn-secondary btn-remove-app";
+  return `<div class="storage-app-row${orphan ? " orphan" : ""}">
+    <div style="flex:1;min-width:0">
+      <strong>${esc(a.name)}</strong>
+      <span class="meta"> · ${esc(ownerLabel)}</span>
+      ${orphan ? ' <span class="storage-orphan-tag">No account</span>' : ""}
+    </div>
+    <span style="margin-right:10px;flex-shrink:0">${fmt(a.bytes || 0)}</span>
+    <button type="button" class="${btnClass}"
+      onclick="removeStorageApp('${attrEsc(a.owner)}','${attrEsc(a.name)}',${orphan})">Remove</button>
+  </div>`;
+}
+
+async function removeStorageApp(owner, name, orphan) {
+  const msg = orphan
+    ? `Remove "${name}" from disk? Schedules and saved data for this app will be deleted.`
+    : `Remove "${name}" (${owner === "shared" ? "shared" : "account: " + owner})?\n\nThe app folder and its saved data will be deleted. The user account is not removed — use Admin → Users for that.`;
+  if (!confirm(msg)) return;
+  const panel = document.getElementById("admin-storage");
+  panelLoading(panel, "Removing app…", true);
+  const r = await api("POST", "/api/admin/storage/delete-app", { owner, name });
+  if (!r.ok) {
+    toast(r.error || "Could not remove");
+    await renderAdmin("storage");
+    return;
+  }
+  const mb = ((r.freed_bytes || 0) / 1048576).toFixed(1);
+  toast(`Removed app (${mb} MB freed)`);
+  await renderAdmin("storage");
+}
+
+async function removeOrphanApps() {
+  const panel = document.getElementById("admin-storage");
+  const s = await api("GET", "/api/admin/storage");
+  const n = (s.apps_list || []).filter((a) => a.orphan).length;
+  if (!n) {
+    toast("No orphaned apps");
+    return;
+  }
+  if (!confirm(`Remove ${n} orphaned app(s)? These folders belong to deleted or missing accounts.`)) return;
+  panelLoading(panel, "Removing orphaned apps…", true);
+  const r = await api("POST", "/api/admin/storage/cleanup", { target: "orphans" });
+  const mb = ((r.freed_bytes || 0) / 1048576).toFixed(1);
+  toast(`Removed ${r.removed || 0} app(s) · ${mb} MB freed`);
+  await renderAdmin("storage");
+}
+
 async function renderAdminStorage(panel) {
     const s = await api("GET", "/api/admin/storage");
     const b = s.breakdown || {};
     const fmt = n => (n / 1048576).toFixed(1) + " MB";
     const apps = s.apps_list || [];
+    const orphans = apps.filter((a) => a.orphan);
+    const active = apps.filter((a) => !a.orphan);
+    const orphanBanner = orphans.length ? `
+      <div class="storage-orphan-banner">
+        <strong>${orphans.length} orphaned app(s)</strong> — folders left behind after an account was removed
+        (e.g. ${esc([...new Set(orphans.map((a) => a.owner))].slice(0, 3).join(", "))}).
+        <button type="button" class="btn btn-danger" style="width:100%;margin-top:10px"
+          onclick="removeOrphanApps()">Remove all orphaned apps</button>
+      </div>` : "";
     const appsHtml = apps.length ? `
       <div class="storage-apps">
         <h3>Apps on disk</h3>
-        ${apps.slice(0, 20).map(a => `
-          <div class="storage-app-row">
-            <div>
-              <strong>${esc(a.name)}</strong>
-              <span class="meta"> · ${esc(a.scope === "shared" ? "Shared" : a.owner)}</span>
-            </div>
-            <span>${fmt(a.bytes || 0)}</span>
-          </div>`).join("")}
-        ${apps.length > 20 ? `<p style="font-size:12px;color:var(--muted);margin-top:8px">+ ${apps.length - 20} more</p>` : ""}
+        <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Remove stale folders here. Use the pencil on the Apps page to rename apps in your library.</p>
+        ${orphanBanner}
+        ${apps.map((a) => storageAppRowHtml(a, fmt)).join("")}
       </div>` : "";
     panel.innerHTML = `
       <div class="stat-grid">
@@ -3367,7 +3542,8 @@ async function renderAdminStorage(panel) {
       ${appsHtml}
       <button class="btn btn-secondary" style="width:100%;margin-top:12px" onclick="cleanupBackups()">Clear old backups (30d)</button>
       <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="cleanupChats()">Clear chats older than 90 days</button>
-      <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="vacuumDb()">Vacuum database</button>`;
+      <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="vacuumDb()">Vacuum database</button>
+      <p style="margin-top:14px;font-size:11px;color:var(--muted);text-align:center">UI ${LAMP_UI_BUILD} · Cmd+Shift+R if this page looks outdated</p>`;
 }
 
 async function renderAdminSystem(panel) {

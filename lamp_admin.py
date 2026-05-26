@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import workshop_db as wdb
+import lamp_db as ldb
 import ticker
 import lamp_voice
 from workshop import apps_dir, load_config, save_config, probe_endpoint, VERSION as WS_VERSION
@@ -64,9 +65,14 @@ def dir_size(path: Path) -> int:
     return total
 
 
+def _known_user_names() -> set[str]:
+    return {u["name"] for u in ldb.user_list_public()}
+
+
 def list_app_storage(cfg) -> list:
     """Per-app folder sizes for admin storage view."""
     base = apps_dir(cfg)
+    known = _known_user_names()
     out = []
     if not base.exists():
         return out
@@ -79,12 +85,14 @@ def list_app_storage(cfg) -> list:
                     "owner": "shared",
                     "scope": "shared",
                     "bytes": dir_size(d),
+                    "orphan": False,
                 })
     users_root = base / "users"
     if users_root.is_dir():
         for user_dir in sorted(users_root.iterdir()):
             if not user_dir.is_dir():
                 continue
+            owner_orphan = user_dir.name not in known
             for d in sorted(user_dir.iterdir()):
                 if d.is_dir() and not d.name.startswith("."):
                     out.append({
@@ -92,9 +100,46 @@ def list_app_storage(cfg) -> list:
                         "owner": user_dir.name,
                         "scope": "personal",
                         "bytes": dir_size(d),
+                        "orphan": owner_orphan,
                     })
-    out.sort(key=lambda x: x["bytes"], reverse=True)
+    out.sort(key=lambda x: (not x.get("orphan"), -x["bytes"]))
     return out
+
+
+def delete_app_from_disk(cfg, owner: str, name: str) -> dict:
+    """Remove app folder and related DB rows (schedules, notifications, data)."""
+    base = apps_dir(cfg)
+    if owner == "shared":
+        ap = base / "shared" / name
+    else:
+        ap = base / "users" / owner / name
+    if not ap.is_dir():
+        return {"ok": False, "error": "not found"}
+    freed = dir_size(ap)
+    shutil.rmtree(ap)
+    if owner != "shared":
+        user_dir = base / "users" / owner
+        if user_dir.is_dir() and not any(user_dir.iterdir()):
+            try:
+                user_dir.rmdir()
+            except OSError:
+                pass
+    db_stats = wipe_app_data(name)
+    return {"ok": True, "freed_bytes": freed, **db_stats}
+
+
+def delete_orphan_apps(cfg) -> dict:
+    """Delete all personal apps whose owner account no longer exists."""
+    removed = 0
+    freed = 0
+    for app in list(list_app_storage(cfg)):
+        if not app.get("orphan"):
+            continue
+        result = delete_app_from_disk(cfg, app["owner"], app["name"])
+        if result.get("ok"):
+            removed += 1
+            freed += result.get("freed_bytes", 0)
+    return {"ok": True, "removed": removed, "freed_bytes": freed}
 
 
 def storage_breakdown(cfg) -> dict:

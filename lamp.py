@@ -9,7 +9,9 @@ import json
 import os
 import re
 import shutil
+import socket
 import sys
+import urllib.request
 from http import cookies
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -31,8 +33,10 @@ from workshop import (  # noqa: E402
     ThreadedHTTPServer,
     VERSION as WORKSHOP_VERSION,
     apps_dir,
+    app_meta,
     list_apps,
     load_config,
+    set_app_display_meta,
     save_config,
     tortoise_version,
     tortoise_script,
@@ -64,6 +68,13 @@ AUTH_PUBLIC_POST = {"/api/auth/login", "/api/auth/setup"}
 
 class LampHandler(WorkshopHandler):
     lamp_user = None
+    _lamp_body_cache = None
+
+    def body(self):
+        if self._lamp_body_cache is not None:
+            return self._lamp_body_cache
+        self._lamp_body_cache = super().body()
+        return self._lamp_body_cache
 
     def _cookie(self, name: str) -> str | None:
         raw = self.headers.get("Cookie", "")
@@ -129,6 +140,59 @@ class LampHandler(WorkshopHandler):
             return False
         return True
 
+    def _allowed_app_slugs(self, user: dict) -> set[str]:
+        """App folder names this user may use (personal + shared family apps)."""
+        return {a["name"] for a in list_apps(load_config(), user["name"])}
+
+    def _can_access_app(self, user: dict, owner: str, name: str) -> bool:
+        if owner == "shared":
+            return True
+        return owner == user["name"]
+
+    def _can_access_app_slug(self, user: dict, slug: str) -> bool:
+        return slug in self._allowed_app_slugs(user)
+
+    def _filter_notifs(self, notifs: list, user: dict) -> list:
+        allowed = self._allowed_app_slugs(user)
+        return [n for n in notifs if n.get("app") in allowed]
+
+    def _filter_schedules(self, schedules: list, user: dict) -> list:
+        allowed = self._allowed_app_slugs(user)
+        return [s for s in schedules if s.get("app") in allowed]
+
+    def _notif_access_ok(self, user: dict, nid: int) -> bool:
+        row = db.notif_get(nid)
+        if not row:
+            return False
+        return row.get("app") in self._allowed_app_slugs(user)
+
+    def _schedule_access_ok(self, user: dict, sid: str) -> bool:
+        row = db.schedule_get(sid)
+        if not row:
+            return False
+        return row.get("app") in self._allowed_app_slugs(user)
+
+    def _schedules_enriched(self, schedules: list) -> list:
+        cfg = load_config()
+        base = apps_dir(cfg)
+        from ticker import _find_app_dir
+
+        for s in schedules:
+            s["app_missing"] = bool(
+                s.get("app") and _find_app_dir(base, s["app"]) is None
+            )
+        return schedules
+
+    def html_file(self, path: Path):
+        b = path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(b)))
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.end_headers()
+        self.wfile.write(b)
+
     def _serve_static(self, path: str) -> bool:
         mapping = {
             "/": LAMP_HTML,
@@ -147,7 +211,7 @@ class LampHandler(WorkshopHandler):
             return True
         fp = mapping.get(path)
         if fp and fp.is_file():
-            self._send_file(fp)
+            self._send_file(fp, no_cache=path in ("/sw.js", "/lamp-icons.js"))
             return True
         if path.startswith("/assets/"):
             rel = path[len("/assets/") :].lstrip("/")
@@ -159,7 +223,7 @@ class LampHandler(WorkshopHandler):
                     return True
         return False
 
-    def _send_file(self, fp: Path):
+    def _send_file(self, fp: Path, *, no_cache: bool = False):
         ct = {
             ".json": "application/json",
             ".js": "application/javascript",
@@ -175,6 +239,9 @@ class LampHandler(WorkshopHandler):
         self.send_response(200)
         self.send_header("Content-Type", ct)
         self.send_header("Content-Length", str(len(b)))
+        if no_cache:
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Pragma", "no-cache")
         self.end_headers()
         self.wfile.write(b)
 
@@ -569,6 +636,27 @@ class LampHandler(WorkshopHandler):
                 self.js(result)
             return
 
+        if path == "/api/admin/storage/delete-app":
+            owner = (body.get("owner") or "").strip()
+            name = (body.get("name") or "").strip()
+            if not owner or not name:
+                self.js({"error": "owner and name required"}, 400)
+                return
+            apps = lamp_admin.list_app_storage(cfg)
+            match = next(
+                (a for a in apps if a["owner"] == owner and a["name"] == name),
+                None,
+            )
+            if not match:
+                self.js({"error": "not found"}, 404)
+                return
+            result = lamp_admin.delete_app_from_disk(cfg, owner, name)
+            if not result.get("ok"):
+                self.js({"error": result.get("error", "delete failed")}, 404)
+                return
+            self.js(result)
+            return
+
         if path == "/api/admin/storage/cleanup":
             target = body.get("target", "backups")
             freed = 0
@@ -579,6 +667,9 @@ class LampHandler(WorkshopHandler):
                     int(body.get("days", 90)), body.get("user")
                 )
                 self.js({"ok": True, "deleted_count": freed})
+                return
+            elif target == "orphans":
+                self.js(lamp_admin.delete_orphan_apps(cfg))
                 return
             elif target == "app_data" and body.get("app"):
                 import workshop_db as wdb
@@ -675,13 +766,48 @@ class LampHandler(WorkshopHandler):
             self._admin_get(p, user, qs)
             return
         if p == "/api/apps":
-            uname = qs.get("user", [None])[0] or user["name"]
-            self.js({"apps": list_apps(load_config(), uname)})
+            self.js({"apps": list_apps(load_config(), user["name"])})
+            return
+
+        if p == "/api/notifications":
+            unread = qs.get("unread", ["0"])[0] in ("1", "true", "yes")
+            notifs = db.notif_list(unread_only=unread)
+            self.js({"notifications": self._filter_notifs(notifs, user)})
+            return
+
+        if p == "/api/schedules":
+            app = qs.get("app", [None])[0]
+            if app and not self._can_access_app_slug(user, app):
+                self.js({"schedules": []})
+                return
+            schedules = self._filter_schedules(db.schedule_list(app=app), user)
+            self.js({"schedules": self._schedules_enriched(schedules)})
+            return
+
+        m = re.match(r"^/api/data/([^/]+)", p)
+        if m and not self._can_access_app_slug(user, m.group(1)):
+            self.js({"error": "forbidden"}, 403)
+            return
+
+        m = re.match(r"^/api/print/([^/]+)/([^/]+)", p)
+        if m and not self._can_access_app(user, m.group(1), m.group(2)):
+            self.js({"error": "forbidden"}, 403)
+            return
+
+        m = re.match(r"^/api/app/([^/]+)/([^/]+)/", p)
+        if m and not self._can_access_app(user, m.group(1), m.group(2)):
+            self.js({"error": "forbidden"}, 403)
+            return
+
+        m = re.match(r"^/apps/([^/]+)/([^/]+)", p)
+        if m and not self._can_access_app(user, m.group(1), m.group(2)):
+            self.js({"error": "forbidden"}, 403)
             return
 
         return super().do_GET()
 
     def do_POST(self):
+        self._lamp_body_cache = None
         p = urlparse(self.path).path
 
         if p.startswith("/api/auth/"):
@@ -732,6 +858,57 @@ class LampHandler(WorkshopHandler):
             self.js({"error": "admin only"}, 403)
             return
 
+        m = re.match(r"^/api/notifications/(\d+)/read$", p)
+        if m:
+            nid = int(m.group(1))
+            if not self._notif_access_ok(user, nid):
+                self.js({"error": "not found"}, 404)
+                return
+            ok = db.notif_mark_read(nid)
+            self.js({"ok": ok} if ok else {"error": "not found"}, 200 if ok else 404)
+            return
+
+        if p == "/api/notifications/clear":
+            if user.get("role") == "child":
+                self.js({"error": "not allowed for child accounts"}, 403)
+                return
+            b = self.body()
+            app = (b.get("app") or "").strip() or None
+            if b.get("mark_read"):
+                n = 0
+                for row in self._filter_notifs(db.notif_list(unread_only=True), user):
+                    if db.notif_mark_read(row["id"]):
+                        n += 1
+                self.js({"ok": True, "marked_read": n})
+                return
+            if app:
+                if not self._can_access_app_slug(user, app):
+                    self.js({"error": "not found"}, 404)
+                    return
+                n = db.notif_clear(app=app, read_only=bool(b.get("read_only")))
+            else:
+                n = 0
+                for slug in self._allowed_app_slugs(user):
+                    n += db.notif_clear(app=slug, read_only=bool(b.get("read_only")))
+            self.js({"ok": True, "deleted": n})
+            return
+
+        if p == "/api/schedules":
+            app = (self.body().get("app") or "").strip()
+            if app and not self._can_access_app_slug(user, app):
+                self.js({"error": "forbidden"}, 403)
+                return
+        if p == "/api/schedules/toggle":
+            sid = (self.body().get("id") or "").strip()
+            if sid and not self._schedule_access_ok(user, sid):
+                self.js({"error": "not found"}, 404)
+                return
+        if p == "/api/schedules/stop-app":
+            app = (self.body().get("app") or "").strip()
+            if app and not self._can_access_app_slug(user, app):
+                self.js({"error": "not found"}, 404)
+                return
+
         if user.get("role") == "child" and (
             p.startswith("/api/schedules")
             or p == "/api/notifications/clear"
@@ -764,6 +941,7 @@ class LampHandler(WorkshopHandler):
             pass
 
     def do_PUT(self):
+        self._lamp_body_cache = None
         p = urlparse(self.path).path
         if self._is_public("PUT", p):
             return super().do_PUT()
@@ -777,6 +955,44 @@ class LampHandler(WorkshopHandler):
         if p.startswith("/api/admin/"):
             self._admin_put(p, self.body(), user)
             return
+
+        m = re.match(r"^/api/data/([^/]+)", p)
+        if m and not self._can_access_app_slug(user, m.group(1)):
+            self.js({"error": "forbidden"}, 403)
+            return
+
+        m = re.match(r"^/api/apps/([^/]+)/([^/]+)/meta$", p)
+        if m:
+            if user.get("role") == "child":
+                self.js({"error": "not allowed for child accounts"}, 403)
+                return
+            owner, name = m.group(1), m.group(2)
+            if not self._can_access_app(user, owner, name):
+                self.js({"error": "forbidden"}, 403)
+                return
+            body = self.body()
+            title = (body.get("title") or "").strip()
+            summary = (body.get("desc") or body.get("summary") or "").strip()
+            if not title:
+                self.js({"error": "title required"}, 400)
+                return
+            cfg = load_config()
+            base = apps_dir(cfg)
+            ap = (
+                base / "shared" / name
+                if owner == "shared"
+                else base / "users" / owner / name
+            )
+            if not ap.is_dir():
+                self.js({"error": "not found"}, 404)
+                return
+            if not set_app_display_meta(ap, title, summary):
+                self.js({"error": "could not update app"}, 500)
+                return
+            scope = "shared" if owner == "shared" else "personal"
+            self.js({"ok": True, **app_meta(ap, owner, scope)})
+            return
+
         return super().do_PUT()
 
     def do_DELETE(self):
@@ -796,13 +1012,32 @@ class LampHandler(WorkshopHandler):
         if p.startswith("/api/apps/") and user.get("role") == "child":
             self.js({"error": "not allowed for child accounts"}, 403)
             return
-        if user.get("role") == "child" and (
-            p.startswith("/api/schedules") or p.startswith("/api/notifications/")
-        ):
-            m = re.match(r"^/api/notifications/(\d+)$", p)
-            if not m:
-                self.js({"error": "not allowed for child accounts"}, 403)
+
+        m = re.match(r"^/api/notifications/(\d+)$", p)
+        if m:
+            nid = int(m.group(1))
+            if not self._notif_access_ok(user, nid):
+                self.js({"error": "not found"}, 404)
                 return
+            ok = db.notif_delete(nid)
+            self.js({"ok": ok} if ok else {"error": "not found"}, 200 if ok else 404)
+            return
+
+        m = re.match(r"^/api/data/([^/]+)", p)
+        if m and not self._can_access_app_slug(user, m.group(1)):
+            self.js({"error": "forbidden"}, 403)
+            return
+
+        if p.startswith("/api/schedules/"):
+            sid = p.split("/")[-1]
+            if not self._schedule_access_ok(user, sid):
+                self.js({"error": "not found"}, 404)
+                return
+
+        if user.get("role") == "child" and p.startswith("/api/schedules"):
+            self.js({"error": "not allowed for child accounts"}, 403)
+            return
+
         return super().do_DELETE()
 
 
@@ -884,6 +1119,39 @@ def _default_tls_paths() -> tuple[Path, Path]:
     return d / "lamp-cert.pem", d / "lamp-key.pem"
 
 
+def _localhost_port_in_use(port: int) -> bool:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.25)
+            return s.connect_ex(("127.0.0.1", port)) == 0
+    except OSError:
+        return False
+
+
+def _fetch_localhost_shell(port: int) -> str | None:
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=1.5) as r:
+            return r.read(120_000).decode("utf-8", errors="replace")
+    except Exception:
+        return None
+
+
+def warn_localhost_port_conflict(port: int):
+    """Another process on 127.0.0.1:port (often Lamp.app) shadows localhost for dev."""
+    if not _localhost_port_in_use(port):
+        return
+    body = _fetch_localhost_shell(port) or ""
+    ours = "nav-account" in body and "id=\"nav-account\"" in body
+    stale = "theme-toggle" in body or "nav-theme" in body
+    if ours:
+        return
+    print("\n  ⚠  Another Lamp is already listening on http://127.0.0.1:{}/".format(port))
+    if stale:
+        print("     That copy is an older build (no Account in the sidebar).")
+    print("     localhost will NOT show this dev tree — use the LAN URL below, or quit Lamp.app")
+    print("     and restart this server.\n")
+
+
 def main():
     ap = argparse.ArgumentParser(prog="lamp")
     ap.add_argument("--port", type=int, default=DEFAULT_PORT)
@@ -929,6 +1197,7 @@ def main():
         print(line)
     if not args.tls and args.host.strip() not in ("127.0.0.1", "localhost", "::1"):
         print("  Note: microphone from phones needs HTTPS — use --tls (see setup/generate-lamp-cert.sh)")
+    warn_localhost_port_conflict(args.port)
     print()
 
     server = ThreadedHTTPServer((args.host, args.port), LampHandler)

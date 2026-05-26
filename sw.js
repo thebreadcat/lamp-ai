@@ -1,8 +1,6 @@
-const CACHE = "lamp-shell-v14";
+const CACHE = "lamp-shell-v17";
 const PRECACHE = [
-  "/",
   "/manifest.json",
-  "/sw.js",
   "/favicon.svg",
   "/lamp-icons.js",
   "/assets/fontawesome/css/all.min.css",
@@ -36,8 +34,9 @@ self.addEventListener("activate", (e) => {
   self.clients.claim();
 });
 
-function shouldPrecache(pathname) {
-  return pathname === "/" || pathname === "/manifest.json" || pathname === "/sw.js";
+function isAppShellRequest(request, url) {
+  if (request.mode === "navigate") return true;
+  return url.pathname === "/" || url.pathname === "/index.html";
 }
 
 self.addEventListener("fetch", (e) => {
@@ -46,18 +45,36 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   if (url.origin !== self.location.origin) return;
 
+  if (isAppShellRequest(e.request, url)) {
+    e.respondWith(
+      (async () => {
+        try {
+          const res = await fetch(e.request, { cache: "no-store" });
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+          }
+          return res;
+        } catch (_) {
+          return (await caches.match(e.request)) || (await caches.match("/"));
+        }
+      })()
+    );
+    return;
+  }
+
   e.respondWith(
     (async () => {
       try {
         const res = await fetch(e.request);
-        if (res.ok && shouldPrecache(url.pathname)) {
+        if (res.ok && (url.pathname === "/manifest.json" || url.pathname === "/sw.js")) {
           const copy = res.clone();
           caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
         }
         return res;
       } catch (_) {
         const cached = await caches.match(e.request);
-        return cached || caches.match("/");
+        return cached || undefined;
       }
     })()
   );
