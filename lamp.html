@@ -1202,7 +1202,46 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 .mind-entity { display: inline-block; font-size: 11px; padding: 2px 8px; margin: 4px 4px 0 0;
   border-radius: 6px; background: var(--surface-raised); color: var(--muted); }
 .mind-confirm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-.mind-search-result { line-height: 1.55; font-size: 16px; }
+.mind-search-lead {
+  font-size: 16px; font-weight: 600; line-height: 1.45; margin-bottom: 4px;
+}
+.mind-search-result { line-height: 1.55; font-size: 15px; }
+.mind-search-group {
+  margin-bottom: 16px; border-radius: var(--r);
+  border: 1px solid var(--border); overflow: hidden; background: var(--surface);
+}
+.mind-search-group-label {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 10px 14px; margin: 0; border-bottom: 1px solid var(--border);
+}
+.mind-search-group-avoid .mind-search-group-label {
+  background: rgba(251, 113, 133, 0.12); color: var(--warn);
+}
+.mind-search-group-ok .mind-search-group-label {
+  background: rgba(134, 239, 172, 0.1); color: #86efac;
+}
+[data-theme="light"] .mind-search-group-ok .mind-search-group-label { color: #166534; }
+.mind-search-group-notes .mind-search-group-label {
+  background: var(--surface-raised); color: var(--muted);
+}
+.mind-search-count {
+  font-weight: 600; opacity: 0.85; font-size: 11px;
+}
+.mind-search-list {
+  list-style: none; margin: 0; padding: 0;
+}
+.mind-search-list li {
+  padding: 12px 14px; font-size: 15px; line-height: 1.45;
+  border-bottom: 1px solid var(--border);
+}
+.mind-search-list li:last-child { border-bottom: none; }
+.mind-search-details {
+  margin-top: 12px;
+}
+.mind-search-details summary {
+  font-size: 13px; color: var(--muted); cursor: pointer; padding: 8px 0;
+}
 .mind-section-label {
   font-size: 12px; font-weight: 700; color: var(--muted);
   text-transform: uppercase; letter-spacing: 0.05em; margin: 16px 0 8px;
@@ -4831,6 +4870,49 @@ function mindConfirmDiscard() {
   location.hash = "#/mind/add";
 }
 
+function renderMindSearchResult(result) {
+  const ans = document.getElementById("mind-search-answer");
+  const meta = document.getElementById("mind-search-meta");
+  const sup = document.getElementById("mind-search-supporting");
+  ans.style.display = "block";
+
+  const lead = result.answer_short || result.answer || "No answer.";
+  const metaParts = [];
+  if (result.summary_line) metaParts.push(result.summary_line);
+  if (result.confidence) metaParts.push(result.confidence);
+  if (result.total_entries_searched != null) {
+    metaParts.push(`${result.total_entries_searched} entries searched`);
+  }
+  meta.textContent = metaParts.join(" · ");
+
+  const groups = result.groups || [];
+  if (groups.length) {
+    ans.innerHTML = `<p class="mind-search-lead">${mindEsc(lead)}</p>`;
+    sup.innerHTML = groups.map(g => `
+      <section class="mind-search-group mind-search-group-${mindEsc(g.id)}">
+        <h3 class="mind-search-group-label">${mindEsc(g.label)}
+          <span class="mind-search-count">${g.items.length}</span>
+        </h3>
+        <ul class="mind-search-list">
+          ${g.items.map(it => `<li>${mindEsc(it.text)}</li>`).join("")}
+        </ul>
+      </section>
+    `).join("");
+    if (result.answer && result.answer !== lead) {
+      sup.innerHTML += `
+        <details class="mind-search-details">
+          <summary>Full summary</summary>
+          <div class="mind-card mind-search-result" style="margin-top:8px">${mindEsc(result.answer)}</div>
+        </details>`;
+    }
+    return;
+  }
+
+  ans.innerHTML = `<div class="mind-search-result">${mindEsc(result.answer || "No answer.")}</div>`;
+  sup.innerHTML = (result.supporting || [])
+    .map(s => `<div class="mind-card"><div>${mindEsc(s.finding)}</div></div>`).join("");
+}
+
 async function mindSearch() {
   const query = document.getElementById("mind-search-input")?.value.trim();
   if (!query) return;
@@ -4838,7 +4920,7 @@ async function mindSearch() {
   const meta = document.getElementById("mind-search-meta");
   const sup = document.getElementById("mind-search-supporting");
   ans.style.display = "block";
-  ans.textContent = "Searching…";
+  ans.innerHTML = '<p class="mind-search-lead">Searching…</p>';
   meta.textContent = "";
   sup.innerHTML = "";
   try {
@@ -4846,14 +4928,10 @@ async function mindSearch() {
       method: "POST",
       body: JSON.stringify({ query }),
     });
-    ans.textContent = result.answer || "No answer.";
-    meta.textContent = result.confidence
-      ? `${result.confidence} · ${result.total_entries_searched || 0} entries`
-      : "";
-    sup.innerHTML = (result.supporting || [])
-      .map(s => `<div class="mind-card"><div>${mindEsc(s.finding)}</div></div>`).join("");
+    renderMindSearchResult(result);
   } catch (e) {
-    ans.textContent = e.message;
+    ans.innerHTML = `<div class="mind-search-result">${mindEsc(e.message)}</div>`;
+    sup.innerHTML = "";
   }
 }
 
