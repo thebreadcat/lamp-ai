@@ -29,6 +29,7 @@ APP_SLUG = "memomind"
 _import_error: str | None = None
 _mm = None  # namespace after successful import
 _local = threading.local()
+_mm_lock = threading.RLock()
 _reminder_thread_started = False
 
 
@@ -140,11 +141,10 @@ def _shared_key() -> str | None:
 
 
 def ensure_user(user_name: str):
+    """Bind MemoMind to this user's DB (global db path; must hold _mm_lock)."""
     _try_import()
     if not _mm:
         raise RuntimeError(_import_error or "MemoMind unavailable")
-    if getattr(_local, "user", None) == user_name:
-        return
     _mm.api.init(
         db_path=str(user_db_path(user_name)),
         user_id=user_name,
@@ -153,6 +153,28 @@ def ensure_user(user_name: str):
         integrated_mode=True,
     )
     _local.user = user_name
+
+
+def _repair_orphan_task_entries() -> list[dict]:
+    """Entries typed as task without a tasks row (legacy / partial saves)."""
+    repaired = []
+    for entry in _mm.db.list_entries(limit=500):
+        if entry.get("type") != "task":
+            continue
+        if _mm.db.get_task_by_entry(entry["id"]):
+            continue
+        title = ((entry.get("content") or "").strip().split("\n")[0] or "Task")[:500]
+        task = _mm.db.create_task(
+            entry_id=entry["id"],
+            title=title,
+            notes=entry.get("content") if "\n" in (entry.get("content") or "") else None,
+            status="todo",
+            priority="medium",
+            thread_id=entry.get("thread_id"),
+        )
+        repaired.append(task)
+        log.info("Repaired orphan task entry %s → task %s", entry["id"], task["id"])
+    return repaired
 
 
 def serve_html(handler) -> bool:
@@ -257,14 +279,13 @@ def handle(handler, method: str, full_path: str, user: dict) -> bool:
         return True
 
     try:
-        ensure_user(user["name"])
+        with _mm_lock:
+            ensure_user(user["name"])
+            if not _dispatch(handler, method, sub, qs, user):
+                _err(handler, "not found", "NOT_FOUND", 404)
+            return True
     except RuntimeError as e:
         _err(handler, str(e), "MEMOMIND_UNAVAILABLE", 503)
-        return True
-
-    try:
-        if not _dispatch(handler, method, sub, qs, user):
-            _err(handler, "not found", "NOT_FOUND", 404)
         return True
     except _mm.NoModelFoundError:
         _err(handler, _mm.ERROR["no_model"], "NO_MODEL", 503)
@@ -328,9 +349,25 @@ def _dispatch(handler, method: str, path: str, qs: dict, user: dict) -> bool:
             if not entry:
                 _err(handler, "Entry not found", "NOT_FOUND", 404)
                 return True
+            task = mm.db.get_task_by_entry(eid)
+            if task and "content" in data:
+                title = (data.get("content") or entry.get("content") or "").strip()
+                title = title.split("\n")[0][:500] or task.get("title") or "Task"
+                mm.db.update_task(task["id"], title=title)
+                entry = mm.db.enrich_entry(mm.db.get_entry(eid))
             _json(handler, entry)
             return True
         if method == "DELETE":
+            entry = mm.db.get_entry(eid)
+            if not entry:
+                _err(handler, "Entry not found", "NOT_FOUND", 404)
+                return True
+            task = mm.db.get_task_by_entry(eid)
+            if task:
+                mm.db.soft_delete_task(task["id"])
+            event = mm.db.get_event_by_entry(eid)
+            if event:
+                mm.db.soft_delete_event(event["id"])
             if not mm.db.soft_delete_entry(eid):
                 _err(handler, "Entry not found", "NOT_FOUND", 404)
                 return True
@@ -527,7 +564,16 @@ def _dispatch(handler, method: str, path: str, qs: dict, user: dict) -> bool:
     if path == "/entries" and method == "GET":
         limit = _qs_int(qs, "limit", 50)
         scope = qs.get("scope", [None])[0]
+        q = (qs.get("q", [""])[0] or "").strip().lower()
         entries = [mm.db.enrich_entry(e) for e in mm.db.list_entries(limit=limit, scope=scope)]
+        if q:
+            entries = [
+                e
+                for e in entries
+                if q in (e.get("content") or "").lower()
+                or q in (e.get("type") or "").lower()
+                or q in (e.get("raw_input") or "").lower()
+            ]
         _json(handler, {"entries": entries})
         return True
 
@@ -750,6 +796,7 @@ def _dispatch(handler, method: str, path: str, qs: dict, user: dict) -> bool:
         return True
 
     if path == "/tasks" and method == "GET":
+        _repair_orphan_task_entries()
         status = qs.get("status", [None])[0]
         filter_name = qs.get("filter", [None])[0]
         sort = qs.get("sort", ["priority"])[0]
@@ -908,6 +955,144 @@ def _dispatch(handler, method: str, path: str, qs: dict, user: dict) -> bool:
     return False
 
 
+def notif_payload(notif: dict) -> dict:
+    p = notif.get("payload")
+    if isinstance(p, dict):
+        return p
+    if isinstance(p, str) and p:
+        try:
+            return json.loads(p)
+        except json.JSONDecodeError:
+            pass
+    return {}
+
+
+def _task_open(task: dict | None) -> bool:
+    if not task:
+        return False
+    return task.get("status") not in ("done", "abandoned")
+
+
+def find_open_task_id(user_name: str, title: str) -> str | None:
+    """Match an open task by title (legacy notifications without payload)."""
+    _try_import()
+    if not _mm or not title:
+        return None
+    with _mm_lock:
+        ensure_user(user_name)
+        tasks = _mm.db.list_tasks()
+    needle = title.strip().lower()
+    for t in tasks:
+        if t.get("status") in ("done", "abandoned"):
+            continue
+        if (t.get("title") or "").strip().lower() == needle:
+            return t["id"]
+    return None
+
+
+def resolve_task_id(user_name: str, notif: dict) -> str | None:
+    p = notif_payload(notif)
+    if p.get("user") and p["user"] != user_name:
+        return None
+    if p.get("parent_type") == "task" and p.get("parent_id"):
+        return p["parent_id"]
+    if p.get("task_id"):
+        return p["task_id"]
+    return find_open_task_id(user_name, notif.get("title"))
+
+
+def resolve_event_id(user_name: str, notif: dict) -> str | None:
+    p = notif_payload(notif)
+    if p.get("user") and p["user"] != user_name:
+        return None
+    if p.get("parent_type") == "event" and p.get("parent_id"):
+        return p["parent_id"]
+    title = (notif.get("title") or "").strip().lower()
+    if not title:
+        return None
+    with _mm_lock:
+        ensure_user(user_name)
+        events = _mm.db.list_events(upcoming_only=True)
+    for ev in events:
+        if (ev.get("title") or "").strip().lower() == title:
+            return ev["id"]
+    return None
+
+
+def enrich_notification(user_name: str, notif: dict) -> None:
+    if notif.get("app") != APP_SLUG:
+        return
+    p = notif_payload(notif)
+    if p.get("user") and p["user"] != user_name:
+        notif["completable"] = False
+        return
+    _try_import()
+    if not _mm:
+        notif["completable"] = False
+        return
+    if p.get("parent_type") == "event" or resolve_event_id(user_name, notif):
+        eid = resolve_event_id(user_name, notif)
+        notif["event_id"] = eid
+        notif["completable"] = bool(eid)
+        return
+    tid = resolve_task_id(user_name, notif)
+    notif["task_id"] = tid
+    if not tid:
+        notif["completable"] = False
+        return
+    with _mm_lock:
+        ensure_user(user_name)
+        task = _mm.db.get_task(tid)
+    notif["completable"] = _task_open(task)
+
+
+def enrich_notifications(user_name: str, notifs: list) -> None:
+    for n in notifs:
+        enrich_notification(user_name, n)
+
+
+def complete_task_for_user(user_name: str, task_id: str) -> dict:
+    _try_import()
+    if not _mm:
+        return {"ok": False, "error": "MemoMind not available"}
+    with _mm_lock:
+        ensure_user(user_name)
+        task = _mm.db.get_task(task_id)
+        if not task:
+            return {"ok": False, "error": "Task not found"}
+        if task.get("status") == "done":
+            return {"ok": True, "task": task, "already_done": True}
+        task = _mm.db.update_task(
+            task_id, status="done", completed_at=_mm.db.now_iso()
+        )
+    return {"ok": True, "task": task}
+
+
+def complete_event_for_user(user_name: str, event_id: str) -> dict:
+    _try_import()
+    if not _mm:
+        return {"ok": False, "error": "MemoMind not available"}
+    with _mm_lock:
+        ensure_user(user_name)
+        event = _mm.db.get_event(event_id)
+        if not event:
+            return {"ok": False, "error": "Event not found"}
+        _mm.db.soft_delete_event(event_id)
+    return {"ok": True, "event_id": event_id, "dismissed": True}
+
+
+def complete_from_notification(user_name: str, notif: dict) -> dict:
+    p = notif_payload(notif)
+    if p.get("parent_type") == "event" or resolve_event_id(user_name, notif):
+        event_id = resolve_event_id(user_name, notif)
+        if event_id:
+            return complete_event_for_user(user_name, event_id)
+    task_id = resolve_task_id(user_name, notif)
+    if not task_id:
+        return {"ok": False, "error": "No linked task or event for this notification"}
+    return complete_task_for_user(user_name, task_id)
+
+
 def poll_reminders():
     """Fire due MemoMind reminders into Workshop notifications (all users)."""
     _try_import()
@@ -922,23 +1107,34 @@ def poll_reminders():
     for row in rows:
         name = row["name"]
         try:
-            ensure_user(name)
-            due = _mm.db.get_due_reminders()
-            for reminder in due:
-                parent_type = reminder["parent_type"]
-                parent = None
-                if parent_type == "task":
-                    parent = _mm.db.get_task(reminder["parent_id"])
-                elif parent_type == "event":
-                    parent = _mm.db.get_event(reminder["parent_id"])
-                if not parent:
+            with _mm_lock:
+                ensure_user(name)
+                due = _mm.db.get_due_reminders()
+                for reminder in due:
+                    parent_type = reminder["parent_type"]
+                    parent = None
+                    if parent_type == "task":
+                        parent = _mm.db.get_task(reminder["parent_id"])
+                    elif parent_type == "event":
+                        parent = _mm.db.get_event(reminder["parent_id"])
+                    if not parent:
+                        _mm.db.mark_reminder_fired(reminder["id"])
+                        continue
+                    message = _mm.build_reminder_message(reminder, parent)
+                    title = parent.get("title") or "Reminder"
                     _mm.db.mark_reminder_fired(reminder["id"])
-                    continue
-                message = _mm.build_reminder_message(reminder, parent)
-                title = parent.get("title") or "Reminder"
-                _mm.db.mark_reminder_fired(reminder["id"])
-                wdb.notif_insert(APP_SLUG, title, message)
-                log.info("MemoMind reminder for %s: %s", name, message)
+                    payload = {
+                        "source": "memomind",
+                        "user": name,
+                        "parent_type": parent_type,
+                        "parent_id": reminder["parent_id"],
+                    }
+                    if parent_type == "task":
+                        payload["task_id"] = parent["id"]
+                    elif parent_type == "event":
+                        payload["event_id"] = parent["id"]
+                    wdb.notif_insert(APP_SLUG, title, message, payload=payload)
+                    log.info("MemoMind reminder for %s: %s", name, message)
         except Exception as e:
             log.warning("MemoMind reminders for %s: %s", name, e)
 

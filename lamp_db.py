@@ -312,11 +312,13 @@ def convo_update(
 
 
 def convo_delete(cid: str, user: str) -> bool:
-    cur = wdb.get_conn().execute(
+    conn = wdb.get_conn()
+    # Delete children first to satisfy messages.convo_id FK.
+    conn.execute("DELETE FROM messages WHERE convo_id=?", (cid,))
+    cur = conn.execute(
         "DELETE FROM conversations WHERE id=? AND user=?", (cid, user)
     )
-    wdb.get_conn().execute("DELETE FROM messages WHERE convo_id=?", (cid,))
-    wdb.get_conn().commit()
+    conn.commit()
     return cur.rowcount > 0
 
 

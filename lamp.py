@@ -158,7 +158,17 @@ class LampHandler(WorkshopHandler):
 
     def _filter_notifs(self, notifs: list, user: dict) -> list:
         allowed = self._allowed_app_slugs(user)
-        return [n for n in notifs if n.get("app") in allowed]
+        out = []
+        for n in notifs:
+            if n.get("app") not in allowed:
+                continue
+            if n.get("app") == "memomind":
+                p = lamp_memomind.notif_payload(n)
+                if p.get("user") and p["user"] != user["name"]:
+                    continue
+            out.append(n)
+        lamp_memomind.enrich_notifications(user["name"], out)
+        return out
 
     def _filter_schedules(self, schedules: list, user: dict) -> list:
         allowed = self._allowed_app_slugs(user)
@@ -934,6 +944,24 @@ class LampHandler(WorkshopHandler):
 
         if p == "/api/setup" and user.get("role") != "admin":
             self.js({"error": "admin only"}, 403)
+            return
+
+        m = re.match(r"^/api/notifications/(\d+)/complete$", p)
+        if m:
+            nid = int(m.group(1))
+            if not self._notif_access_ok(user, nid):
+                self.js({"error": "not found"}, 404)
+                return
+            row = db.notif_get(nid)
+            if not row:
+                self.js({"error": "not found"}, 404)
+                return
+            result = lamp_memomind.complete_from_notification(user["name"], row)
+            if not result.get("ok"):
+                self.js(result, 400)
+                return
+            db.notif_mark_read(nid)
+            self.js({**result, "notification_id": nid, "read": True})
             return
 
         m = re.match(r"^/api/notifications/(\d+)/read$", p)

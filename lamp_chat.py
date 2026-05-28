@@ -20,6 +20,8 @@ JSON block at the end of your message:
 ```
 
 The user never sees this JSON. The interface will show a "Build this" button.
+If the user says they do not want to build an app, acknowledge that and continue
+the conversation normally. Do not include app_idea JSON again unless they ask for it.
 
 Keep responses short (2-4 sentences) unless the user asks for detail.
 Do not mention that you are running on a Pi or local device unless asked."""
@@ -71,9 +73,19 @@ def parse_chat_response(text: str) -> dict:
                 except json.JSONDecodeError:
                     pass
 
-    display = re.sub(r"```(?:json)?\s*\{.*?\}\s*```", "", display, flags=re.S).strip()
+    # Remove only app_idea metadata blocks, not arbitrary JSON/code examples.
+    display = re.sub(
+        r"```(?:json)?\s*\{[^`]*\"app_idea\"[^`]*\}\s*```",
+        "",
+        display,
+        flags=re.S,
+    ).strip()
     if not display:
-        display = "How can I help?"
+        display = (
+            "I can build this if you want, or we can just keep talking."
+            if app_idea
+            else "Tell me a bit more and I can help."
+        )
     return {"reply": display, "app_idea": app_idea}
 
 

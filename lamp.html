@@ -258,6 +258,24 @@ html, body {
   cursor: pointer; margin: -4px -4px 0 0;
 }
 .notif-del-btn:hover { background: var(--surface-raised); color: var(--warn); }
+.notif-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px;
+}
+.notif-done-btn {
+  padding: 6px 14px; border: none; border-radius: 999px;
+  font-size: 13px; font-weight: 700; color: var(--bg);
+  background: var(--accent); cursor: pointer;
+  transition: filter var(--t-fast), transform var(--t-fast);
+}
+.notif-done-btn:hover { filter: brightness(1.06); }
+.notif-done-btn:active { transform: scale(0.97); }
+.home-notif-row {
+  display: flex; align-items: stretch; gap: 8px;
+}
+.home-notif-row .home-notif-card { flex: 1; min-width: 0; }
+.home-notif-row .notif-done-btn {
+  align-self: center; flex-shrink: 0; padding: 8px 14px;
+}
 .reminder-banner {
   margin: 12px 20px; padding: 14px 16px; border-radius: var(--r);
   border: 1px solid rgba(251, 191, 36, 0.35); background: var(--accent-l);
@@ -910,6 +928,15 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   margin-top: 8px; padding: 10px 16px; background: var(--accent);
   color: var(--on-accent); border: none; border-radius: 10px; font-weight: 600; cursor: pointer;
 }
+.build-idea-actions {
+  display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+}
+.build-idea-actions .build-idea-btn { margin-top: 0; }
+.build-idea-skip-btn {
+  padding: 10px 16px; border-radius: 10px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface-raised); color: var(--text);
+}
+.build-idea-skip-btn:hover { border-color: var(--border-strong); }
 .template-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 20px 20px;
 }
@@ -1172,11 +1199,24 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 .mind-capture-row {
   display: flex; gap: 8px; margin-bottom: 16px;
 }
+.mind-attach-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; padding: 0 12px; border-radius: var(--r);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--muted); font-weight: 600; cursor: pointer;
+}
+.mind-attach-btn:hover { border-color: var(--border-strong); color: var(--text); }
 .mind-capture-row input, .mind-capture-row textarea {
   flex: 1; padding: 12px 14px; border-radius: var(--r);
   border: 1px solid var(--border); background: var(--surface);
   color: var(--text); font-size: 16px;
 }
+.mind-card-btn {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  transition: border-color var(--t-fast), transform var(--t-fast);
+}
+.mind-card-btn:hover { border-color: var(--border-strong); }
+.mind-card-btn:active { transform: scale(0.99); }
 .mind-card {
   padding: 14px 16px; margin-bottom: 10px; border-radius: var(--r);
   border: 1px solid var(--border); background: var(--surface);
@@ -1198,10 +1238,41 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   padding: 12px 0; border-bottom: 1px solid var(--border);
 }
 .mind-task-row input { margin-top: 4px; width: 20px; height: 20px; accent-color: var(--accent); }
+.mind-event-row { cursor: default; }
+.mind-event-mark {
+  flex-shrink: 0; width: 20px; text-align: center; color: var(--accent);
+  font-size: 14px; margin-top: 2px;
+}
 .mind-empty { color: var(--muted); font-size: 14px; padding: 24px 0; text-align: center; }
 .mind-entity { display: inline-block; font-size: 11px; padding: 2px 8px; margin: 4px 4px 0 0;
   border-radius: 6px; background: var(--surface-raised); color: var(--muted); }
 .mind-confirm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.mind-search-tabs {
+  display: flex; gap: 8px; margin-bottom: 14px;
+}
+.mind-search-tabs button {
+  flex: 1; padding: 10px; border-radius: var(--r); border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted); font-weight: 600; cursor: pointer;
+}
+.mind-search-tabs button.active {
+  border-color: var(--accent); color: var(--accent); background: var(--accent-l);
+}
+.mind-entry-row {
+  display: flex; align-items: flex-start; gap: 10px; padding: 14px;
+  border: 1px solid var(--border); border-radius: var(--r); background: var(--surface);
+  margin-bottom: 8px; cursor: pointer;
+}
+.mind-entry-row:hover { border-color: var(--border-strong); }
+.mind-entry-row .body { flex: 1; min-width: 0; }
+.mind-entry-row .actions { display: flex; flex-shrink: 0; gap: 6px; }
+.mind-entry-row .actions button {
+  padding: 6px 10px; font-size: 12px; font-weight: 600; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface-raised); cursor: pointer;
+}
+.mind-thumb {
+  width: 48px; height: 48px; border-radius: 10px; object-fit: cover;
+  border: 1px solid var(--border); background: var(--surface-raised);
+}
 .mind-search-lead {
   font-size: 16px; font-weight: 600; line-height: 1.45; margin-bottom: 4px;
 }
@@ -1707,6 +1778,8 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
           <div class="mind-capture-row">
             <input type="text" id="mind-capture-input" placeholder="Remember something…" autocomplete="off"
               onkeydown="if(event.key==='Enter')mindCapture()">
+            <button type="button" class="mind-attach-btn" onclick="mindOpenImagePicker()" aria-label="Upload image">Image</button>
+            <input type="file" id="mind-image-input" accept="image/*" style="display:none" onchange="mindUploadImage(this)">
             <button type="button" class="btn btn-primary" onclick="mindCapture()">Save</button>
           </div>
           <p class="mind-section-label">Recent</p>
@@ -1715,18 +1788,34 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
           <div id="mind-threads"></div>
         </div>
         <div id="mind-panel-search" class="mind-panel">
-          <div class="mind-capture-row">
-            <input type="search" id="mind-search-input" placeholder="What do you want to know?" autocomplete="off"
-              onkeydown="if(event.key==='Enter')mindSearch()">
-            <button type="button" class="btn btn-primary" onclick="mindSearch()">Ask</button>
+          <div class="mind-search-tabs" role="tablist">
+            <button type="button" class="active" data-search-mode="ask" onclick="mindSetSearchMode('ask',this)">Ask</button>
+            <button type="button" data-search-mode="browse" onclick="mindSetSearchMode('browse',this)">Browse</button>
           </div>
-          <div id="mind-search-answer" class="mind-search-result mind-card" style="display:none"></div>
-          <p id="mind-search-meta" class="meta" style="color:var(--muted);font-size:13px"></p>
-          <div id="mind-search-supporting"></div>
+          <div id="mind-search-ask">
+            <div class="mind-capture-row">
+              <input type="search" id="mind-search-input" placeholder="What do you want to know?" autocomplete="off"
+                onkeydown="if(event.key==='Enter')mindSearch()">
+              <button type="button" class="btn btn-primary" onclick="mindSearch()">Ask</button>
+            </div>
+            <div id="mind-search-answer" class="mind-search-result mind-card" style="display:none"></div>
+            <p id="mind-search-meta" class="meta" style="color:var(--muted);font-size:13px"></p>
+            <div id="mind-search-supporting"></div>
+          </div>
+          <div id="mind-search-browse" hidden>
+            <div class="mind-capture-row">
+              <input type="search" id="mind-browse-q" placeholder="Filter your memories…" autocomplete="off"
+                onkeydown="if(event.key==='Enter')mindBrowseLoad()">
+              <button type="button" class="btn btn-primary" onclick="mindBrowseLoad()">Find</button>
+            </div>
+            <p class="mind-section-label">Your entries</p>
+            <div id="mind-browse-list"></div>
+          </div>
         </div>
         <div id="mind-panel-tasks" class="mind-panel">
           <div class="mind-filters" id="mind-task-filters">
-            <button type="button" class="active" data-filter="all" onclick="mindSetTaskFilter('all',this)">All</button>
+            <button type="button" class="active" data-filter="open" onclick="mindSetTaskFilter('open',this)">Open</button>
+            <button type="button" data-filter="all" onclick="mindSetTaskFilter('all',this)">All</button>
             <button type="button" data-filter="today" onclick="mindSetTaskFilter('today',this)">Today</button>
             <button type="button" data-filter="upcoming" onclick="mindSetTaskFilter('upcoming',this)">Upcoming</button>
             <button type="button" data-filter="done" onclick="mindSetTaskFilter('done',this)">Done</button>
@@ -1774,6 +1863,31 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
     <div id="app-cards" class="app-cards"></div>
   </div>
 
+</div>
+
+<div id="mind-entry-sheet" class="model-sheet" hidden>
+  <div class="model-sheet-backdrop" onclick="mindCloseEntryEditor()"></div>
+  <div class="model-sheet-panel" role="dialog" aria-labelledby="mind-entry-sheet-title">
+    <div class="model-sheet-head">
+      <strong id="mind-entry-sheet-title">Edit memory</strong>
+      <button type="button" class="btn-ghost" onclick="mindCloseEntryEditor()">Cancel</button>
+    </div>
+    <label class="mind-section-label" for="mind-entry-type">Type</label>
+    <select id="mind-entry-type" class="setup-input" style="margin-bottom:12px">
+      <option value="note">Note</option>
+      <option value="fact">Fact</option>
+      <option value="task">Task</option>
+      <option value="event">Event</option>
+      <option value="thread_item">Thread item</option>
+    </select>
+    <label class="mind-section-label" for="mind-entry-content">Content</label>
+    <textarea id="mind-entry-content" rows="6" style="width:100%;padding:12px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:12px"></textarea>
+    <p id="mind-entry-meta" class="meta" style="margin-bottom:12px"></p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <button type="button" class="btn btn-primary" onclick="mindEntrySave()">Save</button>
+      <button type="button" class="btn btn-ghost" style="color:var(--warn)" onclick="mindEntryDelete()">Delete</button>
+    </div>
+  </div>
 </div>
 
 <div id="app-meta-sheet" class="model-sheet" hidden>
@@ -1964,6 +2078,10 @@ function notifCardHtml(n) {
   const unread = !n.read;
   const appLabel = notifAppLabel(n.app);
   const appAttr = n.app ? ` data-app="${attrEsc(n.app)}"` : "";
+  const doneBtn = n.completable
+    ? `<div class="notif-actions"><button type="button" class="notif-done-btn"
+        onclick="event.stopPropagation(); completeNotif(${n.id})">Mark done</button></div>`
+    : "";
   return `<div class="notif-card${unread ? " unread" : " read"}" data-id="${n.id}"${appAttr}>
     <div class="notif-avatar" aria-hidden="true">${esc(notifInitial(n))}</div>
     <div class="notif-content">
@@ -1973,6 +2091,7 @@ function notifCardHtml(n) {
       </div>
       ${n.message ? `<p class="notif-msg">${esc(n.message)}</p>` : ""}
       ${appLabel ? `<span class="notif-app-tag">${esc(appLabel)}</span>` : ""}
+      ${doneBtn}
     </div>
     <button type="button" class="notif-del-btn" aria-label="Delete notification"
       onclick="event.stopPropagation(); deleteNotif(${n.id})">×</button>
@@ -2651,14 +2770,18 @@ async function renderHomeNotifications() {
       </div>
       <div class="home-notif-list">
       ${list.slice(0, 3).map((n) => `
-        <button type="button" class="home-notif-card" data-id="${n.id}"
-          onclick="openHomeNotification(${n.id})">
-          <span class="notif-avatar sm" aria-hidden="true">${esc(notifInitial(n))}</span>
-          <span class="home-notif-text">
-            <strong>${esc(n.title || "Update")}</strong>
-            <span>${esc(n.message || notifAppLabel(n.app) || "")}</span>
-          </span>
-        </button>`).join("")}
+        <div class="home-notif-row">
+          <button type="button" class="home-notif-card" data-id="${n.id}"
+            onclick="openHomeNotification(${n.id})">
+            <span class="notif-avatar sm" aria-hidden="true">${esc(notifInitial(n))}</span>
+            <span class="home-notif-text">
+              <strong>${esc(n.title || "Update")}</strong>
+              <span>${esc(n.message || notifAppLabel(n.app) || "")}</span>
+            </span>
+          </button>
+          ${n.completable ? `<button type="button" class="notif-done-btn"
+            onclick="event.stopPropagation(); completeNotif(${n.id})">Done</button>` : ""}
+        </div>`).join("")}
       </div>`;
   } catch (_) {
     banner.style.display = "none";
@@ -2743,6 +2866,21 @@ async function markNotifRead(id) {
   await api("POST", `/api/notifications/${id}/read`);
   await pollNotifications();
   await renderNotifications();
+}
+async function completeNotif(id) {
+  const r = await api("POST", `/api/notifications/${id}/complete`);
+  if (r.ok || r.task) {
+    toast(r.already_done ? "Already completed" : (r.dismissed ? "Reminder dismissed" : "Task marked done"));
+    const tasksPanel = document.getElementById("mind-panel-tasks");
+    if (tasksPanel?.classList.contains("active")) mindLoadTasks();
+    const eventsPanel = document.getElementById("mind-panel-events");
+    if (eventsPanel?.classList.contains("active")) mindLoadEvents();
+  }
+  await pollNotifications();
+  const feed = document.getElementById("notif-feed");
+  if (feed && document.getElementById("v-notifications")?.classList.contains("active")) {
+    await renderNotifications();
+  }
 }
 async function markAllNotifsRead() {
   const feed = document.getElementById("notif-feed");
@@ -2899,6 +3037,7 @@ function formatTime(createdAt) {
 /* ── Lamp chat ─────────────────────────────────────────────────────────────── */
 const CHAT_MOBILE_MQ = window.matchMedia("(max-width: 767px)");
 let chatConvos = [];
+const chatBuildDeclined = new Set();
 
 function isChatMobile() { return CHAT_MOBILE_MQ.matches; }
 
@@ -3632,13 +3771,9 @@ function addLampBubble(role, content, fromHistory = false) {
     b.className += " md";
     b.innerHTML = renderMarkdown(display);
     const idea = parseAppIdea(content);
-    if (idea && idea.description && S.role !== "child") {
-      const btn = document.createElement("button");
-      btn.className = "build-idea-btn";
-      btn.textContent = "Build this app";
-      btn.onclick = () => goBuildFromChat(idea);
+    if (idea && idea.description && S.role !== "child" && !isBuildSuggestionSuppressed()) {
       wrap.appendChild(b);
-      wrap.appendChild(btn);
+      appendBuildIdeaActions(wrap, idea);
       attachBubbleVoiceActions(wrap, content);
       body.appendChild(wrap);
       body.scrollTop = body.scrollHeight;
@@ -3667,6 +3802,33 @@ function goBuildFromChat(idea) {
   const onBuild = (location.hash || "#/").replace(/^#/, "").startsWith("/build");
   if (onBuild) route();
   else location.hash = "#/build";
+}
+
+function isBuildSuggestionSuppressed() {
+  return !!S.chatConvoId && chatBuildDeclined.has(S.chatConvoId);
+}
+
+function keepTalkingFromIdea(btn) {
+  if (S.chatConvoId) chatBuildDeclined.add(S.chatConvoId);
+  btn.closest(".build-idea-actions")?.remove();
+  const input = document.getElementById("lamp-chat-input");
+  if (input) input.focus();
+}
+
+function appendBuildIdeaActions(wrap, idea) {
+  const actions = document.createElement("div");
+  actions.className = "build-idea-actions";
+  const buildBtn = document.createElement("button");
+  buildBtn.className = "build-idea-btn";
+  buildBtn.textContent = "Build this app";
+  buildBtn.onclick = () => goBuildFromChat(idea);
+  const keepBtn = document.createElement("button");
+  keepBtn.className = "build-idea-skip-btn";
+  keepBtn.textContent = "Let's keep talking";
+  keepBtn.onclick = () => keepTalkingFromIdea(keepBtn);
+  actions.appendChild(buildBtn);
+  actions.appendChild(keepBtn);
+  wrap.appendChild(actions);
 }
 
 function lampChatKeydown(e) {
@@ -3737,12 +3899,8 @@ async function sendLampChat() {
             }
             fullText = msg.raw || msg.reply || fullText;
             assistantEl.innerHTML = renderMarkdown(stripAppIdeaJson(msg.reply || fullText));
-            if (msg.app_idea && msg.app_idea.description && S.role !== "child") {
-              const btn = document.createElement("button");
-              btn.className = "build-idea-btn";
-              btn.textContent = "Build this app";
-              btn.onclick = () => goBuildFromChat(msg.app_idea);
-              wrap.appendChild(btn);
+            if (msg.app_idea && msg.app_idea.description && S.role !== "child" && !isBuildSuggestionSuppressed()) {
+              appendBuildIdeaActions(wrap, msg.app_idea);
             }
             if (wrap) attachBubbleVoiceActions(wrap, msg.raw || msg.reply || fullText);
             if (voiceUiEnabled() && isVoiceAutoRead()) {
@@ -4662,7 +4820,9 @@ function setupConvoPullRefresh() {
 // ── Mind (Lamp-native UI → /api/memomind) ───────────────────────────────────
 const MIND_API = "/api/memomind";
 let mindPending = null;
-let mindTaskFilter = "all";
+let mindTaskFilter = "open";
+let mindSearchMode = "ask";
+let mindEditingEntryId = null;
 const MIND_TITLES = { add: "Add", search: "Search", tasks: "Tasks", events: "Events", confirm: "Review" };
 
 async function mindApi(path, opts = {}) {
@@ -4684,6 +4844,11 @@ function mindEsc(s) {
 
 function mindFmtDate(iso) {
   return iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
+}
+
+function mindEntryThumbHtml(entry) {
+  if (entry?.type !== "image") return "";
+  return `<img class="mind-thumb" src="${MIND_API}/images/${encodeURIComponent(entry.id)}/thumb" alt="">`;
 }
 
 function toggleNavFlyout() {
@@ -4734,7 +4899,9 @@ async function renderMindSection(section) {
   mindSetPanel(section);
   try {
     if (section === "add") await mindLoadAdd();
-    else if (section === "search") { /* idle until search */ }
+    else if (section === "search") {
+      if (mindSearchMode === "browse") await mindBrowseLoad();
+    }
     else if (section === "tasks") await mindLoadTasks();
     else if (section === "events") await mindLoadEvents();
     else if (section === "confirm") mindShowConfirm(mindPending);
@@ -4756,7 +4923,10 @@ async function mindLoadAdd() {
     el.innerHTML = '<p class="mind-empty">Nothing saved yet — add something above.</p>';
   } else {
     el.innerHTML = entries.map(e =>
-      `<div class="mind-card"><div>${mindEsc(e.content)}</div><div class="meta">${mindEsc(e.type)} · ${mindFmtDate(e.created_at)}</div></div>`
+      `<button type="button" class="mind-card mind-card-btn" onclick="mindOpenEntry('${e.id}')">
+        <div style="display:flex;gap:10px;align-items:flex-start">${mindEntryThumbHtml(e)}<div style="flex:1;min-width:0">${mindEsc(e.content)}</div></div>
+        <div class="meta">${mindEsc(e.type)} · ${mindFmtDate(e.created_at)}</div>
+      </button>`
     ).join("");
   }
   const { threads } = await mindApi("/threads?status=active");
@@ -4779,6 +4949,34 @@ async function mindCapture() {
     location.hash = "#/mind/confirm";
   } catch (e) {
     toast(e.message);
+  }
+}
+
+function mindOpenImagePicker() {
+  const input = document.getElementById("mind-image-input");
+  if (input) input.click();
+}
+
+async function mindUploadImage(inputEl) {
+  const file = inputEl?.files?.[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append("image", file);
+  try {
+    const res = await fetch(MIND_API + "/images/upload", {
+      method: "POST",
+      credentials: "same-origin",
+      body: fd,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || res.statusText || "Upload failed");
+    toast(data.persona_message || "Image saved");
+    const addPanel = document.getElementById("mind-panel-add");
+    if (addPanel?.classList.contains("active")) await mindLoadAdd();
+  } catch (e) {
+    toast(e.message || "Image upload failed");
+  } finally {
+    inputEl.value = "";
   }
 }
 
@@ -4870,6 +5068,109 @@ function mindConfirmDiscard() {
   location.hash = "#/mind/add";
 }
 
+function mindSetSearchMode(mode, btn) {
+  mindSearchMode = mode;
+  document.querySelectorAll(".mind-search-tabs button").forEach(b => {
+    b.classList.toggle("active", b === btn || b.dataset.searchMode === mode);
+  });
+  const ask = document.getElementById("mind-search-ask");
+  const browse = document.getElementById("mind-search-browse");
+  if (ask) ask.hidden = mode !== "ask";
+  if (browse) browse.hidden = mode !== "browse";
+  if (mode === "browse") mindBrowseLoad();
+}
+
+async function mindBrowseLoad() {
+  const el = document.getElementById("mind-browse-list");
+  if (!el) return;
+  el.innerHTML = '<p class="mind-empty">Loading…</p>';
+  const q = document.getElementById("mind-browse-q")?.value.trim() || "";
+  const path = "/entries?limit=100" + (q ? "&q=" + encodeURIComponent(q) : "");
+  try {
+    const { entries } = await mindApi(path);
+    if (!entries?.length) {
+      el.innerHTML = '<p class="mind-empty">No entries found.</p>';
+      return;
+    }
+    el.innerHTML = entries.map(e => `
+      <div class="mind-entry-row">
+        <div class="body" onclick="mindOpenEntry('${e.id}')">
+          <div style="display:flex;gap:10px;align-items:flex-start">${mindEntryThumbHtml(e)}<span style="flex:1;min-width:0">${mindEsc((e.content || "").replace(/\s+/g, " ").slice(0, 160))}</span></div>
+          <div class="meta">${mindEsc(e.type)} · ${mindFmtDate(e.created_at)}${e.task ? " · " + mindEsc(e.task.status) : ""}</div>
+        </div>
+        <div class="actions">
+          <button type="button" onclick="event.stopPropagation();mindOpenEntry('${e.id}')">Edit</button>
+          <button type="button" onclick="event.stopPropagation();mindEntryDelete('${e.id}')">Delete</button>
+        </div>
+      </div>`).join("");
+  } catch (e) {
+    el.innerHTML = `<p class="mind-empty">${mindEsc(e.message)}</p>`;
+  }
+}
+
+function mindCloseEntryEditor() {
+  const sheet = document.getElementById("mind-entry-sheet");
+  if (sheet) sheet.hidden = true;
+  mindEditingEntryId = null;
+}
+
+async function mindOpenEntry(id) {
+  try {
+    const entry = await mindApi("/entries/" + id);
+    mindEditingEntryId = id;
+    document.getElementById("mind-entry-type").value = entry.type || "note";
+    document.getElementById("mind-entry-content").value = entry.content || "";
+    const meta = document.getElementById("mind-entry-meta");
+    meta.textContent = `Saved ${mindFmtDate(entry.created_at)}${entry.updated_at ? " · updated " + mindFmtDate(entry.updated_at) : ""}`;
+    document.getElementById("mind-entry-sheet").hidden = false;
+  } catch (e) {
+    toast(e.message);
+  }
+}
+
+async function mindEntrySave() {
+  if (!mindEditingEntryId) return;
+  const content = document.getElementById("mind-entry-content")?.value.trim();
+  if (!content) {
+    toast("Content cannot be empty");
+    return;
+  }
+  const type = document.getElementById("mind-entry-type")?.value || "note";
+  try {
+    await mindApi("/entries/" + mindEditingEntryId, {
+      method: "PUT",
+      body: JSON.stringify({ content, type }),
+    });
+    toast("Saved");
+    mindCloseEntryEditor();
+    if (mindSearchMode === "browse") await mindBrowseLoad();
+    const addPanel = document.getElementById("mind-panel-add");
+    if (addPanel?.classList.contains("active")) await mindLoadAdd();
+    const tasksPanel = document.getElementById("mind-panel-tasks");
+    if (tasksPanel?.classList.contains("active")) await mindLoadTasks();
+  } catch (e) {
+    toast(e.message);
+  }
+}
+
+async function mindEntryDelete(id) {
+  const eid = id || mindEditingEntryId;
+  if (!eid) return;
+  if (!confirm("Delete this memory? It will be removed from search and lists.")) return;
+  try {
+    await mindApi("/entries/" + eid, { method: "DELETE" });
+    toast("Deleted");
+    mindCloseEntryEditor();
+    if (mindSearchMode === "browse") await mindBrowseLoad();
+    const addPanel = document.getElementById("mind-panel-add");
+    if (addPanel?.classList.contains("active")) await mindLoadAdd();
+    const tasksPanel = document.getElementById("mind-panel-tasks");
+    if (tasksPanel?.classList.contains("active")) await mindLoadTasks();
+  } catch (e) {
+    toast(e.message);
+  }
+}
+
 function renderMindSearchResult(result) {
   const ans = document.getElementById("mind-search-answer");
   const meta = document.getElementById("mind-search-meta");
@@ -4937,21 +5238,42 @@ async function mindSearch() {
 
 async function mindLoadTasks() {
   const q = mindTaskFilter === "all" ? "" : `?filter=${mindTaskFilter}`;
-  const { tasks } = await mindApi("/tasks" + q);
+  const showEvents = mindTaskFilter !== "done";
+  const [{ tasks }, eventsData] = await Promise.all([
+    mindApi("/tasks" + q),
+    showEvents ? mindApi("/events") : Promise.resolve({ events: [] }),
+  ]);
+  const events = eventsData.events || [];
   const el = document.getElementById("mind-tasks-list");
-  if (!tasks?.length) {
-    el.innerHTML = '<p class="mind-empty">No tasks here.</p>';
+  if (!tasks?.length && !events?.length) {
+    el.innerHTML = '<p class="mind-empty">No tasks or upcoming events.</p>';
     return;
   }
-  el.innerHTML = tasks.map(t => `
-    <div class="mind-task-row">
-      <input type="checkbox" ${t.status === "done" ? "checked" : ""}
-        onchange="mindToggleTask('${t.id}', this.checked)" aria-label="Complete">
-      <div>
-        <div>${mindEsc(t.title)}</div>
-        <div class="meta">${t.due_date ? "Due " + mindFmtDate(t.due_date) : "No due date"} · ${mindEsc(t.priority || "medium")}</div>
-      </div>
-    </div>`).join("");
+  let html = "";
+  if (events.length && showEvents) {
+    html += '<p class="mind-section-label">Upcoming events</p>';
+    html += events.map(e => `
+      <div class="mind-task-row mind-event-row">
+        <span class="mind-event-mark" aria-hidden="true">◷</span>
+        <div>
+          <div>${mindEsc(e.title)}</div>
+          <div class="meta">${mindFmtDate(e.event_date)}${e.location ? " · " + mindEsc(e.location) : ""}</div>
+        </div>
+      </div>`).join("");
+  }
+  if (tasks?.length) {
+    if (events.length && showEvents) html += '<p class="mind-section-label">Tasks</p>';
+    html += tasks.map(t => `
+      <div class="mind-task-row">
+        <input type="checkbox" ${t.status === "done" ? "checked" : ""}
+          onchange="mindToggleTask('${t.id}', this.checked)" aria-label="Complete">
+        <div>
+          <div>${mindEsc(t.title)}</div>
+          <div class="meta">${t.due_date ? "Due " + mindFmtDate(t.due_date) : "No due date"} · ${mindEsc(t.priority || "medium")}</div>
+        </div>
+      </div>`).join("");
+  }
+  el.innerHTML = html;
 }
 
 function mindSetTaskFilter(f, btn) {
