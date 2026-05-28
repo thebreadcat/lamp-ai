@@ -28,6 +28,7 @@ import lamp_chat  # noqa: E402
 import lamp_admin  # noqa: E402
 import lamp_models  # noqa: E402
 import lamp_voice  # noqa: E402
+import lamp_memomind  # noqa: E402
 from workshop import (  # noqa: E402
     Handler as WorkshopHandler,
     ThreadedHTTPServer,
@@ -141,8 +142,11 @@ class LampHandler(WorkshopHandler):
         return True
 
     def _allowed_app_slugs(self, user: dict) -> set[str]:
-        """App folder names this user may use (personal + shared family apps)."""
-        return {a["name"] for a in list_apps(load_config(), user["name"])}
+        """App folder names this user may use (personal + shared family apps, minus hidden)."""
+        slugs = {a["name"] for a in self._apps_for_user(user)}
+        if lamp_memomind.available():
+            slugs.add("memomind")
+        return slugs
 
     def _can_access_app(self, user: dict, owner: str, name: str) -> bool:
         if owner == "shared":
@@ -182,6 +186,40 @@ class LampHandler(WorkshopHandler):
                 s.get("app") and _find_app_dir(base, s["app"]) is None
             )
         return schedules
+
+    def _apps_for_user(self, user: dict) -> list:
+        cfg = load_config()
+        apps = list_apps(cfg, user["name"])
+        hidden = ldb.app_hidden_keys(user["name"])
+        return [a for a in apps if (a["owner"], a["name"]) not in hidden]
+
+    def _update_app_meta(self, user: dict, owner: str, name: str, body: dict):
+        if user.get("role") == "child":
+            self.js({"error": "not allowed for child accounts"}, 403)
+            return
+        if not self._can_access_app(user, owner, name):
+            self.js({"error": "forbidden"}, 403)
+            return
+        title = (body.get("title") or "").strip()
+        summary = (body.get("desc") or body.get("summary") or "").strip()
+        if not title:
+            self.js({"error": "title required"}, 400)
+            return
+        cfg = load_config()
+        base = apps_dir(cfg)
+        ap = (
+            base / "shared" / name
+            if owner == "shared"
+            else base / "users" / owner / name
+        )
+        if not ap.is_dir():
+            self.js({"error": "not found"}, 404)
+            return
+        if not set_app_display_meta(ap, title, summary):
+            self.js({"error": "could not update app"}, 500)
+            return
+        scope = "shared" if owner == "shared" else "personal"
+        self.js({"ok": True, **app_meta(ap, owner, scope)})
 
     def html_file(self, path: Path):
         b = path.read_bytes()
@@ -264,7 +302,13 @@ class LampHandler(WorkshopHandler):
             token = self._cookie(SESSION_COOKIE)
             user = ldb.session_check(token) if token else None
             if user:
-                self.js({"ok": True, "user": user["name"], "role": user["role"]})
+                self.js({
+                    "ok": True,
+                    "user": user["name"],
+                    "role": user["role"],
+                    "ui_build": lamp_admin.LAMP_UI_BUILD,
+                    "memomind": lamp_memomind.available(),
+                })
             else:
                 self.js({"ok": False, "needs_setup": ldb.user_count() == 0}, 401)
             return
@@ -741,6 +785,22 @@ class LampHandler(WorkshopHandler):
 
         if self._serve_static(p):
             return
+        if p in ("/memomind-app", "/memomind-app/"):
+            user = self._require_auth()
+            if not user:
+                return
+            self.lamp_user = user
+            lamp_memomind.serve_html(self)
+            return
+        if p.startswith("/api/memomind"):
+            user = self._require_auth()
+            if not user:
+                return
+            self.lamp_user = user
+            if lamp_memomind.handle(self, "GET", p, user):
+                return
+            self.js({"error": "not found"}, 404)
+            return
         if p.startswith("/api/auth/"):
             self._auth_get(p, qs)
             return
@@ -766,7 +826,16 @@ class LampHandler(WorkshopHandler):
             self._admin_get(p, user, qs)
             return
         if p == "/api/apps":
-            self.js({"apps": list_apps(load_config(), user["name"])})
+            if qs.get("hidden", ["0"])[0] in ("1", "true", "yes"):
+                cfg = load_config()
+                hidden = ldb.app_hidden_keys(user["name"])
+                apps = [
+                    a for a in list_apps(cfg, user["name"])
+                    if (a["owner"], a["name"]) in hidden
+                ]
+                self.js({"apps": apps})
+                return
+            self.js({"apps": self._apps_for_user(user)})
             return
 
         if p == "/api/notifications":
@@ -812,6 +881,15 @@ class LampHandler(WorkshopHandler):
 
         if p.startswith("/api/auth/"):
             self._auth_post(self.body())
+            return
+        if p.startswith("/api/memomind"):
+            user = self._require_auth()
+            if not user:
+                return
+            self.lamp_user = user
+            if lamp_memomind.handle(self, "POST", p, user):
+                return
+            self.js({"error": "not found"}, 404)
             return
         if self._is_public("POST", p):
             return super().do_POST()
@@ -916,6 +994,44 @@ class LampHandler(WorkshopHandler):
             self.js({"error": "not allowed for child accounts"}, 403)
             return
 
+        m = re.match(r"^/api/apps/([^/]+)/([^/]+)/meta$", p)
+        if m:
+            self._update_app_meta(user, m.group(1), m.group(2), self.body())
+            return
+
+        m = re.match(r"^/api/apps/([^/]+)/([^/]+)/share$", p)
+        if m:
+            if user.get("role") == "child":
+                self.js({"error": "not allowed for child accounts"}, 403)
+                return
+            owner, name = m.group(1), m.group(2)
+            if owner == "shared":
+                self.js({"error": "already shared"}, 400)
+                return
+            if owner != user["name"] and user.get("role") != "admin":
+                self.js({"error": "forbidden"}, 403)
+                return
+            result = lamp_admin.share_app_with_family(load_config(), owner, name)
+            if not result.get("ok"):
+                self.js({"error": result.get("error", "share failed")}, 404)
+                return
+            self.js(result)
+            return
+
+        m = re.match(r"^/api/apps/([^/]+)/([^/]+)/visibility$", p)
+        if m:
+            owner, name = m.group(1), m.group(2)
+            if owner != "shared":
+                self.js({"error": "only shared apps can be hidden from your list"}, 400)
+                return
+            if not self._can_access_app(user, owner, name):
+                self.js({"error": "not found"}, 404)
+                return
+            hidden = bool(self.body().get("hidden"))
+            ldb.app_set_hidden(user["name"], owner, name, hidden)
+            self.js({"ok": True, "hidden": hidden})
+            return
+
         return super().do_POST()
 
     def _post_with_body(self, path: str, body: dict):
@@ -955,6 +1071,11 @@ class LampHandler(WorkshopHandler):
         if p.startswith("/api/admin/"):
             self._admin_put(p, self.body(), user)
             return
+        if p.startswith("/api/memomind"):
+            if lamp_memomind.handle(self, "PUT", p, user):
+                return
+            self.js({"error": "not found"}, 404)
+            return
 
         m = re.match(r"^/api/data/([^/]+)", p)
         if m and not self._can_access_app_slug(user, m.group(1)):
@@ -963,34 +1084,7 @@ class LampHandler(WorkshopHandler):
 
         m = re.match(r"^/api/apps/([^/]+)/([^/]+)/meta$", p)
         if m:
-            if user.get("role") == "child":
-                self.js({"error": "not allowed for child accounts"}, 403)
-                return
-            owner, name = m.group(1), m.group(2)
-            if not self._can_access_app(user, owner, name):
-                self.js({"error": "forbidden"}, 403)
-                return
-            body = self.body()
-            title = (body.get("title") or "").strip()
-            summary = (body.get("desc") or body.get("summary") or "").strip()
-            if not title:
-                self.js({"error": "title required"}, 400)
-                return
-            cfg = load_config()
-            base = apps_dir(cfg)
-            ap = (
-                base / "shared" / name
-                if owner == "shared"
-                else base / "users" / owner / name
-            )
-            if not ap.is_dir():
-                self.js({"error": "not found"}, 404)
-                return
-            if not set_app_display_meta(ap, title, summary):
-                self.js({"error": "could not update app"}, 500)
-                return
-            scope = "shared" if owner == "shared" else "personal"
-            self.js({"ok": True, **app_meta(ap, owner, scope)})
+            self._update_app_meta(user, m.group(1), m.group(2), self.body())
             return
 
         return super().do_PUT()
@@ -1008,6 +1102,11 @@ class LampHandler(WorkshopHandler):
             return
         if p.startswith("/api/admin/"):
             self._admin_delete(p, user)
+            return
+        if p.startswith("/api/memomind"):
+            if lamp_memomind.handle(self, "DELETE", p, user):
+                return
+            self.js({"error": "not found"}, 404)
             return
         if p.startswith("/api/apps/") and user.get("role") == "child":
             self.js({"error": "not allowed for child accounts"}, 403)
@@ -1061,6 +1160,10 @@ def print_status(cfg) -> int:
     vs = lamp_voice.voice_status(cfg)
     wh = "OK" if vs["whisper_available"] else "not installed"
     print(f"  whisper  : {wh} (model {vs['model']}, ffmpeg {'yes' if vs['ffmpeg'] else 'no'})")
+    if lamp_memomind.available():
+        print(f"  memomind : OK  ({lamp_memomind.find_memomind_root()})")
+    else:
+        print(f"  memomind : —  ({lamp_memomind.status_message()})")
     print()
     return 0 if ts_ok else 1
 
@@ -1184,6 +1287,8 @@ def main():
         raise SystemExit(print_status(cfg))
 
     ticker.start_ticker_thread(lambda: apps_dir(load_config()))
+    if lamp_memomind.available():
+        lamp_memomind.start_reminder_thread()
 
     code = print_status(cfg)
     if code:

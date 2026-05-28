@@ -36,6 +36,14 @@ const LAMP_ICONS = {
   users: ["solid", "users"],
   user: ["solid", "user"],
   account: ["solid", "circle-user"],
+  brain: ["solid", "brain"],
+  menu: ["solid", "bars"],
+  search: ["solid", "magnifying-glass"],
+  calendar: ["solid", "calendar-days"],
+  tasks: ["solid", "list-check"],
+  plus: ["solid", "plus"],
+  "eye-slash": ["solid", "eye-slash"],
+  eye: ["solid", "eye"],
   "arrow-right": ["solid", "arrow-right"],
 };
 

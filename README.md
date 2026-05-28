@@ -15,6 +15,23 @@ Lamp → Workshop → Tortoise
 | **Tortoise** | Chunk-based code generation for slow/local LLMs |
 | **Workshop** | Interview + build loop, SQLite data API, ticker |
 | **Lamp** | PWA hub, PIN auth, chat, admin, notifications, per-user apps |
+| **[MemoMind](https://github.com/thebreadcat/memomind)** | Optional hub module — personal memory, tasks, events, search |
+
+## MemoMind (second brain)
+
+When [MemoMind](https://github.com/thebreadcat/memomind) is installed beside this repo (`../memomind`) or under `vendor/memomind`, Lamp exposes it as a **Memory** tab in the hub:
+
+- Per-user SQLite DB: `~/.workshop/users/{name}/memomind.db`
+- Household shared DB: `~/.workshop/shared/memomind.db`
+- API at `/api/memomind/*`; native Lamp UI at `#/mind` (Add, Search, Tasks, Events)
+- Task/event reminders fire into Lamp’s notification ticker (`app: memomind`)
+
+```bash
+git clone https://github.com/thebreadcat/memomind ../memomind
+pip install -r requirements-memomind.txt   # Flask, Pillow, requests, etc.
+```
+
+Override location with `MEMOMIND_PATH=/path/to/memomind`. Optional shared brain key in `~/.workshop/config.json`: `"memomind_shared_key": "your-uuid"`.
 
 ## Documentation
 

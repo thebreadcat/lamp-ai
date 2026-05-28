@@ -57,6 +57,12 @@ def init_lamp_tables():
             created_at  TEXT NOT NULL,
             FOREIGN KEY (convo_id) REFERENCES conversations(id)
         );
+        CREATE TABLE IF NOT EXISTS user_app_hidden (
+            user        TEXT NOT NULL,
+            owner       TEXT NOT NULL,
+            name        TEXT NOT NULL,
+            PRIMARY KEY (user, owner, name)
+        );
     """)
     conn.commit()
     for ddl in (
@@ -395,6 +401,29 @@ def user_delete(name: str) -> bool:
         conn.execute("DELETE FROM messages WHERE convo_id=?", (r["id"],))
     conn.execute("DELETE FROM conversations WHERE user=?", (name,))
     conn.execute("DELETE FROM sessions WHERE user=?", (name,))
+    conn.execute("DELETE FROM user_app_hidden WHERE user=?", (name,))
     cur = conn.execute("DELETE FROM users WHERE name=?", (name,))
     conn.commit()
     return cur.rowcount > 0
+
+
+def app_hidden_keys(user: str) -> set[tuple[str, str]]:
+    rows = wdb.get_conn().execute(
+        "SELECT owner, name FROM user_app_hidden WHERE user=?", (user,)
+    ).fetchall()
+    return {(r["owner"], r["name"]) for r in rows}
+
+
+def app_set_hidden(user: str, owner: str, name: str, hidden: bool) -> None:
+    conn = wdb.get_conn()
+    if hidden:
+        conn.execute(
+            "INSERT OR REPLACE INTO user_app_hidden (user, owner, name) VALUES (?,?,?)",
+            (user, owner, name),
+        )
+    else:
+        conn.execute(
+            "DELETE FROM user_app_hidden WHERE user=? AND owner=? AND name=?",
+            (user, owner, name),
+        )
+    conn.commit()

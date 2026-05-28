@@ -16,6 +16,7 @@ import lamp_voice
 from workshop import apps_dir, load_config, save_config, probe_endpoint, VERSION as WS_VERSION
 
 LAMP_VERSION = "0.4.2"
+LAMP_UI_BUILD = "2026-05-28"
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
 
@@ -126,6 +127,28 @@ def delete_app_from_disk(cfg, owner: str, name: str) -> dict:
                 pass
     db_stats = wipe_app_data(name)
     return {"ok": True, "freed_bytes": freed, **db_stats}
+
+
+def share_app_with_family(cfg, owner: str, name: str) -> dict:
+    """Move a personal app folder into shared/ so every account can use it."""
+    base = apps_dir(cfg)
+    src = base / "users" / owner / name
+    dst = base / "shared" / name
+    if not src.is_dir():
+        return {"ok": False, "error": "not found"}
+    if dst.exists():
+        return {"ok": False, "error": "a shared app with this name already exists"}
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(src), str(dst))
+    user_dir = base / "users" / owner
+    if user_dir.is_dir() and not any(user_dir.iterdir()):
+        try:
+            user_dir.rmdir()
+        except OSError:
+            pass
+    from workshop import app_meta
+
+    return {"ok": True, **app_meta(dst, "shared", "shared")}
 
 
 def delete_orphan_apps(cfg) -> dict:

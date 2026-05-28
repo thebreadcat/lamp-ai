@@ -1,0 +1,3 @@
+# Optional — MemoMind hub module (clone ../memomind or vendor/memomind)
+# pip install -r requirements-memomind.txt
+-r ../memomind/requirements.txt

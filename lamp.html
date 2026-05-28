@@ -991,6 +991,27 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   font-size: 11px; padding: 2px 6px; border-radius: 6px;
   background: var(--surface-raised); color: var(--subtle);
 }
+.plan-scope {
+  display: flex; flex-direction: column; gap: 8px; margin: 14px 0 4px;
+  padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg);
+}
+.plan-scope-label {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.plan-scope-opt {
+  display: flex; align-items: flex-start; gap: 10px; font-size: 14px;
+  cursor: pointer; color: var(--text);
+}
+.plan-scope-opt input { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0; }
+.plan-scope-opt .opt-text { flex: 1; }
+.plan-scope-opt .opt-sub { color: var(--muted); font-size: 13px; display: block; margin-top: 2px; }
+.account-hidden-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r);
+  margin-bottom: 8px; background: var(--surface);
+}
 
 /* admin */
 .admin-tabs { display: flex; gap: 4px; padding: 12px 20px; overflow-x: auto; }
@@ -1069,6 +1090,144 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 .net:hover, .net.sel { border-color: var(--accent); background: var(--accent-l); }
 .net strong { display: block; font-size: 15px; }
 .net span { font-size: 12px; color: var(--muted); }
+
+/* ── Mobile nav flyout ──────────────────────────────────────────────────────── */
+.nav-menu-mobile-only { display: flex; }
+.nav-desktop-only { display: none; }
+#nav-flyout {
+  position: fixed; inset: 0; z-index: 200; pointer-events: none; visibility: hidden;
+  transition: visibility var(--t-fast);
+}
+#nav-flyout.open { pointer-events: auto; visibility: visible; }
+#nav-flyout-backdrop {
+  position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45);
+  opacity: 0; transition: opacity var(--t-med);
+}
+#nav-flyout.open #nav-flyout-backdrop { opacity: 1; }
+#nav-flyout-panel {
+  position: absolute; right: 0; top: 0; bottom: 0; width: min(300px, 88vw);
+  background: var(--surface); border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-md); transform: translateX(100%);
+  transition: transform var(--t-med);
+  display: flex; flex-direction: column; padding: 16px 12px 24px;
+  overflow-y: auto;
+}
+#nav-flyout.open #nav-flyout-panel { transform: translateX(0); }
+.nav-flyout-title {
+  font-size: 13px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 8px 12px 6px;
+}
+.nav-flyout-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left; padding: 14px 12px;
+  border: none; background: transparent; color: var(--text);
+  font-size: 16px; border-radius: 12px; cursor: pointer;
+}
+.nav-flyout-item:hover, .nav-flyout-item:active { background: var(--accent-l); }
+.nav-flyout-item .ico { font-size: 1.2rem; width: 1.35rem; color: var(--muted); }
+
+/* ── Mind (native) ─────────────────────────────────────────────────────────── */
+#v-mind.view.active { padding-bottom: 0; }
+.mind-shell {
+  display: flex; flex-direction: column; min-height: calc(100vh - var(--nav-h));
+  width: 100%;
+}
+.mind-mobile-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+  background: var(--surface); flex-shrink: 0;
+}
+.mind-mobile-bar h1 { font-size: 18px; font-weight: 600; flex: 1; }
+.mind-sidebar {
+  display: none;
+}
+.mind-backdrop {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  z-index: 80;
+}
+.mind-drawer {
+  position: fixed; left: 0; top: 0; bottom: 0; width: min(260px, 82vw);
+  background: var(--surface); border-right: 1px solid var(--border);
+  z-index: 90; transform: translateX(-100%);
+  transition: transform var(--t-med);
+  padding: 16px 10px; display: flex; flex-direction: column; gap: 4px;
+}
+.mind-drawer.open { transform: translateX(0); }
+.mind-backdrop.open { display: block; }
+.mind-nav-btn {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 12px 14px; border: none; border-radius: 12px;
+  background: transparent; color: var(--muted); font-size: 15px; cursor: pointer;
+}
+.mind-nav-btn.active { background: var(--accent-l); color: var(--accent); font-weight: 600; }
+.mind-nav-btn .ico { width: 1.25rem; font-size: 1.1rem; }
+.mind-main { flex: 1; overflow-y: auto; padding: 16px; }
+.mind-panel { display: none; }
+.mind-panel.active { display: block; }
+.mind-return {
+  padding: 12px 14px; margin-bottom: 12px; border-radius: var(--r);
+  background: var(--accent-l); color: var(--subtle); font-size: 14px;
+}
+.mind-capture-row {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.mind-capture-row input, .mind-capture-row textarea {
+  flex: 1; padding: 12px 14px; border-radius: var(--r);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); font-size: 16px;
+}
+.mind-card {
+  padding: 14px 16px; margin-bottom: 10px; border-radius: var(--r);
+  border: 1px solid var(--border); background: var(--surface);
+}
+.mind-card .meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.mind-chip {
+  display: inline-block; padding: 4px 10px; margin: 0 6px 6px 0;
+  border-radius: 999px; font-size: 12px; background: var(--surface-raised);
+  border: 1px solid var(--border);
+}
+.mind-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.mind-filters button {
+  padding: 8px 12px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--muted); font-size: 13px; cursor: pointer;
+}
+.mind-filters button.active { border-color: var(--accent); color: var(--accent); background: var(--accent-l); }
+.mind-task-row {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.mind-task-row input { margin-top: 4px; width: 20px; height: 20px; accent-color: var(--accent); }
+.mind-empty { color: var(--muted); font-size: 14px; padding: 24px 0; text-align: center; }
+.mind-entity { display: inline-block; font-size: 11px; padding: 2px 8px; margin: 4px 4px 0 0;
+  border-radius: 6px; background: var(--surface-raised); color: var(--muted); }
+.mind-confirm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.mind-search-result { line-height: 1.55; font-size: 16px; }
+.mind-section-label {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.05em; margin: 16px 0 8px;
+}
+
+@media (max-width: 767px) {
+  #nav-mind-desktop { display: none !important; }
+}
+@media (min-width: 768px) {
+  .nav-menu-mobile-only { display: none !important; }
+  #nav-mind { display: none !important; }
+  .nav-desktop-only { display: flex; }
+  .mind-mobile-bar { display: none; }
+  .mind-backdrop, .mind-drawer { display: none !important; }
+  .mind-shell {
+    flex-direction: row; min-height: 100vh;
+  }
+  .mind-sidebar {
+    display: flex; flex-direction: column; gap: 4px;
+    width: 200px; flex-shrink: 0; padding: 20px 12px;
+    border-right: 1px solid var(--border); background: var(--surface-raised);
+  }
+  .mind-main { padding: 24px 32px; max-width: 720px; }
+  body.has-nav #v-mind.view.active { min-height: 100vh; }
+}
 
 /* ── Desktop layout ─────────────────────────────────────────────────────────── */
 @media (min-width: 768px) {
@@ -1296,6 +1455,7 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
       </div>
       <div class="home-actions">
         <button type="button" class="hero-btn hero-btn-secondary" id="hero-chat-btn" onclick="location.hash='#/chat'">Chat with Lamp</button>
+        <button type="button" class="hero-btn hero-btn-secondary" id="hero-mind-btn" style="display:none" onclick="location.hash='#/mind/add'">Mind</button>
         <button type="button" class="hero-btn" id="hero-build-btn" onclick="location.hash='#/build'">Build something new</button>
       </div>
       <div id="home-notif-banner" class="home-notif-banner" style="display:none" hidden></div>
@@ -1482,6 +1642,88 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
     <div id="account-page" class="account-page"></div>
   </div>
 
+  <!-- Mind -->
+  <div id="v-mind" class="view">
+    <div class="mind-shell">
+      <aside class="mind-sidebar" aria-label="Mind sections">
+        <button type="button" class="mind-nav-btn" data-mind="add" onclick="mindGo('add')"><span class="ico" id="mind-ico-add-d"></span>Add</button>
+        <button type="button" class="mind-nav-btn" data-mind="search" onclick="mindGo('search')"><span class="ico" id="mind-ico-search-d"></span>Search</button>
+        <button type="button" class="mind-nav-btn" data-mind="tasks" onclick="mindGo('tasks')"><span class="ico" id="mind-ico-tasks-d"></span>Tasks</button>
+        <button type="button" class="mind-nav-btn" data-mind="events" onclick="mindGo('events')"><span class="ico" id="mind-ico-events-d"></span>Events</button>
+      </aside>
+      <div class="mind-backdrop" id="mind-backdrop" onclick="closeMindDrawer()"></div>
+      <nav class="mind-drawer" id="mind-drawer" aria-label="Mind menu">
+        <button type="button" class="mind-nav-btn" data-mind="add" onclick="mindGo('add')"><span class="ico" id="mind-ico-add-m"></span>Add</button>
+        <button type="button" class="mind-nav-btn" data-mind="search" onclick="mindGo('search')"><span class="ico" id="mind-ico-search-m"></span>Search</button>
+        <button type="button" class="mind-nav-btn" data-mind="tasks" onclick="mindGo('tasks')"><span class="ico" id="mind-ico-tasks-m"></span>Tasks</button>
+        <button type="button" class="mind-nav-btn" data-mind="events" onclick="mindGo('events')"><span class="ico" id="mind-ico-events-m"></span>Events</button>
+      </nav>
+      <div class="mind-mobile-bar">
+        <button type="button" class="btn-icon" onclick="toggleMindDrawer()" aria-label="Mind sections"><span class="ico" id="mind-menu-ico"></span></button>
+        <h1 id="mind-mobile-title">Add</h1>
+      </div>
+      <main class="mind-main">
+        <div id="mind-panel-add" class="mind-panel active">
+          <div id="mind-return" class="mind-return" style="display:none"></div>
+          <div class="mind-capture-row">
+            <input type="text" id="mind-capture-input" placeholder="Remember something…" autocomplete="off"
+              onkeydown="if(event.key==='Enter')mindCapture()">
+            <button type="button" class="btn btn-primary" onclick="mindCapture()">Save</button>
+          </div>
+          <p class="mind-section-label">Recent</p>
+          <div id="mind-recent"></div>
+          <p class="mind-section-label">Threads</p>
+          <div id="mind-threads"></div>
+        </div>
+        <div id="mind-panel-search" class="mind-panel">
+          <div class="mind-capture-row">
+            <input type="search" id="mind-search-input" placeholder="What do you want to know?" autocomplete="off"
+              onkeydown="if(event.key==='Enter')mindSearch()">
+            <button type="button" class="btn btn-primary" onclick="mindSearch()">Ask</button>
+          </div>
+          <div id="mind-search-answer" class="mind-search-result mind-card" style="display:none"></div>
+          <p id="mind-search-meta" class="meta" style="color:var(--muted);font-size:13px"></p>
+          <div id="mind-search-supporting"></div>
+        </div>
+        <div id="mind-panel-tasks" class="mind-panel">
+          <div class="mind-filters" id="mind-task-filters">
+            <button type="button" class="active" data-filter="all" onclick="mindSetTaskFilter('all',this)">All</button>
+            <button type="button" data-filter="today" onclick="mindSetTaskFilter('today',this)">Today</button>
+            <button type="button" data-filter="upcoming" onclick="mindSetTaskFilter('upcoming',this)">Upcoming</button>
+            <button type="button" data-filter="done" onclick="mindSetTaskFilter('done',this)">Done</button>
+          </div>
+          <button type="button" class="btn btn-secondary" style="width:100%;margin-bottom:12px" onclick="mindNewTask()">New task</button>
+          <div id="mind-tasks-list"></div>
+        </div>
+        <div id="mind-panel-events" class="mind-panel">
+          <button type="button" class="btn btn-secondary" style="width:100%;margin-bottom:12px" onclick="mindNewEvent()">New event</button>
+          <p class="mind-section-label">Upcoming</p>
+          <div id="mind-events-upcoming"></div>
+          <p class="mind-section-label">Past</p>
+          <div id="mind-events-past"></div>
+        </div>
+        <div id="mind-panel-confirm" class="mind-panel">
+          <p id="mind-confirm-hint" class="meta" style="margin-bottom:12px;color:var(--muted)"></p>
+          <label class="mind-section-label" for="mind-confirm-type">Type</label>
+          <select id="mind-confirm-type" class="setup-input" style="margin-bottom:12px" onchange="mindConfirmTypeChange()">
+            <option value="note">Note</option>
+            <option value="fact">Fact</option>
+            <option value="task">Task</option>
+            <option value="event">Event</option>
+          </select>
+          <label class="mind-section-label" for="mind-confirm-content">Content</label>
+          <textarea id="mind-confirm-content" rows="4" style="width:100%;padding:12px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:8px"></textarea>
+          <div id="mind-confirm-entities"></div>
+          <div id="mind-confirm-extra"></div>
+          <div class="mind-confirm-actions">
+            <button type="button" class="btn btn-primary" onclick="mindConfirmSave()">Save</button>
+            <button type="button" class="btn btn-ghost" onclick="mindConfirmDiscard()">Discard</button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
   <!-- Apps library -->
   <div id="v-apps" class="view">
     <div class="header"><span class="wordmark">Apps</span></div>
@@ -1526,14 +1768,30 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
       <span id="nav-notif-badge" class="nav-badge" style="display:none" aria-hidden="true">0</span>
     </button>
     <button class="nav-item" data-route="chat" onclick="location.hash='#/chat'"><span class="icon" id="nav-ico-chat"></span>Chat</button>
-    <button class="nav-item" data-route="build" onclick="location.hash='#/build'"><span class="icon" id="nav-ico-build"></span>Build</button>
-    <button class="nav-item" data-route="apps" onclick="location.hash='#/apps'"><span class="icon" id="nav-ico-apps"></span>Apps</button>
+    <button class="nav-item nav-desktop-only" id="nav-mind-desktop" data-route="mind" style="display:none" onclick="location.hash='#/mind/add'"><span class="icon" id="nav-ico-mind-d"></span>Mind</button>
+    <button class="nav-item" id="nav-mind" data-route="mind" style="display:none" onclick="location.hash='#/mind/add'"><span class="icon" id="nav-ico-mind"></span>Mind</button>
+    <button class="nav-item nav-menu-mobile-only" id="nav-menu-btn" data-route="menu" onclick="toggleNavFlyout()" aria-label="Menu"><span class="icon" id="nav-ico-menu"></span>Menu</button>
+    <button class="nav-item nav-desktop-only" data-route="build" onclick="location.hash='#/build'"><span class="icon" id="nav-ico-build"></span>Build</button>
+    <button class="nav-item nav-desktop-only" data-route="apps" onclick="location.hash='#/apps'"><span class="icon" id="nav-ico-apps"></span>Apps</button>
   </div>
-  <div class="nav-footer">
+  <div class="nav-footer nav-desktop-only">
     <button class="nav-item" id="nav-account" data-route="account" onclick="location.hash='#/account'"><span class="icon" id="nav-ico-account"></span>Account</button>
     <button class="nav-item" id="nav-admin" data-route="admin" style="display:none" onclick="location.hash='#/admin'"><span class="icon" id="nav-ico-admin"></span>Admin</button>
   </div>
 </nav>
+
+<div id="nav-flyout" aria-hidden="true">
+  <div id="nav-flyout-backdrop" onclick="closeNavFlyout()"></div>
+  <div id="nav-flyout-panel" role="dialog" aria-label="Menu">
+    <p class="nav-flyout-title">Lamp</p>
+    <button type="button" class="nav-flyout-item" id="flyout-build" onclick="navFlyoutGo('#/build')"><span class="ico" id="flyout-ico-build"></span>Build</button>
+    <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/apps')"><span class="ico" id="flyout-ico-apps"></span>Apps</button>
+    <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/notifications')"><span class="ico" id="flyout-ico-bell"></span>Notifications</button>
+    <p class="nav-flyout-title" style="margin-top:12px">Account</p>
+    <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/account')"><span class="ico" id="flyout-ico-account"></span>Account</button>
+    <button type="button" class="nav-flyout-item" id="flyout-admin" style="display:none" onclick="navFlyoutGo('#/admin')"><span class="ico" id="flyout-ico-admin"></span>Admin</button>
+  </div>
+</div>
 
 <div id="onboarding" class="onboarding-overlay" role="dialog" aria-labelledby="onboard-title" aria-hidden="true">
   <div class="onboarding-card">
@@ -1552,7 +1810,7 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 
 const THEME_KEY = "lamp-theme";
 const ONBOARD_KEY = "lamp_onboarded_v1";
-const LAMP_UI_BUILD = "2026-05-26";
+const LAMP_UI_BUILD = "2026-05-28";
 
 function getTheme() {
   const t = document.documentElement.getAttribute("data-theme");
@@ -1590,7 +1848,24 @@ function initStaticIcons() {
   setIconEl(document.getElementById("nav-ico-chat"), "chat");
   setIconEl(document.getElementById("nav-ico-build"), "hammer");
   setIconEl(document.getElementById("nav-ico-apps"), "apps");
+  setIconEl(document.getElementById("nav-ico-mind"), "brain");
+  setIconEl(document.getElementById("nav-ico-mind-d"), "brain");
+  setIconEl(document.getElementById("nav-ico-menu"), "menu");
   setIconEl(document.getElementById("nav-ico-admin"), "admin");
+  setIconEl(document.getElementById("mind-menu-ico"), "menu");
+  setIconEl(document.getElementById("mind-ico-add-d"), "plus");
+  setIconEl(document.getElementById("mind-ico-add-m"), "plus");
+  setIconEl(document.getElementById("mind-ico-search-d"), "search");
+  setIconEl(document.getElementById("mind-ico-search-m"), "search");
+  setIconEl(document.getElementById("mind-ico-tasks-d"), "tasks");
+  setIconEl(document.getElementById("mind-ico-tasks-m"), "tasks");
+  setIconEl(document.getElementById("mind-ico-events-d"), "calendar");
+  setIconEl(document.getElementById("mind-ico-events-m"), "calendar");
+  setIconEl(document.getElementById("flyout-ico-build"), "hammer");
+  setIconEl(document.getElementById("flyout-ico-apps"), "apps");
+  setIconEl(document.getElementById("flyout-ico-bell"), "bell");
+  setIconEl(document.getElementById("flyout-ico-account"), "account");
+  setIconEl(document.getElementById("flyout-ico-admin"), "admin");
   setIconEl(document.getElementById("nav-ico-account"), "account");
   setIconEl(document.getElementById("lamp-chat-send"), "arrow-up");
   setIconEl(document.getElementById("chat-rename-btn"), "pencil");
@@ -1713,10 +1988,12 @@ function showView(id) {
   const showNav = !hideNav && S.user;
   nav.classList.toggle("visible", showNav);
   document.body.classList.toggle("has-nav", showNav);
-  const navRoute = (id === "building" || id === "done") ? "build" : id;
+  let navRoute = (id === "building" || id === "done") ? "build" : id;
+  if (id === "mind" || String(id).startsWith("mind")) navRoute = "mind";
   document.querySelectorAll(".nav-item[data-route]").forEach(n => {
     n.classList.toggle("active", n.dataset.route === navRoute);
   });
+  if (navRoute !== "menu") closeNavFlyout();
   window.scrollTo(0, 0);
 }
 
@@ -1744,6 +2021,7 @@ async function route() {
 
   S.user = auth.user;
   S.role = auth.role;
+  S.memomindAvailable = !!auth.memomind;
   applyRoleUi();
   updateGreeting();
   startNotificationPoll();
@@ -1782,7 +2060,7 @@ async function route() {
     if (!chatConvos.length) await newConversation();
     return;
   }
-  if (r === "account") { showView("account"); renderAccount(); return; }
+  if (r === "account") { showView("account"); await renderAccountPage(); return; }
   if (r === "notifications") { showView("notifications"); await renderNotifications(); return; }
   if (r === "reminders") {
     if (S.role === "child") { location.hash = "#/"; return route(); }
@@ -1824,6 +2102,15 @@ async function route() {
     showView("done"); return;
   }
   if (r === "apps") { showView("apps"); await renderApps(); return; }
+  if (r === "mind") {
+    if (!S.memomindAvailable) { location.hash = "#/"; return route(); }
+    if (!param) { location.hash = "#/mind/add"; return route(); }
+    const section = ["add", "search", "tasks", "events", "confirm"].includes(param) ? param : "add";
+    if (section === "confirm" && !mindPending) { location.hash = "#/mind/add"; return route(); }
+    showView("mind");
+    await renderMindSection(section);
+    return;
+  }
   showView("home");
   await renderHome();
   maybeShowOnboarding();
@@ -1855,6 +2142,18 @@ function hideOnboarding() {
 function applyRoleUi() {
   const admin = S.role === "admin";
   const child = S.role === "child";
+  const mmOk = !!S.memomindAvailable;
+  const mmDisp = mmOk ? "flex" : "none";
+  ["nav-mind", "nav-mind-desktop"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = mmDisp;
+  });
+  const heroMm = document.getElementById("hero-mind-btn");
+  if (heroMm) heroMm.style.display = mmOk ? "" : "none";
+  const flyBuild = document.getElementById("flyout-build");
+  if (flyBuild) flyBuild.style.display = child ? "none" : "flex";
+  const flyAdmin = document.getElementById("flyout-admin");
+  if (flyAdmin) flyAdmin.style.display = admin ? "flex" : "none";
   const navAdmin = document.getElementById("nav-admin");
   if (navAdmin) navAdmin.style.display = admin ? "flex" : "none";
   const buildNav = document.querySelector('.nav-item[data-route="build"]');
@@ -1962,9 +2261,16 @@ async function saveAppMeta() {
     toast("Name is required");
     return;
   }
-  const r = await api("PUT", `/api/apps/${a.owner}/${a.name}/meta`, { title, desc });
+  const path = `/api/apps/${encodeURIComponent(a.owner)}/${encodeURIComponent(a.name)}/meta`;
+  let r = await api("POST", path, { title, desc });
+  if (r._status === 404) {
+    r = await api("PUT", path, { title, desc });
+  }
   if (!r.ok) {
-    toast(r.error || "Could not save");
+    const msg = r._status === 404
+      ? "Could not save — quit and reopen Lamp.app (localhost), or use the LAN URL from your terminal"
+      : (r.error || "Could not save");
+    toast(msg);
     return;
   }
   closeAppMetaSheet();
@@ -1979,6 +2285,7 @@ function renderAppCard(a) {
   const shared = a.scope === "shared";
   const child = S.role === "child";
   const manage = !child;
+  const canShare = manage && !shared && (a.owner === S.user || S.role === "admin");
   const descHtml = a.desc
     ? `<div class="app-card-desc">${esc(a.desc)}</div>`
     : `<div class="app-card-desc" style="font-style:italic">No description</div>`;
@@ -1993,11 +2300,15 @@ function renderAppCard(a) {
     </div>
     <div class="app-card-actions">
       ${a.url ? `<a class="btn btn-primary" style="font-size:14px;padding:8px 16px" href="${a.url}" target="_blank">Open</a>` : ""}
+      ${canShare ? `<button type="button" class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-share>${iconHtml("users")} Share with family</button>` : ""}
+      ${shared ? `<button type="button" class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-hide>${iconHtml("eye-slash")} Hide</button>` : ""}
       ${manage ? '<button class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-improve>Improve</button>' : ""}
       ${manage ? '<button class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-wipe>Clear data</button>' : ""}
       ${manage ? '<button class="btn btn-danger" style="font-size:14px;padding:8px 16px" data-del>Delete</button>' : ""}
     </div>`;
   if (manage) card.querySelector("[data-edit]").onclick = () => openAppMetaEditor(a);
+  if (canShare) card.querySelector("[data-share]").onclick = () => shareAppWithFamily(a);
+  if (shared) card.querySelector("[data-hide]").onclick = () => hideSharedApp(a);
   if (manage) card.querySelector("[data-improve]").onclick = () => openAppForEdit(a);
   if (manage) card.querySelector("[data-wipe]").onclick = async () => {
     if (!confirm(`Clear all saved data for "${appDisplayName(a)}"? Schedules and app storage will be removed.`)) return;
@@ -2014,6 +2325,42 @@ function renderAppCard(a) {
     };
   }
   return card;
+}
+
+async function shareAppWithFamily(a) {
+  const label = appDisplayName(a);
+  if (!confirm(`Share "${label}" with everyone on this Lamp?\n\nIt moves to the family apps folder. Saved data stays with the app.`)) return;
+  const r = await api("POST", `/api/apps/${encodeURIComponent(a.owner)}/${encodeURIComponent(a.name)}/share`, {});
+  if (!r.ok) {
+    toast(r.error || "Could not share");
+    return;
+  }
+  toast("Shared with the whole family");
+  await renderApps();
+  if (location.hash === "#/" || location.hash === "") await renderHome();
+}
+
+async function hideSharedApp(a) {
+  const r = await api("POST", `/api/apps/shared/${encodeURIComponent(a.name)}/visibility`, { hidden: true });
+  if (!r.ok) {
+    toast(r.error || "Could not hide");
+    return;
+  }
+  toast("Hidden from your apps");
+  await renderApps();
+  if (location.hash === "#/" || location.hash === "") await renderHome();
+}
+
+async function unhideSharedApp(name) {
+  const r = await api("POST", `/api/apps/shared/${encodeURIComponent(name)}/visibility`, { hidden: false });
+  if (!r.ok) {
+    toast(r.error || "Could not restore");
+    return;
+  }
+  toast("App visible again");
+  if (location.hash === "#/account") await renderAccountPage();
+  await renderApps();
+  if (location.hash === "#/" || location.hash === "") await renderHome();
 }
 
 async function renderApps() {
@@ -2147,6 +2494,10 @@ function roleLabel(role) {
 }
 
 function renderAccount() {
+  renderAccountPage();
+}
+
+async function renderAccountPage() {
   const page = document.getElementById("account-page");
   if (!page || !S.user) return;
   const initial = esc(S.user.charAt(0).toUpperCase());
@@ -2188,7 +2539,24 @@ function renderAccount() {
       <p class="account-role">${esc(roleLabel(S.role))}</p>
       ${child ? '<p class="account-role" style="margin-top:8px">You can chat and use apps. Building is for grown-ups on this device.</p>' : ""}
     </div>
-    <div class="account-menu">${menu}</div>`;
+    <div class="account-menu">${menu}</div>
+    <div id="account-hidden-apps"></div>`;
+  const hiddenWrap = document.getElementById("account-hidden-apps");
+  if (!hiddenWrap) return;
+  const { apps } = await api("GET", "/api/apps?hidden=1");
+  const hidden = (apps || []).filter((a) => a.scope === "shared");
+  if (!hidden.length) return;
+  hiddenWrap.innerHTML = `
+    <p class="account-section-label">Hidden shared apps</p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px">These family apps are hidden from your Home and Apps lists.</p>
+    ${hidden.map((a) => `
+      <div class="account-hidden-row">
+        <span>${esc(appDisplayName(a))}</span>
+        <button type="button" class="btn btn-secondary" style="font-size:13px;padding:6px 12px"
+          onclick="unhideSharedApp('${attrEsc(a.name)}')">
+          ${iconHtml("eye")} Show
+        </button>
+      </div>`).join("")}`;
 }
 
 function confirmLogout() {
@@ -4057,6 +4425,17 @@ function showPlanCard(plan, opts = {}) {
     <input type="text" id="plan-app-name" class="setup-input plan-app-name" maxlength="48"
       value="${attrEsc(defaultName)}" autocomplete="off">
     <p class="plan-slug-hint">Folder on this device: <code id="plan-app-slug"></code></p>
+    <div class="plan-scope">
+      <span class="plan-scope-label">Who can use this app?</span>
+      <label class="plan-scope-opt">
+        <input type="radio" name="plan-scope" value="personal" checked>
+        <span class="opt-text">Just me<span class="opt-sub">Only on your account</span></span>
+      </label>
+      <label class="plan-scope-opt">
+        <input type="radio" name="plan-scope" value="shared">
+        <span class="opt-text">Whole family<span class="opt-sub">Everyone on this Lamp can open it</span></span>
+      </label>
+    </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
       <button type="button" class="btn btn-primary plan-build-btn">Build this →</button>
       ${opts.fromChat ? '<button type="button" class="btn btn-secondary plan-refine-btn">Refine plan with AI</button>' : ""}
@@ -4067,6 +4446,10 @@ function showPlanCard(plan, opts = {}) {
   const syncSlug = () => { slugEl.textContent = slugifyAppName(nameInput.value); };
   nameInput.addEventListener("input", syncSlug);
   syncSlug();
+  const scopeVal = plan.scope === "shared" ? "shared" : "personal";
+  wrap.querySelectorAll('input[name="plan-scope"]').forEach((el) => {
+    el.checked = el.value === scopeVal;
+  });
   wrap.querySelector(".plan-build-btn").onclick = () => startBuild();
   const refineBtn = wrap.querySelector(".plan-refine-btn");
   if (refineBtn) refineBtn.onclick = () => refineBuildPlanFromChat();
@@ -4091,7 +4474,10 @@ async function startBuild() {
   const nameInput = document.getElementById("plan-app-name");
   const displayName = (nameInput?.value || S.interview.plan?.title || "").trim() || "My app";
   const appSlug = slugifyAppName(displayName);
-  const buildPlan = { ...(S.interview.plan || {}), title: displayName };
+  const scopePick = document.querySelector('input[name="plan-scope"]:checked');
+  const scope = scopePick?.value === "shared" ? "shared" : "personal";
+  const buildPlan = { ...(S.interview.plan || {}), title: displayName, scope };
+  S.interview.scope = scope;
   const res = await api("POST", "/api/build/start", {
     description: desc,
     user: S.user,
@@ -4232,6 +4618,313 @@ function setupConvoPullRefresh() {
     ptr.innerHTML = "";
     if (go) await renderConvoList();
   });
+}
+
+// ── Mind (Lamp-native UI → /api/memomind) ───────────────────────────────────
+const MIND_API = "/api/memomind";
+let mindPending = null;
+let mindTaskFilter = "all";
+const MIND_TITLES = { add: "Add", search: "Search", tasks: "Tasks", events: "Events", confirm: "Review" };
+
+async function mindApi(path, opts = {}) {
+  const res = await fetch(MIND_API + path, {
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+    ...opts,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.statusText || "Request failed");
+  return data;
+}
+
+function mindEsc(s) {
+  const d = document.createElement("div");
+  d.textContent = s || "";
+  return d.innerHTML;
+}
+
+function mindFmtDate(iso) {
+  return iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
+}
+
+function toggleNavFlyout() {
+  const el = document.getElementById("nav-flyout");
+  if (!el) return;
+  const open = el.classList.toggle("open");
+  el.setAttribute("aria-hidden", open ? "false" : "true");
+}
+
+function closeNavFlyout() {
+  const el = document.getElementById("nav-flyout");
+  if (!el) return;
+  el.classList.remove("open");
+  el.setAttribute("aria-hidden", "true");
+}
+
+function navFlyoutGo(hash) {
+  closeNavFlyout();
+  location.hash = hash;
+}
+
+function toggleMindDrawer() {
+  document.getElementById("mind-drawer")?.classList.toggle("open");
+  document.getElementById("mind-backdrop")?.classList.toggle("open");
+}
+
+function closeMindDrawer() {
+  document.getElementById("mind-drawer")?.classList.remove("open");
+  document.getElementById("mind-backdrop")?.classList.remove("open");
+}
+
+function mindGo(section) {
+  closeMindDrawer();
+  location.hash = "#/mind/" + section;
+}
+
+function mindSetPanel(section) {
+  document.querySelectorAll(".mind-panel").forEach(p => p.classList.remove("active"));
+  document.getElementById("mind-panel-" + section)?.classList.add("active");
+  document.querySelectorAll(".mind-nav-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.mind === section);
+  });
+  const title = document.getElementById("mind-mobile-title");
+  if (title) title.textContent = MIND_TITLES[section] || "Mind";
+}
+
+async function renderMindSection(section) {
+  mindSetPanel(section);
+  try {
+    if (section === "add") await mindLoadAdd();
+    else if (section === "search") { /* idle until search */ }
+    else if (section === "tasks") await mindLoadTasks();
+    else if (section === "events") await mindLoadEvents();
+    else if (section === "confirm") mindShowConfirm(mindPending);
+  } catch (e) {
+    toast(e.message || "Mind unavailable");
+  }
+}
+
+async function mindLoadAdd() {
+  const session = await mindApi("/session");
+  const ret = document.getElementById("mind-return");
+  if (session.return_message) {
+    ret.textContent = session.return_message;
+    ret.style.display = "block";
+  } else ret.style.display = "none";
+  const { entries } = await mindApi("/entries?limit=8");
+  const el = document.getElementById("mind-recent");
+  if (!entries?.length) {
+    el.innerHTML = '<p class="mind-empty">Nothing saved yet — add something above.</p>';
+  } else {
+    el.innerHTML = entries.map(e =>
+      `<div class="mind-card"><div>${mindEsc(e.content)}</div><div class="meta">${mindEsc(e.type)} · ${mindFmtDate(e.created_at)}</div></div>`
+    ).join("");
+  }
+  const { threads } = await mindApi("/threads?status=active");
+  const th = document.getElementById("mind-threads");
+  th.innerHTML = threads?.length
+    ? threads.map(t => `<span class="mind-chip">${mindEsc(t.title)}</span>`).join("")
+    : '<p class="mind-empty" style="padding:8px 0">No active threads</p>';
+}
+
+async function mindCapture() {
+  const input = document.getElementById("mind-capture-input")?.value.trim();
+  if (!input) return;
+  try {
+    const result = await mindApi("/capture", {
+      method: "POST",
+      body: JSON.stringify({ input, type: "text" }),
+    });
+    document.getElementById("mind-capture-input").value = "";
+    mindPending = result;
+    location.hash = "#/mind/confirm";
+  } catch (e) {
+    toast(e.message);
+  }
+}
+
+function mindShowConfirm(result) {
+  mindPending = result;
+  mindSetPanel("confirm");
+  document.getElementById("mind-confirm-hint").textContent = result.persona_message || "Review before saving.";
+  document.getElementById("mind-confirm-content").value = result.cleaned || "";
+  document.getElementById("mind-confirm-type").value = result.suggested_type || "note";
+  document.getElementById("mind-confirm-entities").innerHTML = (result.entities || [])
+    .map(e => `<span class="mind-entity">${mindEsc(e.type)}: ${mindEsc(e.value)}</span>`).join("");
+  mindRenderConfirmExtra(result);
+}
+
+function mindConfirmTypeChange() {
+  if (mindPending) mindRenderConfirmExtra(mindPending);
+}
+
+function mindRenderConfirmExtra(result) {
+  const el = document.getElementById("mind-confirm-extra");
+  const type = document.getElementById("mind-confirm-type").value;
+  const extra = result.extra_data || {};
+  if (type === "task") {
+    const t = extra.task || {};
+    el.innerHTML = `
+      <label class="mind-section-label">Priority</label>
+      <select id="mind-task-priority" class="setup-input" style="margin-bottom:8px">
+        <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+      </select>
+      <label class="mind-section-label">Due date</label>
+      <input type="date" id="mind-task-due" class="setup-input" value="${(t.due_date || "").slice(0, 10)}">`;
+    const pr = document.getElementById("mind-task-priority");
+    if (pr) pr.value = t.priority || "medium";
+  } else if (type === "event") {
+    const ev = extra.event || {};
+    const dt = (ev.event_date || "").slice(0, 16);
+    el.innerHTML = `
+      <label class="mind-section-label">When</label>
+      <input type="datetime-local" id="mind-event-date" class="setup-input" value="${dt.replace("Z", "")}">
+      <label class="mind-section-label">Location</label>
+      <input type="text" id="mind-event-location" class="setup-input" placeholder="Optional">`;
+    const loc = document.getElementById("mind-event-location");
+    if (loc) loc.value = ev.location || "";
+  } else el.innerHTML = "";
+}
+
+async function mindConfirmSave() {
+  if (!mindPending) return;
+  const save_as = document.getElementById("mind-confirm-type").value;
+  const body = {
+    confirmation_id: mindPending.confirmation_id,
+    approved_content: document.getElementById("mind-confirm-content").value,
+    save_as,
+  };
+  if (save_as === "task") {
+    body.task = {
+      title: body.approved_content,
+      priority: document.getElementById("mind-task-priority")?.value || "medium",
+      due_date: document.getElementById("mind-task-due")?.value || null,
+    };
+  }
+  if (save_as === "event") {
+    const dt = document.getElementById("mind-event-date")?.value;
+    body.event = {
+      title: body.approved_content,
+      event_date: dt ? new Date(dt).toISOString() : new Date().toISOString(),
+      location: document.getElementById("mind-event-location")?.value || null,
+      reminders: [{ offset_minutes: 1440, label: null, method: "notification" }],
+    };
+  }
+  try {
+    await mindApi("/capture/confirm", { method: "POST", body: JSON.stringify(body) });
+    mindPending = null;
+    toast("Saved");
+    location.hash = "#/mind/add";
+  } catch (e) {
+    toast(e.message);
+  }
+}
+
+function mindConfirmDiscard() {
+  if (mindPending?.confirmation_id) {
+    mindApi("/capture/discard", {
+      method: "POST",
+      body: JSON.stringify({ confirmation_id: mindPending.confirmation_id }),
+    }).catch(() => {});
+  }
+  mindPending = null;
+  location.hash = "#/mind/add";
+}
+
+async function mindSearch() {
+  const query = document.getElementById("mind-search-input")?.value.trim();
+  if (!query) return;
+  const ans = document.getElementById("mind-search-answer");
+  const meta = document.getElementById("mind-search-meta");
+  const sup = document.getElementById("mind-search-supporting");
+  ans.style.display = "block";
+  ans.textContent = "Searching…";
+  meta.textContent = "";
+  sup.innerHTML = "";
+  try {
+    const result = await mindApi("/search", {
+      method: "POST",
+      body: JSON.stringify({ query }),
+    });
+    ans.textContent = result.answer || "No answer.";
+    meta.textContent = result.confidence
+      ? `${result.confidence} · ${result.total_entries_searched || 0} entries`
+      : "";
+    sup.innerHTML = (result.supporting || [])
+      .map(s => `<div class="mind-card"><div>${mindEsc(s.finding)}</div></div>`).join("");
+  } catch (e) {
+    ans.textContent = e.message;
+  }
+}
+
+async function mindLoadTasks() {
+  const q = mindTaskFilter === "all" ? "" : `?filter=${mindTaskFilter}`;
+  const { tasks } = await mindApi("/tasks" + q);
+  const el = document.getElementById("mind-tasks-list");
+  if (!tasks?.length) {
+    el.innerHTML = '<p class="mind-empty">No tasks here.</p>';
+    return;
+  }
+  el.innerHTML = tasks.map(t => `
+    <div class="mind-task-row">
+      <input type="checkbox" ${t.status === "done" ? "checked" : ""}
+        onchange="mindToggleTask('${t.id}', this.checked)" aria-label="Complete">
+      <div>
+        <div>${mindEsc(t.title)}</div>
+        <div class="meta">${t.due_date ? "Due " + mindFmtDate(t.due_date) : "No due date"} · ${mindEsc(t.priority || "medium")}</div>
+      </div>
+    </div>`).join("");
+}
+
+function mindSetTaskFilter(f, btn) {
+  mindTaskFilter = f;
+  document.querySelectorAll("#mind-task-filters button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  mindLoadTasks();
+}
+
+async function mindToggleTask(id, done) {
+  await mindApi(`/tasks/${id}/status`, {
+    method: "POST",
+    body: JSON.stringify({ status: done ? "done" : "todo" }),
+  });
+  mindLoadTasks();
+}
+
+function mindNewTask() {
+  const t = prompt("Task title:");
+  if (!t?.trim()) return;
+  mindApi("/tasks", {
+    method: "POST",
+    body: JSON.stringify({ title: t.trim(), priority: "medium" }),
+  }).then(() => mindLoadTasks()).catch(e => toast(e.message));
+}
+
+async function mindLoadEvents() {
+  const { events, past } = await mindApi("/events?include_past=1");
+  const up = document.getElementById("mind-events-upcoming");
+  up.innerHTML = events?.length
+    ? events.map(e => `<div class="mind-card"><strong>${mindFmtDate(e.event_date)}</strong> ${mindEsc(e.title)}<div class="meta">${mindEsc(e.location || "")}</div></div>`).join("")
+    : '<p class="mind-empty">Nothing upcoming</p>';
+  const pa = document.getElementById("mind-events-past");
+  pa.innerHTML = past?.length
+    ? past.map(e => `<div class="mind-card meta">${mindFmtDate(e.event_date)} — ${mindEsc(e.title)}</div>`).join("")
+    : '<p class="mind-empty">None</p>';
+}
+
+function mindNewEvent() {
+  const t = prompt("Event title:");
+  if (!t?.trim()) return;
+  const d = prompt("Date (YYYY-MM-DD):", new Date().toISOString().slice(0, 10));
+  if (!d) return;
+  mindApi("/events", {
+    method: "POST",
+    body: JSON.stringify({
+      title: t.trim(),
+      event_date: d + "T14:00:00.000Z",
+      reminders: [{ offset_minutes: 1440, label: null, method: "notification" }],
+    }),
+  }).then(() => mindLoadEvents()).catch(e => toast(e.message));
 }
 
 window.addEventListener("hashchange", route);
