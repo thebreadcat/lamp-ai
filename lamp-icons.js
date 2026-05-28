@@ -42,9 +42,12 @@ const LAMP_ICONS = {
   calendar: ["solid", "calendar-days"],
   tasks: ["solid", "list-check"],
   plus: ["solid", "plus"],
+  image: ["solid", "image"],
   "eye-slash": ["solid", "eye-slash"],
   eye: ["solid", "eye"],
   "arrow-right": ["solid", "arrow-right"],
+  ellipsis: ["solid", "ellipsis-vertical"],
+  merge: ["solid", "code-merge"],
 };
 
 const TEMPLATE_ICON_ALIASES = {

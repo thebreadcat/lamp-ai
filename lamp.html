@@ -52,9 +52,14 @@
   --nav-h: 64px;
   --nav-side-w: 220px;
   --content-max: 1200px;
+  --mind-mobile-header-h: 68px;
+  --lava-blob-core: #fcd34d;
+  --lava-blob-mid: #f59e0b;
 }
 [data-theme="light"] {
   color-scheme: light;
+  --lava-blob-core: #fbbf24;
+  --lava-blob-mid: #f59e0b;
   --bg: #f5f5f4;
   --surface: #ffffff;
   --surface-raised: #fafaf9;
@@ -398,18 +403,36 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   border: 1px solid rgba(248, 113, 113, 0.35); background: rgba(248, 113, 113, 0.08);
   font-size: 14px; line-height: 1.45;
 }
-.lamp-logo {
-  display: block; width: 26px; height: 26px; color: var(--text); flex-shrink: 0;
-}
-.nav-item.active .lamp-logo { color: var(--accent); }
 .nav-brand {
-  display: none; align-items: center; gap: 10px; width: calc(100% - 20px);
-  margin: 0 10px 8px; padding: 4px 10px 16px; border: none; background: none;
+  display: none; align-items: stretch; width: calc(100% - 20px);
+  margin: 0 10px 8px; padding: 0 0 16px; border: none; background: none;
   cursor: pointer; text-decoration: none; color: var(--text); flex-shrink: 0;
 }
-.nav-brand-text {
-  font-size: 24px; font-weight: 500; letter-spacing: -0.06em; color: var(--text);
+/* Lava logo — Chris Gannon-style goo blobs (codepen.io/chrisgannon/pen/QjKXXe) */
+.lamp-lava-logo {
+  position: relative; display: block; overflow: hidden; width: 100%;
+  border-radius: 32px 14px 14px 14px;
+  box-shadow: var(--shadow-sm), inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
 }
+.lamp-lava-logo--lg {
+  width: min(280px, 88vw); height: 112px;
+}
+.lamp-lava-logo--sm {
+  height: 52px;
+  border-radius: 24px 10px 10px 10px;
+}
+.lamp-lava-svg {
+  display: block; width: 100%; height: 100%; pointer-events: none;
+}
+.lamp-lava-logo__word {
+  position: absolute; inset: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 500; letter-spacing: -0.06em; line-height: 1;
+  color: #ffecd6; pointer-events: none;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+}
+.lamp-lava-logo--lg .lamp-lava-logo__word { font-size: 42px; }
+.lamp-lava-logo--sm .lamp-lava-logo__word { font-size: 26px; }
 .nav-badge {
   position: absolute; top: 6px; margin-left: 28px;
   background: var(--warn); color: #fff; font-size: 10px; font-weight: 700;
@@ -464,24 +487,26 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   letter-spacing: 0.06em; padding: 20px 20px 8px;
 }
 .apps-row {
-  display: flex; gap: 10px; padding: 0 20px 8px; overflow-x: auto;
-  scrollbar-width: none;
+  display: flex; gap: 10px; padding: 6px 20px 12px; overflow-x: auto;
+  overflow-y: visible; scrollbar-width: none;
 }
 .apps-row::-webkit-scrollbar { display: none; }
 .app-chip {
   flex: 0 0 140px; background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 14px; cursor: pointer;
+  border-radius: var(--r); padding: 14px; cursor: pointer; text-decoration: none;
   box-shadow: var(--shadow-sm);
-  transition: border-color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
 }
 .app-chip-name { font-weight: 700; font-size: 15px; }
-.app-chip-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.app-chip-meta { font-size: 12px; margin-top: 4px; opacity: 0.82; }
 .app-chip:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+  filter: brightness(1.04);
 }
-[data-theme="dark"] .app-chip:hover { border-color: rgba(251, 191, 36, 0.35); }
+.app-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
@@ -544,18 +569,24 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   display: flex; flex-direction: column; align-items: center; text-align: center;
   margin-bottom: 28px;
 }
-.auth-logo-mark { width: 72px; height: 72px; color: var(--text); margin-bottom: 12px; }
-.auth-logo-text {
-  font-size: 42px; font-weight: 500; letter-spacing: -0.06em; color: var(--text); line-height: 1;
-}
-.auth-tagline { color: var(--muted); font-size: 15px; margin-top: 8px; }
+.auth-tagline { color: var(--muted); font-size: 15px; margin-top: 12px; }
 .app-chip-icon {
-  width: 40px; height: 40px; border-radius: 12px; background: var(--accent-l);
-  color: var(--accent); display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 17px; margin-bottom: 10px;
 }
-.app-chip.shared .app-chip-icon { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
-[data-theme="light"] .app-chip.shared .app-chip-icon { color: #4f46e5; background: #eef2ff; }
+.app-meta-color-row {
+  display: flex; align-items: center; gap: 12px;
+}
+.app-meta-color-row input[type="color"] {
+  width: 52px; height: 44px; padding: 4px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg); cursor: pointer;
+}
+.app-meta-color-preview {
+  flex: 1; min-height: 44px; border-radius: 10px; padding: 10px 14px;
+  font-size: 14px; font-weight: 600; display: flex; align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
 .setup-input {
   width: 100%; padding: 14px 16px; border-radius: 10px; border: 1px solid var(--border);
   background: var(--surface); color: var(--text); font-size: 17px; margin-bottom: 12px;
@@ -681,13 +712,16 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 .done-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
 .app-cards { padding: 12px 20px; display: flex; flex-direction: column; gap: 10px; }
 .app-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px;
-  box-shadow: var(--shadow-sm);
-  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  border: 1px solid var(--border); border-radius: var(--r); padding: 0;
+  overflow: hidden; box-shadow: var(--shadow-sm);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
 }
-[data-theme="dark"] .app-card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, var(--surface) 100%);
+.app-card:hover { box-shadow: var(--shadow-md); filter: brightness(1.03); }
+.app-card-body { padding: 18px 18px 14px; }
+.app-card-open {
+  color: inherit; text-decoration: none;
 }
+.app-card-open:hover { text-decoration: underline; text-underline-offset: 3px; }
 .app-card-head {
   display: flex; align-items: flex-start; justify-content: space-between;
   gap: 12px; margin-bottom: 2px;
@@ -697,11 +731,34 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 .app-card-desc { color: var(--muted); font-size: 14px; margin-top: 4px; }
 .app-card-edit {
   flex-shrink: 0; width: 40px; height: 40px; padding: 0;
-  border: 1px solid var(--border); border-radius: 10px;
-  background: var(--surface-raised); color: var(--muted); cursor: pointer;
+  border: none; border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28); color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
 }
-.app-card-edit:hover { color: var(--accent); border-color: var(--accent); }
-.app-card-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.app-card-edit:hover { background: rgba(0, 0, 0, 0.4); color: #fff; }
+.app-card-toolbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 12px; background: rgba(0, 0, 0, 0.38);
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+.app-card-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 14px; min-height: 36px; border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 600; font-family: inherit; line-height: 1.2;
+  background: rgba(255, 255, 255, 0.14); color: #f5f5f4;
+  cursor: pointer; text-decoration: none;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.app-card-btn:hover { background: rgba(255, 255, 255, 0.24); color: #fff; }
+.app-card-btn .ico-inline { font-size: 0.9rem; width: 0.9rem; opacity: 0.92; }
+.app-card-btn--icon {
+  width: 36px; min-width: 36px; padding: 0;
+}
+.app-card-btn--icon .ico-inline { margin: 0; font-size: 1rem; width: 1rem; }
+.app-card-btn--danger { margin-left: auto; }
+.app-card-btn--danger:hover {
+  background: rgba(220, 38, 38, 0.45); color: #fecaca;
+}
 .app-meta-field { margin-bottom: 14px; }
 .app-meta-field label {
   display: block; font-size: 12px; font-weight: 700; color: var(--muted);
@@ -766,9 +823,49 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 .convo-item {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
+  transition: background var(--t-fast), outline-color var(--t-fast);
 }
 .convo-item:active { background: var(--surface); }
-.convo-item.active { background: var(--accent-l); }
+.convo-item.active {
+  background: var(--accent-l);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.convo-item.convo-dragging { opacity: 0.4; }
+.convo-list.is-dragging .convo-item.convo-drop-target {
+  margin: 2px 8px;
+  background: var(--accent-l);
+  border-radius: 10px;
+  border-bottom-color: transparent;
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+[data-theme="dark"] .convo-list.is-dragging .convo-item.convo-drop-target {
+  background: rgba(251, 191, 36, 0.1);
+  box-shadow: none;
+}
+.convo-drop-hint {
+  font-size: 12px; font-weight: 600; color: var(--accent); margin-top: 4px;
+}
+.convo-menu-btn {
+  flex-shrink: 0; width: 36px; height: 36px; padding: 0; margin: -4px -4px 0 0;
+  border: none; background: transparent; color: var(--muted); border-radius: 8px;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.convo-menu-btn:hover, .convo-menu-btn:focus-visible {
+  background: var(--surface-raised); color: var(--text);
+}
+.convo-action-row {
+  display: flex; width: 100%; align-items: center; gap: 10px;
+  padding: 14px 16px; margin-bottom: 8px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--surface);
+  font-size: 16px; font-weight: 500; color: var(--text);
+  cursor: pointer; text-align: left;
+}
+.convo-action-row:hover { border-color: var(--border-strong); background: var(--accent-l); }
+.convo-action-row .ico { width: 1.125rem; color: var(--muted); }
+.convo-action-row.danger { color: var(--warn); }
+.convo-action-row.danger .ico { color: var(--warn); }
 .convo-item-star { width: 18px; flex-shrink: 0; color: var(--accent); font-size: 14px; line-height: 1.4; }
 .convo-item-body { flex: 1; min-width: 0; }
 .convo-item-title {
@@ -1132,14 +1229,25 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 }
 #nav-flyout.open #nav-flyout-backdrop { opacity: 1; }
 #nav-flyout-panel {
-  position: absolute; right: 0; top: 0; bottom: 0; width: min(300px, 88vw);
-  background: var(--surface); border-left: 1px solid var(--border);
-  box-shadow: var(--shadow-md); transform: translateX(100%);
+  position: absolute; left: 0; top: 0; bottom: 0; width: min(300px, 88vw);
+  background: var(--surface); border-right: 1px solid var(--border);
+  box-shadow: 4px 0 32px rgba(0, 0, 0, 0.18);
+  transform: translateX(-100%);
   transition: transform var(--t-med);
   display: flex; flex-direction: column; padding: 16px 12px 24px;
+  padding-top: max(16px, env(safe-area-inset-top));
   overflow-y: auto;
 }
 #nav-flyout.open #nav-flyout-panel { transform: translateX(0); }
+.nav-flyout-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 8px 12px; margin-bottom: 4px;
+}
+.nav-flyout-close {
+  width: 36px; height: 36px; border: none; border-radius: 10px;
+  background: var(--surface-raised); color: var(--muted); cursor: pointer;
+  font-size: 20px; line-height: 1;
+}
 .nav-flyout-title {
   font-size: 13px; font-weight: 700; color: var(--muted);
   text-transform: uppercase; letter-spacing: 0.06em;
@@ -1160,27 +1268,43 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   display: flex; flex-direction: column; min-height: calc(100vh - var(--nav-h));
   width: 100%;
 }
+.mind-mobile-nav {
+  position: relative; z-index: 120; flex-shrink: 0;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+}
 .mind-mobile-bar {
   display: flex; align-items: center; gap: 10px;
-  padding: 12px 16px; border-bottom: 1px solid var(--border);
-  background: var(--surface); flex-shrink: 0;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  background: var(--surface); cursor: pointer;
 }
 .mind-mobile-bar h1 { font-size: 18px; font-weight: 600; flex: 1; }
+.mind-mobile-bar .mind-mode-label {
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
 .mind-sidebar {
   display: none;
 }
 .mind-backdrop {
   display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-  z-index: 80;
+  z-index: 110;
 }
 .mind-drawer {
-  position: fixed; left: 0; top: 0; bottom: 0; width: min(260px, 82vw);
-  background: var(--surface); border-right: 1px solid var(--border);
-  z-index: 90; transform: translateX(-100%);
-  transition: transform var(--t-med);
-  padding: 16px 10px; display: flex; flex-direction: column; gap: 4px;
+  position: absolute; left: 0; right: 0; top: 100%;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+  max-height: 0; overflow: hidden; opacity: 0;
+  transform: translateY(-12px);
+  transition: max-height var(--t-med), opacity var(--t-med), transform var(--t-med);
+  padding: 0 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  pointer-events: none;
 }
-.mind-drawer.open { transform: translateX(0); }
+.mind-drawer.open {
+  max-height: 280px; opacity: 1; transform: translateY(0);
+  padding: 10px 10px 14px; pointer-events: auto;
+}
+.mind-drawer .mind-nav-btn { width: 100%; }
 .mind-backdrop.open { display: block; }
 .mind-nav-btn {
   display: flex; align-items: center; gap: 10px; width: 100%;
@@ -1189,6 +1313,8 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 }
 .mind-nav-btn.active { background: var(--accent-l); color: var(--accent); font-weight: 600; }
 .mind-nav-btn .ico { width: 1.25rem; font-size: 1.1rem; }
+.mind-mobile-bar > .ico { transition: transform var(--t-fast); font-size: 1.1rem; }
+.mind-mobile-bar[aria-expanded="true"] > .ico { transform: rotate(180deg); }
 .mind-main { flex: 1; overflow-y: auto; padding: 16px; }
 .mind-panel { display: none; }
 .mind-panel.active { display: block; }
@@ -1199,13 +1325,22 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 .mind-capture-row {
   display: flex; gap: 8px; margin-bottom: 16px;
 }
-.mind-attach-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 44px; padding: 0 12px; border-radius: var(--r);
-  border: 1px solid var(--border); background: var(--surface);
-  color: var(--muted); font-weight: 600; cursor: pointer;
+.mind-icon-btn {
+  width: 44px; height: 44px; min-width: 44px; padding: 0;
+  border-radius: 10px; flex-shrink: 0;
+  border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
 }
-.mind-attach-btn:hover { border-color: var(--border-strong); color: var(--text); }
+.mind-icon-btn:hover:not(:disabled) { border-color: var(--border-strong); color: var(--text); }
+.mind-icon-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.mind-icon-btn.voice-unavailable { opacity: 0.5; }
+.mind-icon-btn.listening {
+  color: var(--warn); border-color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 12%, var(--surface));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warn) 25%, transparent);
+  animation: voice-pulse 1.2s ease-in-out infinite;
+}
 .mind-capture-row input, .mind-capture-row textarea {
   flex: 1; padding: 12px 14px; border-radius: var(--r);
   border: 1px solid var(--border); background: var(--surface);
@@ -1320,12 +1455,44 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 
 @media (max-width: 767px) {
   #nav-mind-desktop { display: none !important; }
+  #v-mind.view.active {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - var(--nav-h));
+    overflow: hidden;
+  }
+  #v-mind.view.active .mind-shell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-top: 0;
+  }
+  #v-mind.view.active .mind-mobile-nav {
+    position: sticky;
+    top: 0;
+    left: auto;
+    right: auto;
+    flex-shrink: 0;
+    z-index: 120;
+  }
+  #v-mind.view.active .mind-mobile-bar {
+    min-height: var(--mind-mobile-header-h);
+    box-sizing: border-box;
+  }
+  #v-mind.view.active .mind-main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-top: 12px;
+  }
 }
 @media (min-width: 768px) {
   .nav-menu-mobile-only { display: none !important; }
   #nav-mind { display: none !important; }
   .nav-desktop-only { display: flex; }
-  .mind-mobile-bar { display: none; }
+  .mind-mobile-nav { display: none; }
   .mind-backdrop, .mind-drawer { display: none !important; }
   .mind-shell {
     flex-direction: row; min-height: 100vh;
@@ -1399,8 +1566,11 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
     padding-bottom: 18px;
     margin-bottom: 8px;
   }
-  .nav-brand .lamp-logo { width: 40px; height: 40px; }
-  .nav-brand-text { font-size: 28px; }
+  .lamp-lava-logo--sm {
+    height: 56px;
+    border-radius: 28px 12px 12px 12px;
+  }
+  .lamp-lava-logo--sm .lamp-lava-logo__word { font-size: 28px; }
   .nav-main {
     flex: 1;
     display: flex;
@@ -1450,7 +1620,7 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
     min-height: 56px;
   }
   .section-title { padding: 24px 0 12px; }
-  .apps-row { padding: 0 0 12px; }
+  .apps-row { padding: 6px 0 14px; }
   .template-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 14px;
@@ -1503,6 +1673,26 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
       <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.95"/>
       <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
     </linearGradient>
+    <filter id="lamp-lava-goo" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 21 -9" result="cm"/>
+      <feBlend in="SourceGraphic" in2="cm"/>
+    </filter>
+    <radialGradient id="lamp-lava-bg" cx="50%" cy="38%" r="72%" gradientUnits="objectBoundingBox">
+      <stop offset="7%" stop-color="#471A19"/>
+      <stop offset="31%" stop-color="#290F0E"/>
+      <stop offset="55%" stop-color="#120706"/>
+      <stop offset="78%" stop-color="#050202"/>
+      <stop offset="98%" stop-color="#000000"/>
+    </radialGradient>
+    <radialGradient id="lamp-lava-blob" cx="40%" cy="35%" r="70%" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="var(--lava-blob-core)"/>
+      <stop offset="48%" stop-color="var(--accent)"/>
+      <stop offset="100%" stop-color="var(--accent-d)"/>
+    </radialGradient>
+    <clipPath id="lamp-lava-clip" clipPathUnits="objectBoundingBox">
+      <path d="M0.114,0 H1 V1 H0 V0.286 Q0,0 0.114,0 Z"/>
+    </clipPath>
     <symbol id="lamp-logo-icon" viewBox="0 0 900 900">
       <path d="M470 170 L300 470 L610 470 Z" fill="url(#lampLogoBeam)"/>
       <g fill="var(--accent)">
@@ -1527,8 +1717,9 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   <div id="v-setup" class="view full">
     <div class="setup-center">
       <div class="auth-brand">
-        <svg class="auth-logo-mark" viewBox="0 0 900 900" aria-hidden="true"><use href="#lamp-logo-icon"/></svg>
-        <div class="auth-logo-text">lamp</div>
+        <div class="lamp-lava-logo lamp-lava-logo--lg" data-lava-logo role="img" aria-label="Lamp">
+          <span class="lamp-lava-logo__word">lamp</span>
+        </div>
       </div>
       <h1>Welcome</h1>
       <p>Create the first account — this person will be the admin for this home device.</p>
@@ -1544,8 +1735,9 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   <div id="v-login" class="view full">
     <div class="setup-center" style="padding-top:48px">
       <div class="auth-brand">
-        <svg class="auth-logo-mark" viewBox="0 0 900 900" aria-hidden="true"><use href="#lamp-logo-icon"/></svg>
-        <div class="auth-logo-text">lamp</div>
+        <div class="lamp-lava-logo lamp-lava-logo--lg" data-lava-logo role="img" aria-label="Lamp">
+          <span class="lamp-lava-logo__word">lamp</span>
+        </div>
         <p class="auth-tagline">Every home needs a Lamp.</p>
       </div>
     </div>
@@ -1603,6 +1795,7 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
           <div class="chat-panel-actions">
             <button type="button" class="btn-icon" id="chat-voice-auto-btn" onclick="toggleVoiceAutoRead()" title="Auto-read replies" aria-label="Auto-read" style="display:none"></button>
             <button type="button" class="btn-icon" id="chat-star-btn" onclick="toggleStarChat()" title="Star" aria-label="Star"></button>
+            <button type="button" class="btn-icon" id="chat-merge-btn" onclick="openMergeIntoCurrentChat()" title="Link another chat's context" aria-label="Link context" style="display:none"></button>
             <button type="button" class="btn-icon" id="chat-rename-btn" onclick="renameCurrentChat()" title="Rename" aria-label="Rename"></button>
             <button type="button" class="btn-ghost" onclick="deleteCurrentChat()">Delete</button>
           </div>
@@ -1624,6 +1817,26 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
           <button class="send-btn" id="lamp-chat-send" onclick="sendLampChat()" aria-label="Send"></button>
         </div>
       </section>
+    </div>
+    <div id="convo-actions-sheet" class="model-sheet" hidden>
+      <div class="model-sheet-backdrop" onclick="closeConvoActionsSheet()"></div>
+      <div class="model-sheet-panel" role="dialog" aria-labelledby="convo-actions-title">
+        <div class="model-sheet-head">
+          <strong id="convo-actions-title">Chat</strong>
+          <button type="button" class="btn-ghost" onclick="closeConvoActionsSheet()">Done</button>
+        </div>
+        <div id="convo-actions-menu"></div>
+        <div id="convo-merge-pick" hidden>
+          <p class="model-sheet-hint" id="convo-merge-pick-hint"></p>
+          <div id="convo-merge-target-list" class="model-sheet-list"></div>
+          <button type="button" class="btn-ghost" style="margin-top:8px" onclick="convoActionBackToMenu()">Back</button>
+        </div>
+        <div id="convo-merge-mode" hidden>
+          <p class="model-sheet-hint" id="convo-merge-mode-hint"></p>
+          <div id="convo-merge-mode-actions"></div>
+          <button type="button" class="btn-ghost" style="margin-top:8px" onclick="convoActionBackToMergePick()">Back</button>
+        </div>
+      </div>
     </div>
     <div id="chat-model-sheet" class="model-sheet" hidden>
       <div class="model-sheet-backdrop" onclick="closeChatModelSheet()"></div>
@@ -1762,15 +1975,22 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
         <button type="button" class="mind-nav-btn" data-mind="events" onclick="mindGo('events')"><span class="ico" id="mind-ico-events-d"></span>Events</button>
       </aside>
       <div class="mind-backdrop" id="mind-backdrop" onclick="closeMindDrawer()"></div>
-      <nav class="mind-drawer" id="mind-drawer" aria-label="Mind menu">
-        <button type="button" class="mind-nav-btn" data-mind="add" onclick="mindGo('add')"><span class="ico" id="mind-ico-add-m"></span>Add</button>
-        <button type="button" class="mind-nav-btn" data-mind="search" onclick="mindGo('search')"><span class="ico" id="mind-ico-search-m"></span>Search</button>
-        <button type="button" class="mind-nav-btn" data-mind="tasks" onclick="mindGo('tasks')"><span class="ico" id="mind-ico-tasks-m"></span>Tasks</button>
-        <button type="button" class="mind-nav-btn" data-mind="events" onclick="mindGo('events')"><span class="ico" id="mind-ico-events-m"></span>Events</button>
-      </nav>
-      <div class="mind-mobile-bar">
-        <button type="button" class="btn-icon" onclick="toggleMindDrawer()" aria-label="Mind sections"><span class="ico" id="mind-menu-ico"></span></button>
-        <h1 id="mind-mobile-title">Add</h1>
+      <div class="mind-mobile-nav">
+        <div class="mind-mobile-bar" onclick="toggleMindDrawer()" role="button" tabindex="0"
+          onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); toggleMindDrawer(); }">
+          <span class="ico" id="mind-menu-ico" aria-hidden="true"></span>
+          <div style="flex:1;min-width:0">
+            <span class="mind-mode-label">Mind</span>
+            <h1 id="mind-mobile-title">Add</h1>
+          </div>
+          <span class="mind-mode-label" id="mind-menu-hint" aria-hidden="true">Sections</span>
+        </div>
+        <nav class="mind-drawer" id="mind-drawer" aria-label="Mind sections" onclick="event.stopPropagation()">
+          <button type="button" class="mind-nav-btn" data-mind="add" onclick="mindGo('add')"><span class="ico" id="mind-ico-add-m"></span>Add</button>
+          <button type="button" class="mind-nav-btn" data-mind="search" onclick="mindGo('search')"><span class="ico" id="mind-ico-search-m"></span>Search</button>
+          <button type="button" class="mind-nav-btn" data-mind="tasks" onclick="mindGo('tasks')"><span class="ico" id="mind-ico-tasks-m"></span>Tasks</button>
+          <button type="button" class="mind-nav-btn" data-mind="events" onclick="mindGo('events')"><span class="ico" id="mind-ico-events-m"></span>Events</button>
+        </nav>
       </div>
       <main class="mind-main">
         <div id="mind-panel-add" class="mind-panel active">
@@ -1778,7 +1998,10 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
           <div class="mind-capture-row">
             <input type="text" id="mind-capture-input" placeholder="Remember something…" autocomplete="off"
               onkeydown="if(event.key==='Enter')mindCapture()">
-            <button type="button" class="mind-attach-btn" onclick="mindOpenImagePicker()" aria-label="Upload image">Image</button>
+            <button type="button" class="mind-icon-btn" id="mind-capture-mic" onclick="toggleMindCaptureDictation()"
+              aria-label="Dictate" title="Dictate"></button>
+            <button type="button" class="mind-icon-btn" id="mind-image-btn" onclick="mindOpenImagePicker()"
+              aria-label="Upload image" title="Upload image"></button>
             <input type="file" id="mind-image-input" accept="image/*" style="display:none" onchange="mindUploadImage(this)">
             <button type="button" class="btn btn-primary" onclick="mindCapture()">Save</button>
           </div>
@@ -1796,6 +2019,8 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
             <div class="mind-capture-row">
               <input type="search" id="mind-search-input" placeholder="What do you want to know?" autocomplete="off"
                 onkeydown="if(event.key==='Enter')mindSearch()">
+              <button type="button" class="mind-icon-btn" id="mind-search-mic" onclick="toggleMindSearchDictation()"
+                aria-label="Dictate search" title="Dictate search"></button>
               <button type="button" class="btn btn-primary" onclick="mindSearch()">Ask</button>
             </div>
             <div id="mind-search-answer" class="mind-search-result mind-card" style="display:none"></div>
@@ -1906,14 +2131,22 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
       <label for="app-meta-desc">Description</label>
       <textarea id="app-meta-desc" maxlength="500" placeholder="What does this app do?"></textarea>
     </div>
+    <div class="app-meta-field">
+      <label for="app-meta-color">Card color</label>
+      <div class="app-meta-color-row">
+        <input type="color" id="app-meta-color" value="#d97706" aria-label="App card color">
+        <div class="app-meta-color-preview" id="app-meta-color-preview">Preview</div>
+      </div>
+    </div>
     <button type="button" class="btn btn-primary" style="width:100%" onclick="saveAppMeta()">Save</button>
   </div>
 </div>
 
 <nav id="bottom-nav" class="bottom-nav">
   <button type="button" class="nav-brand" onclick="location.hash='#/'" aria-label="Lamp home">
-    <svg class="lamp-logo" viewBox="0 0 900 900" aria-hidden="true"><use href="#lamp-logo-icon"/></svg>
-    <span class="nav-brand-text">lamp</span>
+    <div class="lamp-lava-logo lamp-lava-logo--sm" data-lava-logo aria-hidden="true">
+      <span class="lamp-lava-logo__word">lamp</span>
+    </div>
   </button>
   <div class="nav-main">
     <button class="nav-item" data-route="home" onclick="location.hash='#/'" style="position:relative">
@@ -1936,7 +2169,13 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 <div id="nav-flyout" aria-hidden="true">
   <div id="nav-flyout-backdrop" onclick="closeNavFlyout()"></div>
   <div id="nav-flyout-panel" role="dialog" aria-label="Menu">
-    <p class="nav-flyout-title">Lamp</p>
+    <div class="nav-flyout-head">
+      <p class="nav-flyout-title" style="padding:0;margin:0">Menu</p>
+      <button type="button" class="nav-flyout-close" onclick="closeNavFlyout()" aria-label="Close menu">×</button>
+    </div>
+    <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/')"><span class="ico" id="flyout-ico-home"></span>Home</button>
+    <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/chat')"><span class="ico" id="flyout-ico-chat"></span>Chat</button>
+    <button type="button" class="nav-flyout-item" id="flyout-mind" style="display:none" onclick="navFlyoutGo('#/mind/add')"><span class="ico" id="flyout-ico-mind"></span>Mind</button>
     <button type="button" class="nav-flyout-item" id="flyout-build" onclick="navFlyoutGo('#/build')"><span class="ico" id="flyout-ico-build"></span>Build</button>
     <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/apps')"><span class="ico" id="flyout-ico-apps"></span>Apps</button>
     <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/notifications')"><span class="ico" id="flyout-ico-bell"></span>Notifications</button>
@@ -1996,6 +2235,54 @@ function updateStarBtn(starred) {
   starBtn.setAttribute("aria-label", starBtn.title);
 }
 
+const LAVA_BLOB_SPECS = [
+  { x: 48, r: 19, yA: 128, yB: -24, xDrift: 16 },
+  { x: 118, r: 14, yA: -22, yB: 124, xDrift: -12 },
+  { x: 178, r: 17, yA: 132, yB: -20, xDrift: -14 },
+  { x: 82, r: 11, yA: -18, yB: 118, xDrift: 10 },
+  { x: 218, r: 13, yA: 126, yB: -26, xDrift: 8 },
+];
+
+function lavaLogoSvgMarkup() {
+  const blobs = LAVA_BLOB_SPECS.map((b, i) =>
+    `<circle class="lamp-lava-svg-blob" r="${b.r}" cx="${b.x}" cy="${b.yA}" fill="url(#lamp-lava-blob)" data-lava-blob="${i}"/>`
+  ).join("");
+  return `<svg class="lamp-lava-svg" viewBox="0 0 280 112" preserveAspectRatio="none" aria-hidden="true">
+    <rect width="280" height="112" fill="url(#lamp-lava-bg)"/>
+    <rect width="280" height="112" fill="var(--accent)" opacity="0.06"/>
+    <g clip-path="url(#lamp-lava-clip)" filter="url(#lamp-lava-goo)">
+      ${blobs}
+    </g>
+  </svg>`;
+}
+
+function mountLavaLogos() {
+  document.querySelectorAll("[data-lava-logo]").forEach(el => {
+    if (el.querySelector(".lamp-lava-svg")) return;
+    el.insertAdjacentHTML("afterbegin", lavaLogoSvgMarkup());
+  });
+}
+
+function initLavaLogoMotion() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  LAVA_BLOB_SPECS.forEach((spec, i) => {
+    document.querySelectorAll(`[data-lava-blob="${i}"]`).forEach(el => {
+      const dur = 14000 + i * 3200 + Math.random() * 5000;
+      const delay = i * 900 + Math.random() * 600;
+      el.animate([
+        { cy: spec.yA, cx: spec.x },
+        { cy: spec.yB, cx: spec.x + spec.xDrift },
+      ], {
+        duration: dur,
+        delay,
+        iterations: Infinity,
+        direction: "alternate",
+        easing: "ease-in-out",
+      });
+    });
+  });
+}
+
 function initStaticIcons() {
   setIconEl(document.getElementById("nav-ico-home"), "home");
   setIconEl(document.getElementById("nav-ico-chat"), "chat");
@@ -2005,7 +2292,7 @@ function initStaticIcons() {
   setIconEl(document.getElementById("nav-ico-mind-d"), "brain");
   setIconEl(document.getElementById("nav-ico-menu"), "menu");
   setIconEl(document.getElementById("nav-ico-admin"), "admin");
-  setIconEl(document.getElementById("mind-menu-ico"), "menu");
+  setIconEl(document.getElementById("mind-menu-ico"), "chevron-down");
   setIconEl(document.getElementById("mind-ico-add-d"), "plus");
   setIconEl(document.getElementById("mind-ico-add-m"), "plus");
   setIconEl(document.getElementById("mind-ico-search-d"), "search");
@@ -2014,6 +2301,13 @@ function initStaticIcons() {
   setIconEl(document.getElementById("mind-ico-tasks-m"), "tasks");
   setIconEl(document.getElementById("mind-ico-events-d"), "calendar");
   setIconEl(document.getElementById("mind-ico-events-m"), "calendar");
+  setIconEl(document.getElementById("mind-image-btn"), "image");
+  setIconEl(document.getElementById("mind-capture-mic"), "microphone");
+  setIconEl(document.getElementById("mind-search-mic"), "microphone");
+  syncVoiceMicButtons();
+  setIconEl(document.getElementById("flyout-ico-home"), "home");
+  setIconEl(document.getElementById("flyout-ico-chat"), "chat");
+  setIconEl(document.getElementById("flyout-ico-mind"), "brain");
   setIconEl(document.getElementById("flyout-ico-build"), "hammer");
   setIconEl(document.getElementById("flyout-ico-apps"), "apps");
   setIconEl(document.getElementById("flyout-ico-bell"), "bell");
@@ -2022,6 +2316,7 @@ function initStaticIcons() {
   setIconEl(document.getElementById("nav-ico-account"), "account");
   setIconEl(document.getElementById("lamp-chat-send"), "arrow-up");
   setIconEl(document.getElementById("chat-rename-btn"), "pencil");
+  setIconEl(document.getElementById("chat-merge-btn"), "merge");
   setIconEl(document.getElementById("done-icon-el"), "sparkles");
   const heroChat = document.getElementById("hero-chat-btn");
   const heroBuild = document.getElementById("hero-build-btn");
@@ -2048,6 +2343,61 @@ function syncThemeUi() {
 function appDisplayName(a) {
   if (!a) return "App";
   return (a.title || a.name || "App").trim();
+}
+
+function hexToRgb(hex) {
+  const h = String(hex || "").replace(/^#/, "");
+  if (h.length !== 6) return { r: 217, g: 119, b: 6 };
+  return {
+    r: parseInt(h.slice(0, 2), 16),
+    g: parseInt(h.slice(2, 4), 16),
+    b: parseInt(h.slice(4, 6), 16),
+  };
+}
+
+function mixHex(c1, c2, t) {
+  const a = hexToRgb(c1);
+  const b = hexToRgb(c2);
+  const ch = (k) => Math.round(a[k] + (b[k] - a[k]) * t);
+  const r = ch("r");
+  const g = ch("g");
+  const bl = ch("b");
+  return "#" + [r, g, bl].map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+function relativeLuminance(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  const lin = [r, g, b].map((v) => {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+}
+
+function appColorStyles(hex) {
+  const base = /^#[0-9A-Fa-f]{6}$/.test(hex || "") ? hex : "#d97706";
+  const light = mixHex(base, "#ffffff", 0.38);
+  const dark = mixHex(base, "#000000", 0.24);
+  const onLight = relativeLuminance(base) > 0.45;
+  return {
+    base,
+    background: `linear-gradient(145deg, ${light} 0%, ${base} 52%, ${dark} 100%)`,
+    color: onLight ? "#1c1917" : "#fafaf9",
+    muted: onLight ? "rgba(28, 25, 23, 0.68)" : "rgba(250, 250, 249, 0.78)",
+    border: onLight ? "rgba(0, 0, 0, 0.14)" : "rgba(255, 255, 255, 0.22)",
+    iconBg: onLight ? "rgba(0, 0, 0, 0.1)" : "rgba(255, 255, 255, 0.22)",
+    iconColor: onLight ? base : "#ffffff",
+  };
+}
+
+function applyAppColorEl(el, color) {
+  if (!el) return;
+  const st = appColorStyles(color);
+  el.style.background = st.background;
+  el.style.borderColor = st.border;
+  el.style.color = st.color;
+  el.dataset.appColor = st.base;
+  return st;
 }
 
 function slugifyAppName(text) {
@@ -2152,6 +2502,7 @@ function showView(id) {
     n.classList.toggle("active", n.dataset.route === navRoute);
   });
   if (navRoute !== "menu") closeNavFlyout();
+  if (!String(id).startsWith("mind")) closeMindDrawer();
   window.scrollTo(0, 0);
 }
 
@@ -2266,6 +2617,7 @@ async function route() {
     const section = ["add", "search", "tasks", "events", "confirm"].includes(param) ? param : "add";
     if (section === "confirm" && !mindPending) { location.hash = "#/mind/add"; return route(); }
     showView("mind");
+    await initVoice();
     await renderMindSection(section);
     return;
   }
@@ -2308,6 +2660,8 @@ function applyRoleUi() {
   });
   const heroMm = document.getElementById("hero-mind-btn");
   if (heroMm) heroMm.style.display = mmOk ? "" : "none";
+  const flyMind = document.getElementById("flyout-mind");
+  if (flyMind) flyMind.style.display = mmOk ? "flex" : "none";
   const flyBuild = document.getElementById("flyout-build");
   if (flyBuild) flyBuild.style.display = child ? "none" : "flex";
   const flyAdmin = document.getElementById("flyout-admin");
@@ -2358,11 +2712,16 @@ async function renderHome() {
       const label = appDisplayName(a);
       const initial = esc(label.charAt(0).toUpperCase());
       const shared = a.scope === "shared" ? " shared" : "";
-      return `<div class="app-chip${shared}" onclick="location.href='${a.url}'">
-        <div class="app-chip-icon">${initial}</div>
+      const st = appColorStyles(a.color);
+      const inner = `
+        <div class="app-chip-icon" style="background:${st.iconBg};color:${st.iconColor}">${initial}</div>
         <div class="app-chip-name">${esc(label)}</div>
-        <div class="app-chip-meta">${a.scope === "shared" ? "Shared · " : ""}${esc(a.last_used || "Open")}</div>
-      </div>`;
+        <div class="app-chip-meta" style="color:${st.muted}">${a.scope === "shared" ? "Shared · " : ""}${esc(a.last_used || "Open")}</div>`;
+      const style = `background:${st.background};border-color:${st.border};color:${st.color}`;
+      if (a.url) {
+        return `<a class="app-chip${shared}" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer" style="${style}">${inner}</a>`;
+      }
+      return `<div class="app-chip${shared}" style="${style}">${inner}</div>`;
     }).join("");
   }
   await renderHomeNotifications();
@@ -2397,10 +2756,24 @@ async function startTemplate(id) {
 
 let _appMetaTarget = null;
 
+function updateAppMetaColorPreview() {
+  const input = document.getElementById("app-meta-color");
+  const preview = document.getElementById("app-meta-color-preview");
+  if (!input || !preview) return;
+  const st = appColorStyles(input.value);
+  preview.style.background = st.background;
+  preview.style.color = st.color;
+  preview.style.borderColor = st.border;
+  preview.textContent = st.base;
+}
+
 function openAppMetaEditor(a) {
   _appMetaTarget = a;
   document.getElementById("app-meta-title").value = appDisplayName(a);
   document.getElementById("app-meta-desc").value = a.desc || "";
+  const colorInput = document.getElementById("app-meta-color");
+  if (colorInput) colorInput.value = a.color || "#d97706";
+  updateAppMetaColorPreview();
   document.getElementById("app-meta-sheet").hidden = false;
 }
 
@@ -2415,14 +2788,15 @@ async function saveAppMeta() {
   const a = _appMetaTarget;
   const title = document.getElementById("app-meta-title").value.trim();
   const desc = document.getElementById("app-meta-desc").value.trim();
+  const color = document.getElementById("app-meta-color")?.value || "";
   if (!title) {
     toast("Name is required");
     return;
   }
   const path = `/api/apps/${encodeURIComponent(a.owner)}/${encodeURIComponent(a.name)}/meta`;
-  let r = await api("POST", path, { title, desc });
+  let r = await api("POST", path, { title, desc, color });
   if (r._status === 404) {
-    r = await api("PUT", path, { title, desc });
+    r = await api("PUT", path, { title, desc, color });
   }
   if (!r.ok) {
     const msg = r._status === 404
@@ -2440,29 +2814,37 @@ async function saveAppMeta() {
 function renderAppCard(a) {
   const card = document.createElement("div");
   card.className = "app-card";
+  const st = appColorStyles(a.color);
+  applyAppColorEl(card, a.color);
   const shared = a.scope === "shared";
   const child = S.role === "child";
   const manage = !child;
   const canShare = manage && !shared && (a.owner === S.user || S.role === "admin");
+  const openHref = a.url ? esc(a.url) : "";
+  const nameHtml = openHref
+    ? `<a class="app-card-open app-card-name" href="${openHref}" target="_blank" rel="noopener noreferrer">${esc(appDisplayName(a))}</a>`
+    : `<div class="app-card-name">${esc(appDisplayName(a))}</div>`;
   const descHtml = a.desc
-    ? `<div class="app-card-desc">${esc(a.desc)}</div>`
-    : `<div class="app-card-desc" style="font-style:italic">No description</div>`;
+    ? `<div class="app-card-desc" style="color:${st.muted}">${esc(a.desc)}</div>`
+    : `<div class="app-card-desc" style="font-style:italic;color:${st.muted}">No description</div>`;
   card.innerHTML = `
-    ${shared ? '<span class="app-scope-badge">Shared</span>' : ""}
-    <div class="app-card-head">
-      <div class="app-card-head-text">
-        <div class="app-card-name">${esc(appDisplayName(a))}</div>
-        ${descHtml}
+    <div class="app-card-body">
+      ${shared ? '<span class="app-scope-badge">Shared</span>' : ""}
+      <div class="app-card-head">
+        <div class="app-card-head-text">
+          ${nameHtml}
+          ${descHtml}
+        </div>
+        ${manage ? `<button type="button" class="app-card-edit" data-edit title="Edit name and description" aria-label="Edit name and description">${iconHtml("pencil")}</button>` : ""}
       </div>
-      ${manage ? `<button type="button" class="app-card-edit" data-edit title="Edit name and description" aria-label="Edit name and description">${iconHtml("pencil")}</button>` : ""}
     </div>
-    <div class="app-card-actions">
-      ${a.url ? `<a class="btn btn-primary" style="font-size:14px;padding:8px 16px" href="${a.url}" target="_blank">Open</a>` : ""}
-      ${canShare ? `<button type="button" class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-share>${iconHtml("users")} Share with family</button>` : ""}
-      ${shared ? `<button type="button" class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-hide>${iconHtml("eye-slash")} Hide</button>` : ""}
-      ${manage ? '<button class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-improve>Improve</button>' : ""}
-      ${manage ? '<button class="btn btn-secondary" style="font-size:14px;padding:8px 16px" data-wipe>Clear data</button>' : ""}
-      ${manage ? '<button class="btn btn-danger" style="font-size:14px;padding:8px 16px" data-del>Delete</button>' : ""}
+    <div class="app-card-toolbar">
+      ${a.url ? `<a class="app-card-btn" href="${openHref}" target="_blank" rel="noopener noreferrer">Open</a>` : ""}
+      ${canShare ? `<button type="button" class="app-card-btn" data-share>${iconHtml("users", "ico-inline")} Share</button>` : ""}
+      ${shared ? `<button type="button" class="app-card-btn" data-hide>${iconHtml("eye-slash", "ico-inline")} Hide</button>` : ""}
+      ${manage ? '<button type="button" class="app-card-btn" data-improve>Improve</button>' : ""}
+      ${manage ? '<button type="button" class="app-card-btn" data-wipe>Clear data</button>' : ""}
+      ${manage ? `<button type="button" class="app-card-btn app-card-btn--icon app-card-btn--danger" data-del title="Delete" aria-label="Delete app">${iconHtml("trash", "ico-inline")}</button>` : ""}
     </div>`;
   if (manage) card.querySelector("[data-edit]").onclick = () => openAppMetaEditor(a);
   if (canShare) card.querySelector("[data-share]").onclick = () => shareAppWithFamily(a);
@@ -2477,7 +2859,7 @@ function renderAppCard(a) {
   if (manage) {
     card.querySelector("[data-del]").onclick = async (ev) => {
       if (!confirm(`Delete "${appDisplayName(a)}"?`)) return;
-      ev.target.disabled = true;
+      ev.currentTarget.disabled = true;
       await api("DELETE", `/api/apps/${a.owner}/${a.name}`);
       renderApps();
     };
@@ -3062,6 +3444,10 @@ function updateChatPanelChrome() {
   const title = (c && c.title) ? c.title : "New chat";
   document.getElementById("chat-panel-title").textContent = title;
   updateStarBtn(!!(c && c.starred));
+  const mergeBtn = document.getElementById("chat-merge-btn");
+  if (mergeBtn) {
+    mergeBtn.style.display = (S.chatConvoId && chatConvos.length > 1) ? "inline-flex" : "none";
+  }
 }
 
 function showChatList() {
@@ -3171,17 +3557,254 @@ async function renderConvoList() {
     return;
   }
   el.innerHTML = chatConvos.map(c => `
-    <div class="convo-item ${c.id === S.chatConvoId ? "active" : ""}" data-id="${esc(c.id)}">
+    <div class="convo-item ${c.id === S.chatConvoId ? "active" : ""}" data-id="${esc(c.id)}"
+      draggable="true">
       <span class="convo-item-star">${c.starred ? iconHtml("star-filled", "ico") : ""}</span>
       <div class="convo-item-body">
         <div class="convo-item-title">${esc(c.title || "New chat")}</div>
         <div class="convo-item-meta">${formatTime(c.updated_at)}</div>
+        <div class="convo-drop-hint" hidden>Drop to link context</div>
       </div>
+      <button type="button" class="convo-menu-btn" data-convo-menu="${esc(c.id)}"
+        draggable="false" aria-label="Chat options" title="Chat options">${iconHtml("ellipsis")}</button>
     </div>`).join("");
   el.querySelectorAll(".convo-item").forEach(item => {
-    item.onclick = () => { location.hash = "#/chat/" + item.dataset.id; };
+    item.onclick = () => {
+      if (item.classList.contains("convo-dragging")) return;
+      location.hash = "#/chat/" + item.dataset.id;
+    };
+    const menuBtn = item.querySelector("[data-convo-menu]");
+    if (menuBtn) {
+      menuBtn.onclick = e => {
+        e.stopPropagation();
+        openConvoMenu(menuBtn.dataset.convoMenu);
+      };
+    }
   });
   updateChatPanelChrome();
+}
+
+let _convoMenuSourceId = null;
+let _convoMergePickMode = null; // "into-other" | "into-current"
+let _convoMergePending = null; // { targetId, sourceId }
+
+function convoLabel(c) {
+  return (c && c.title) || "New chat";
+}
+
+function closeConvoActionsSheet() {
+  const sheet = document.getElementById("convo-actions-sheet");
+  if (sheet) sheet.hidden = true;
+  _convoMenuSourceId = null;
+  _convoMergePickMode = null;
+  _convoMergePending = null;
+  const pick = document.getElementById("convo-merge-pick");
+  const mode = document.getElementById("convo-merge-mode");
+  if (pick) pick.hidden = true;
+  if (mode) mode.hidden = true;
+}
+
+function convoActionBackToMenu() {
+  if (!_convoMenuSourceId) {
+    closeConvoActionsSheet();
+    return;
+  }
+  document.getElementById("convo-merge-pick").hidden = true;
+  document.getElementById("convo-merge-mode").hidden = true;
+  _convoMergePending = null;
+  document.getElementById("convo-actions-menu").hidden = false;
+  renderConvoActionsMenu(_convoMenuSourceId);
+}
+
+function convoActionBackToMergePick() {
+  _convoMergePending = null;
+  document.getElementById("convo-merge-mode").hidden = true;
+  document.getElementById("convo-merge-pick").hidden = false;
+}
+
+function renderConvoActionsMenu(sourceId) {
+  const c = chatConvos.find(x => x.id === sourceId);
+  const title = document.getElementById("convo-actions-title");
+  const menu = document.getElementById("convo-actions-menu");
+  if (title) title.textContent = convoLabel(c);
+  if (!menu) return;
+  const canMerge = chatConvos.length > 1;
+  menu.innerHTML = `
+    ${canMerge ? `<button type="button" class="convo-action-row" onclick="convoActionShowMerge('into-other')">
+      ${iconHtml("merge", "ico")} Link context with another chat…
+    </button>` : ""}
+    <button type="button" class="convo-action-row" onclick="convoActionRename()">
+      ${iconHtml("pencil", "ico")} Rename
+    </button>
+    <button type="button" class="convo-action-row danger" onclick="convoActionDelete()">
+      ${iconHtml("trash", "ico")} Delete
+    </button>`;
+}
+
+function openConvoMenu(sourceId) {
+  if (!sourceId || chatConvos.length < 1) return;
+  _convoMenuSourceId = sourceId;
+  _convoMergePickMode = null;
+  document.getElementById("convo-actions-menu").hidden = false;
+  document.getElementById("convo-merge-pick").hidden = true;
+  renderConvoActionsMenu(sourceId);
+  document.getElementById("convo-actions-sheet").hidden = false;
+}
+
+function openMergeIntoCurrentChat() {
+  if (!S.chatConvoId || chatConvos.length < 2) return;
+  _convoMenuSourceId = S.chatConvoId;
+  _convoMergePickMode = "into-current";
+  document.getElementById("convo-actions-menu").hidden = true;
+  document.getElementById("convo-merge-pick").hidden = false;
+  const c = chatConvos.find(x => x.id === S.chatConvoId);
+  document.getElementById("convo-actions-title").textContent = convoLabel(c);
+  convoRenderMergePickList();
+  document.getElementById("convo-actions-sheet").hidden = false;
+}
+
+function convoActionShowMerge(mode) {
+  _convoMergePickMode = mode || "into-other";
+  _convoMergePending = null;
+  document.getElementById("convo-actions-menu").hidden = true;
+  document.getElementById("convo-merge-mode").hidden = true;
+  document.getElementById("convo-merge-pick").hidden = false;
+  convoRenderMergePickList();
+}
+
+function convoShowMergeMode(targetId, sourceId) {
+  _convoMergePending = { targetId, sourceId };
+  document.getElementById("convo-actions-menu").hidden = true;
+  document.getElementById("convo-merge-pick").hidden = true;
+  document.getElementById("convo-merge-mode").hidden = false;
+  const target = chatConvos.find(c => c.id === targetId);
+  const source = chatConvos.find(c => c.id === sourceId);
+  const hint = document.getElementById("convo-merge-mode-hint");
+  if (hint) {
+    hint.textContent =
+      `Link "${convoLabel(source)}" with "${convoLabel(target)}". Messages stay in their own chats — Lamp shares history when you reply.`;
+  }
+  const actions = document.getElementById("convo-merge-mode-actions");
+  if (actions) {
+    actions.innerHTML = `
+      <button type="button" class="convo-action-row" onclick="confirmConvoMerge('keep')">
+        ${iconHtml("chat", "ico")} Keep both chats
+        <span style="display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:4px">
+          Shared context only — nothing moves in either thread
+        </span>
+      </button>
+      <button type="button" class="convo-action-row" onclick="confirmConvoMerge('remove')">
+        ${iconHtml("trash", "ico")} Remove other chat from list
+        <span style="display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:4px">
+          Hide "${esc(convoLabel(source))}"; its context stays with "${esc(convoLabel(target))}"
+        </span>
+      </button>`;
+  }
+  document.getElementById("convo-actions-title").textContent = "Link context";
+  document.getElementById("convo-actions-sheet").hidden = false;
+}
+
+function confirmConvoMerge(mode) {
+  if (!_convoMergePending) return;
+  const { targetId, sourceId } = _convoMergePending;
+  _convoMergePending = null;
+  closeConvoActionsSheet();
+  mergeConversations(targetId, sourceId, mode);
+}
+
+function convoRenderMergePickList() {
+  const sourceId = _convoMenuSourceId;
+  const hint = document.getElementById("convo-merge-pick-hint");
+  const list = document.getElementById("convo-merge-target-list");
+  if (!list || !sourceId) return;
+  const source = chatConvos.find(c => c.id === sourceId);
+  const intoCurrent = _convoMergePickMode === "into-current";
+  if (hint) {
+    hint.textContent = intoCurrent
+      ? `Choose a chat to link with "${convoLabel(source)}".`
+      : `Choose a chat to link with "${convoLabel(source)}".`;
+  }
+  const others = chatConvos.filter(c => c.id !== sourceId);
+  if (!others.length) {
+    list.innerHTML = `<p class="model-sheet-hint">No other chats to merge.</p>`;
+    return;
+  }
+  list.innerHTML = others.map(c => `
+    <button type="button" class="model-sheet-row" data-merge-target="${esc(c.id)}">
+      <span>${esc(convoLabel(c))}</span>
+      <span style="font-size:12px;color:var(--muted)">${formatTime(c.updated_at)}</span>
+    </button>`).join("");
+  list.querySelectorAll("[data-merge-target]").forEach(btn => {
+    btn.onclick = () => {
+      const targetId = intoCurrent ? sourceId : btn.dataset.mergeTarget;
+      const fromId = intoCurrent ? btn.dataset.mergeTarget : sourceId;
+      convoShowMergeMode(targetId, fromId);
+    };
+  });
+}
+
+async function convoActionRename() {
+  const sourceId = _convoMenuSourceId;
+  if (!sourceId) return;
+  const c = chatConvos.find(x => x.id === sourceId);
+  const next = prompt("Rename chat", convoLabel(c));
+  closeConvoActionsSheet();
+  if (next === null) return;
+  const title = next.trim();
+  const res = await api("PUT", `/api/chat/conversations/${encodeURIComponent(sourceId)}`, { title });
+  if (res.ok) {
+    const row = chatConvos.find(x => x.id === sourceId);
+    if (row) row.title = res.title || title || null;
+    await renderConvoList();
+    if (S.chatConvoId === sourceId) updateChatPanelChrome();
+  }
+}
+
+async function convoActionDelete() {
+  const sourceId = _convoMenuSourceId;
+  if (!sourceId) return;
+  closeConvoActionsSheet();
+  if (!confirm("Delete this conversation?")) return;
+  await api("DELETE", `/api/chat/conversations/${encodeURIComponent(sourceId)}`);
+  if (S.chatConvoId === sourceId) {
+    S.chatConvoId = null;
+    setChatPanelOpen(false);
+    showChatEmptyState(true);
+    location.hash = "#/chat";
+  }
+  await renderConvoList();
+}
+
+async function mergeConversations(targetId, sourceId, mode) {
+  if (!targetId || !sourceId || targetId === sourceId) return;
+  const mergeMode = mode === "remove" ? "remove" : "keep";
+  const res = await api(
+    "POST",
+    `/api/chat/conversations/${encodeURIComponent(targetId)}/merge`,
+    { from: [sourceId], mode: mergeMode }
+  );
+  if (res.error || !res.ok) {
+    toast(res.error || "Could not link chats");
+    return;
+  }
+  if (mergeMode === "remove") {
+    chatConvos = chatConvos.filter(c => c.id !== sourceId);
+  }
+  const row = chatConvos.find(c => c.id === targetId);
+  if (row) {
+    row.title = res.title ?? row.title;
+    row.starred = !!res.starred;
+    row.updated_at = res.updated_at || row.updated_at;
+  }
+  await renderConvoList();
+  if (S.chatConvoId === sourceId && mergeMode === "remove") {
+    location.hash = "#/chat/" + targetId;
+  }
+  toast(
+    mergeMode === "remove"
+      ? "Context linked — other chat removed from list"
+      : "Context linked — both chats unchanged"
+  );
 }
 
 async function newConversation() {
@@ -3386,6 +4009,12 @@ let _sttEngine = null; // "whisper" | "browser" | null
 let _dictating = false;
 let _dictateManualStop = false;
 let _dictateBase = "";
+let _dictateTargetId = "lamp-chat-input";
+const VOICE_MIC_BUTTONS = [
+  { id: "chat-mic-btn", target: "lamp-chat-input", alwaysShow: false },
+  { id: "mind-capture-mic", target: "mind-capture-input", alwaysShow: true },
+  { id: "mind-search-mic", target: "mind-search-input", alwaysShow: true },
+];
 let _speakingWrap = null;
 let _mediaRecorder = null;
 let _recordChunks = [];
@@ -3450,10 +4079,10 @@ function setupBrowserRecognition() {
       if (r.isFinal) final += chunk;
       else interim += chunk;
     }
-    const input = document.getElementById("lamp-chat-input");
+    const input = getDictateInput();
     if (!input) return;
     input.value = (_dictateBase + final + interim).trimStart();
-    autoResize(input);
+    if (input.tagName === "TEXTAREA") autoResize(input);
   };
   _recognition.onerror = (e) => {
     const err = e.error || "";
@@ -3462,7 +4091,7 @@ function setupBrowserRecognition() {
       return;
     }
     if (err === "not-allowed") {
-      voiceToastOnce("Microphone permission denied");
+      voiceToastOnce(micBlockedMessage());
     } else if (err === "network") {
       voiceToastOnce("Browser dictation needs network — install Whisper locally instead");
     } else {
@@ -3475,49 +4104,111 @@ function setupBrowserRecognition() {
   };
 }
 
-function voiceUiEnabled() {
+/** Browsers only allow getUserMedia / dictation in a secure context (HTTPS or localhost). */
+function voiceMicEnabled() {
   return window.isSecureContext === true;
 }
 
-async function initVoice() {
-  const mic = document.getElementById("chat-mic-btn");
-  const autoBtn = document.getElementById("chat-voice-auto-btn");
-  if (!voiceUiEnabled()) {
-    _sttEngine = null;
-    if (mic) mic.style.display = "none";
-    if (autoBtn) autoBtn.style.display = "none";
-    stopDictation(true);
-    stopSpeaking();
-    return;
+/** TTS can work on plain HTTP; STT needs voiceMicEnabled(). */
+function voiceUiEnabled() {
+  return voiceMicEnabled() || voiceTtsSupported();
+}
+
+function micBlockedMessage() {
+  if (window.isSecureContext) {
+    return "Microphone permission denied. Check this site in your browser settings.";
   }
-  let status = { whisper_available: false, stt_engine: "browser" };
-  try {
-    status = await api("GET", "/api/voice/status");
-  } catch (_) {}
-  const canRecord = !!recorderMimeType() && !!navigator.mediaDevices?.getUserMedia;
-  if (status.whisper_available && canRecord) {
-    _sttEngine = "whisper";
-  } else if (canRecord) {
-    _sttEngine = "whisper";
-    if (!status.whisper_available) {
-      console.info("Whisper not installed — mic will record but transcription may fail");
-    }
-  } else if (voiceBrowserSttSupported()) {
-    _sttEngine = "browser";
-    setupBrowserRecognition();
-  } else {
-    _sttEngine = null;
+  const port = location.port || "7700";
+  const host = location.hostname;
+  if (host === "localhost" || host === "127.0.0.1") {
+    return "Microphone blocked in this browser.";
   }
-  if (mic) {
-    if (_sttEngine) {
-      mic.style.display = "flex";
-      mic.innerHTML = iconHtml("microphone", "ico");
-      mic.title = _sttEngine === "whisper"
-        ? "Record message (Whisper)"
-        : "Dictate (browser)";
+  return (
+    "Microphone requires HTTPS on Wi‑Fi (browsers block it on http://" + host + "). " +
+    "Run ./setup/generate-lamp-cert.sh then start Lamp with --tls, and open https://" + host + ":" + port +
+    ". Or use http://localhost:" + port + " on this computer."
+  );
+}
+
+function getDictateInput() {
+  return document.getElementById(_dictateTargetId);
+}
+
+function applyDictateText(text) {
+  const input = getDictateInput();
+  if (!input) return;
+  const prefix = _dictateBase || "";
+  input.value = (prefix + text).trim();
+  if (input.tagName === "TEXTAREA") autoResize(input);
+  input.focus();
+}
+
+function voiceInputAvailable() {
+  return voiceMicEnabled() && !!_sttEngine;
+}
+
+function voiceUnavailableReason() {
+  if (!voiceMicEnabled()) return "Microphone needs HTTPS or localhost";
+  if (!_sttEngine) return "Voice input is not available in this browser.";
+  return "";
+}
+
+function syncVoiceMicButtons() {
+  const available = voiceInputAvailable();
+  const reason = voiceUnavailableReason();
+  const micTitle = available
+    ? (_sttEngine === "whisper" ? "Record (Whisper)" : "Dictate")
+    : reason;
+  VOICE_MIC_BUTTONS.forEach(({ id, alwaysShow }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (alwaysShow || available) {
+      el.style.display = "inline-flex";
+      el.innerHTML = iconHtml("microphone", "ico");
+      el.title = micTitle;
+      if (alwaysShow) {
+        el.disabled = false;
+        el.classList.toggle("voice-unavailable", !available);
+      } else {
+        el.classList.remove("voice-unavailable");
+        el.disabled = !available;
+      }
     } else {
-      mic.style.display = "none";
+      el.style.display = "none";
+      el.disabled = true;
+      el.classList.remove("voice-unavailable");
     }
+  });
+}
+
+async function initVoice() {
+  const autoBtn = document.getElementById("chat-voice-auto-btn");
+  const imageBtn = document.getElementById("mind-image-btn");
+  if (imageBtn) setIconEl(imageBtn, "image");
+  if (!voiceMicEnabled()) {
+    _sttEngine = null;
+    syncVoiceMicButtons();
+    stopDictation(true);
+  } else {
+    let status = { whisper_available: false, stt_engine: "browser" };
+    try {
+      status = await api("GET", "/api/voice/status");
+    } catch (_) {}
+    const canRecord = !!recorderMimeType() && !!navigator.mediaDevices?.getUserMedia;
+    if (status.whisper_available && canRecord) {
+      _sttEngine = "whisper";
+    } else if (canRecord) {
+      _sttEngine = "whisper";
+      if (!status.whisper_available) {
+        console.info("Whisper not installed — mic will record but transcription may fail");
+      }
+    } else if (voiceBrowserSttSupported()) {
+      _sttEngine = "browser";
+      if (!_recognition) setupBrowserRecognition();
+    } else {
+      _sttEngine = null;
+    }
+    syncVoiceMicButtons();
   }
   if (voiceTtsSupported() && autoBtn) {
     autoBtn.style.display = "inline-flex";
@@ -3543,32 +4234,76 @@ function toggleVoiceAutoRead() {
 }
 
 function setMicUi(listening, transcribing) {
-  const mic = document.getElementById("chat-mic-btn");
-  if (!mic) return;
-  mic.classList.toggle("listening", !!listening);
-  mic.disabled = !!transcribing || S.chatStreaming;
-  if (transcribing) {
-    mic.innerHTML = iconHtml("spinner", "ico ico-loading");
-    mic.setAttribute("aria-label", "Transcribing…");
-  } else if (listening) {
-    mic.innerHTML = iconHtml("stop", "ico");
-    mic.setAttribute("aria-label", "Stop recording");
-  } else {
-    mic.innerHTML = iconHtml("microphone", "ico");
-    mic.setAttribute("aria-label", _sttEngine === "whisper" ? "Record message" : "Dictate");
-  }
+  VOICE_MIC_BUTTONS.forEach(({ id, target }) => {
+    const mic = document.getElementById(id);
+    if (!mic) return;
+    const isActive = _dictateTargetId === target;
+    mic.classList.toggle("listening", !!listening && isActive);
+    mic.disabled = !!transcribing || (target === "lamp-chat-input" && S.chatStreaming);
+    if (!isActive && !transcribing) {
+      mic.innerHTML = iconHtml("microphone", "ico");
+      return;
+    }
+    if (transcribing && isActive) {
+      mic.innerHTML = iconHtml("spinner", "ico ico-loading");
+      mic.setAttribute("aria-label", "Transcribing…");
+    } else if (listening && isActive) {
+      mic.innerHTML = iconHtml("stop", "ico");
+      mic.setAttribute("aria-label", "Stop recording");
+    } else {
+      mic.innerHTML = iconHtml("microphone", "ico");
+      mic.setAttribute("aria-label", _sttEngine === "whisper" ? "Record" : "Dictate");
+    }
+  });
 }
 
-function toggleDictation() {
-  if (!voiceUiEnabled() || _transcribing) return;
-  if (_dictating) stopDictation(false);
-  else startDictation();
+function toggleDictation(targetId) {
+  const tid = targetId || "lamp-chat-input";
+  if (_transcribing) return;
+  if (!voiceMicEnabled()) {
+    toast(micBlockedMessage());
+    return;
+  }
+  if (!voiceInputAvailable()) {
+    toast(voiceUnavailableReason() || "Voice input unavailable");
+    return;
+  }
+  if (_dictating && _dictateTargetId === tid) {
+    stopDictation(false);
+    return;
+  }
+  if (_dictating) stopDictation(true);
+  _dictateTargetId = tid;
+  startDictation();
+}
+
+function toggleMindCaptureDictation() {
+  if (!voiceMicEnabled()) { toast(micBlockedMessage()); return; }
+  if (!voiceInputAvailable()) {
+    toast(voiceUnavailableReason() || "Voice input unavailable");
+    return;
+  }
+  toggleDictation("mind-capture-input");
+}
+
+function toggleMindSearchDictation() {
+  if (!voiceMicEnabled()) { toast(micBlockedMessage()); return; }
+  if (!voiceInputAvailable()) {
+    toast(voiceUnavailableReason() || "Voice input unavailable");
+    return;
+  }
+  toggleDictation("mind-search-input");
 }
 
 function startDictation() {
-  if (!voiceUiEnabled() || !voiceSttSupported() || S.chatStreaming) return;
+  if (!voiceMicEnabled()) {
+    toast(micBlockedMessage());
+    return;
+  }
+  if (!voiceInputAvailable()) return;
+  if (_dictateTargetId === "lamp-chat-input" && S.chatStreaming) return;
   stopSpeaking();
-  const input = document.getElementById("lamp-chat-input");
+  const input = getDictateInput();
   _dictateBase = input ? (input.value.trim() ? input.value.trim() + " " : "") : "";
   if (_sttEngine === "whisper") startWhisperRecord();
   else startBrowserDictation();
@@ -3588,7 +4323,10 @@ function startBrowserDictation() {
 }
 
 async function startWhisperRecord() {
-  if (!voiceUiEnabled()) return;
+  if (!voiceMicEnabled()) {
+    toast(micBlockedMessage());
+    return;
+  }
   const mime = recorderMimeType();
   if (!mime || !navigator.mediaDevices?.getUserMedia) {
     toast("Recording not supported in this browser");
@@ -3597,8 +4335,11 @@ async function startWhisperRecord() {
   try {
     _recordStream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch (e) {
-    if (e && e.name === "NotAllowedError") toast("Microphone permission denied");
-    else toast("Could not access microphone");
+    if (!window.isSecureContext || (e && e.name === "NotAllowedError")) {
+      toast(micBlockedMessage());
+    } else {
+      toast("Could not access microphone");
+    }
     return;
   }
   _recordChunks = [];
@@ -3665,13 +4406,7 @@ async function finishWhisperRecord(mime) {
       voiceToastOnce(data.error || "Install Whisper: pip install openai-whisper && brew install ffmpeg");
       return;
     }
-    const input = document.getElementById("lamp-chat-input");
-    if (input) {
-      const prefix = _dictateBase || "";
-      input.value = (prefix + data.text).trim();
-      autoResize(input);
-      input.focus();
-    }
+    applyDictateText(data.text);
   } catch (_) {
     toast("Could not reach Lamp for transcription");
   } finally {
@@ -4783,6 +5518,75 @@ document.getElementById("onboard-next").onclick = () => {
   else { onboardStep++; renderOnboardStep(); }
 };
 
+let _convoDragId = null;
+
+function setupConvoDragMerge() {
+  const list = document.getElementById("convo-list");
+  if (!list || list.dataset.dnd) return;
+  list.dataset.dnd = "1";
+
+  list.addEventListener("dragstart", e => {
+    const item = e.target.closest(".convo-item");
+    if (!item) return;
+    _convoDragId = item.dataset.id;
+    item.classList.add("convo-dragging");
+    list.classList.add("is-dragging");
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", _convoDragId);
+  });
+
+  list.addEventListener("dragover", e => {
+    const item = e.target.closest(".convo-item");
+    if (!item || item.dataset.id === _convoDragId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    list.querySelectorAll(".convo-drop-target").forEach(el => {
+      el.classList.remove("convo-drop-target");
+      const hint = el.querySelector(".convo-drop-hint");
+      if (hint) hint.hidden = true;
+    });
+    item.classList.add("convo-drop-target");
+    const hint = item.querySelector(".convo-drop-hint");
+    if (hint) hint.hidden = false;
+  });
+
+  list.addEventListener("dragleave", e => {
+    const item = e.target.closest(".convo-item");
+    if (!item) return;
+    const rel = e.relatedTarget;
+    if (rel && item.contains(rel)) return;
+    item.classList.remove("convo-drop-target");
+    const hint = item.querySelector(".convo-drop-hint");
+    if (hint) hint.hidden = true;
+  });
+
+  list.addEventListener("drop", async e => {
+    e.preventDefault();
+    list.classList.remove("is-dragging");
+    const item = e.target.closest(".convo-item");
+    list.querySelectorAll(".convo-drop-target").forEach(el => {
+      el.classList.remove("convo-drop-target");
+      const hint = el.querySelector(".convo-drop-hint");
+      if (hint) hint.hidden = true;
+    });
+    if (!item || !_convoDragId || item.dataset.id === _convoDragId) return;
+    const targetId = item.dataset.id;
+    const sourceId = _convoDragId;
+    _convoDragId = null;
+    convoShowMergeMode(targetId, sourceId);
+  });
+
+  list.addEventListener("dragend", () => {
+    _convoDragId = null;
+    list.classList.remove("is-dragging");
+    list.querySelectorAll(".convo-dragging, .convo-drop-target").forEach(el => {
+      el.classList.remove("convo-dragging", "convo-drop-target");
+      const hint = el.querySelector(".convo-drop-hint");
+      if (hint) hint.hidden = true;
+    });
+  });
+}
+
 function setupConvoPullRefresh() {
   const list = document.getElementById("convo-list");
   const ptr = document.getElementById("ptr-indicator");
@@ -4852,6 +5656,7 @@ function mindEntryThumbHtml(entry) {
 }
 
 function toggleNavFlyout() {
+  closeMindDrawer();
   const el = document.getElementById("nav-flyout");
   if (!el) return;
   const open = el.classList.toggle("open");
@@ -4871,13 +5676,23 @@ function navFlyoutGo(hash) {
 }
 
 function toggleMindDrawer() {
-  document.getElementById("mind-drawer")?.classList.toggle("open");
-  document.getElementById("mind-backdrop")?.classList.toggle("open");
+  closeNavFlyout();
+  const drawer = document.getElementById("mind-drawer");
+  const backdrop = document.getElementById("mind-backdrop");
+  const bar = document.querySelector(".mind-mobile-bar");
+  if (!drawer) return;
+  const open = drawer.classList.toggle("open");
+  backdrop?.classList.toggle("open", open);
+  if (bar) bar.setAttribute("aria-expanded", open ? "true" : "false");
 }
 
 function closeMindDrawer() {
-  document.getElementById("mind-drawer")?.classList.remove("open");
-  document.getElementById("mind-backdrop")?.classList.remove("open");
+  const drawer = document.getElementById("mind-drawer");
+  const backdrop = document.getElementById("mind-backdrop");
+  const bar = document.querySelector(".mind-mobile-bar");
+  drawer?.classList.remove("open");
+  backdrop?.classList.remove("open");
+  if (bar) bar.setAttribute("aria-expanded", "false");
 }
 
 function mindGo(section) {
@@ -5328,8 +6143,12 @@ function mindNewEvent() {
 }
 
 window.addEventListener("hashchange", route);
+mountLavaLogos();
+initLavaLogoMotion();
 initStaticIcons();
+document.getElementById("app-meta-color")?.addEventListener("input", updateAppMetaColorPreview);
 setupConvoPullRefresh();
+setupConvoDragMerge();
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("/sw.js").then((reg) => {
     reg.update();

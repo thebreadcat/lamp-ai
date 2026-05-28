@@ -24,7 +24,15 @@ If the user says they do not want to build an app, acknowledge that and continue
 the conversation normally. Do not include app_idea JSON again unless they ask for it.
 
 Keep responses short (2-4 sentences) unless the user asks for detail.
-Do not mention that you are running on a Pi or local device unless asked."""
+Do not mention that you are running on a Pi or local device unless asked.
+
+When the user links chat threads, you may see messages tagged [From chat "…"] from another
+thread. Treat them as part of this conversation. Recall facts they stated there (names,
+passwords used for tests, preferences) when they ask — this is their private home assistant,
+not a shared cloud service.
+
+If they tell you a test password or code in chat, remember it and answer when they ask
+later, including after threads are linked."""
 
 
 def parse_chat_response(text: str) -> dict:
@@ -81,12 +89,33 @@ def parse_chat_response(text: str) -> dict:
         flags=re.S,
     ).strip()
     if not display:
-        display = (
-            "I can build this if you want, or we can just keep talking."
-            if app_idea
-            else "Tell me a bit more and I can help."
-        )
+        raw = (text or "").strip()
+        if raw and not app_idea:
+            display = raw
+        elif raw and app_idea:
+            display = re.sub(
+                r"```(?:json)?\s*\{[^`]*\"app_idea\"[^`]*\}\s*```",
+                "",
+                raw,
+                flags=re.S,
+            ).strip() or (
+                "I can build this if you want, or we can just keep talking."
+            )
+        else:
+            display = (
+                "I can build this if you want, or we can just keep talking."
+                if app_idea
+                else "Tell me a bit more and I can help."
+            )
     return {"reply": display, "app_idea": app_idea}
+
+
+LINKED_CONTEXT_NOTE = (
+    "\n\n[Linked chats: this thread shares context with other chats on this home device. "
+    "The message history may include lines tagged [From chat \"…\"] from those threads. "
+    "Use all of it — when the user asks about something said in a linked chat, answer from "
+    "that history.]"
+)
 
 
 MODEL_HANDOFF_NOTE = (

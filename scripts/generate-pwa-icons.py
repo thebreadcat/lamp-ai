@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate icon-192.png and icon-512.png from assets/favicon.svg (optional dev tool)."""
+"""Generate icon-192.png and icon-512.png from assets/app-icon.svg (optional dev tool)."""
 
 import shutil
 import subprocess
@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SVG = ROOT / "assets" / "favicon.svg"
+SVG = ROOT / "assets" / "app-icon.svg"
 OUT192 = ROOT / "icon-192.png"
 OUT512 = ROOT / "icon-512.png"
 

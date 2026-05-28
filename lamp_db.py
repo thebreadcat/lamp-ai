@@ -70,12 +70,18 @@ def init_lamp_tables():
         "ALTER TABLE conversations ADD COLUMN model TEXT",
         "ALTER TABLE conversations ADD COLUMN endpoint TEXT",
         "ALTER TABLE conversations ADD COLUMN model_handoff INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE conversations ADD COLUMN context_group_id TEXT",
+        "ALTER TABLE conversations ADD COLUMN merged_into TEXT",
     ):
         try:
             conn.execute(ddl)
             conn.commit()
         except sqlite3.OperationalError:
             pass
+    conn.execute(
+        "UPDATE conversations SET context_group_id=id WHERE context_group_id IS NULL"
+    )
+    conn.commit()
 
 
 def user_count() -> int:
@@ -159,9 +165,9 @@ def convo_create(user: str, title: str = None) -> dict:
     cid = secrets.token_urlsafe(12)
     ts = _now()
     wdb.get_conn().execute(
-        """INSERT INTO conversations (id, user, title, created_at, updated_at)
-           VALUES (?,?,?,?,?)""",
-        (cid, user, title, ts, ts),
+        """INSERT INTO conversations (id, user, title, created_at, updated_at, context_group_id)
+           VALUES (?,?,?,?,?,?)""",
+        (cid, user, title, ts, ts, cid),
     )
     wdb.get_conn().commit()
     return {
@@ -176,7 +182,8 @@ def convo_create(user: str, title: str = None) -> dict:
 def convo_list(user: str) -> list:
     rows = wdb.get_conn().execute(
         """SELECT id, title, starred, created_at, updated_at FROM conversations
-           WHERE user=? ORDER BY starred DESC, updated_at DESC LIMIT 100""",
+           WHERE user=? AND merged_into IS NULL
+           ORDER BY starred DESC, updated_at DESC LIMIT 100""",
         (user,),
     ).fetchall()
     out = []
@@ -190,7 +197,7 @@ def convo_list(user: str) -> list:
 def convo_get(cid: str, user: str) -> dict | None:
     row = wdb.get_conn().execute(
         """SELECT id, user, title, starred, model, endpoint, model_handoff,
-                  created_at, updated_at
+                  context_group_id, merged_into, created_at, updated_at
            FROM conversations WHERE id=? AND user=?""",
         (cid, user),
     ).fetchone()
@@ -322,6 +329,123 @@ def convo_delete(cid: str, user: str) -> bool:
     return cur.rowcount > 0
 
 
+def convo_context_group_id(convo: dict) -> str:
+    return (convo.get("context_group_id") or convo["id"]).strip()
+
+
+def _convo_unify_groups(canonical: str, other: str, user: str):
+    if canonical == other:
+        return
+    conn = wdb.get_conn()
+    conn.execute(
+        """UPDATE conversations SET context_group_id=?
+           WHERE user=? AND (context_group_id=? OR id=?)""",
+        (canonical, user, other, other),
+    )
+
+
+def convo_merge(
+    target_id: str, source_ids: list, user: str, mode: str = "keep"
+) -> dict | None:
+    """Link chats for shared LLM context without mixing visible messages.
+
+    mode: keep — both chats stay in the list; remove — hide source from list.
+    """
+    target = convo_get(target_id, user)
+    if not target:
+        return None
+    source_ids = [
+        s.strip()
+        for s in (source_ids or [])
+        if s and str(s).strip() and str(s).strip() != target_id
+    ]
+    if not source_ids:
+        return target
+
+    sources = []
+    for sid in source_ids:
+        c = convo_get(sid, user)
+        if not c or c.get("merged_into"):
+            return None
+        sources.append(c)
+
+    remove = (mode or "keep").strip().lower() == "remove"
+    group = convo_context_group_id(target)
+    conn = wdb.get_conn()
+    ts = _now()
+
+    if not target.get("context_group_id"):
+        conn.execute(
+            "UPDATE conversations SET context_group_id=? WHERE id=? AND user=?",
+            (group, target_id, user),
+        )
+
+    for src, sid in zip(sources, source_ids):
+        _convo_unify_groups(group, convo_context_group_id(src), user)
+        if remove:
+            conn.execute(
+                """UPDATE conversations
+                   SET merged_into=?, context_group_id=?, updated_at=?
+                   WHERE id=? AND user=?""",
+                (target_id, group, ts, sid, user),
+            )
+        else:
+            conn.execute(
+                """UPDATE conversations SET context_group_id=?, updated_at=?
+                   WHERE id=? AND user=?""",
+                (group, ts, sid, user),
+            )
+
+    conn.commit()
+
+    labels = [(c.get("title") or "New chat").strip() for c in sources]
+    target_title = (target.get("title") or "this chat").strip()
+    if len(labels) == 1:
+        if remove:
+            note = (
+                f'Context linked with "{labels[0]}" — that chat was removed from your list; '
+                "Lamp still remembers it when you reply here."
+            )
+        else:
+            note = (
+                f'Context linked with "{labels[0]}" — your chats stay separate; '
+                "new replies here can use both histories."
+            )
+    else:
+        joined = ", ".join(labels)
+        if remove:
+            note = (
+                f"Context linked with {len(labels)} chats ({joined}) — "
+                "they were removed from your list; Lamp still remembers them here."
+            )
+        else:
+            note = (
+                f"Context linked with {len(labels)} chats ({joined}) — "
+                "threads stay separate; replies here use shared history."
+            )
+    msg_add(target_id, "system", note)
+
+    if not remove and len(source_ids) == 1:
+        msg_add(
+            source_ids[0],
+            "system",
+            f'Context linked with "{target_title}" — shared history, separate thread.',
+        )
+
+    if any(c.get("starred") for c in sources) and not target.get("starred"):
+        conn.execute(
+            "UPDATE conversations SET starred=1 WHERE id=? AND user=?",
+            (target_id, user),
+        )
+
+    convo_touch(target_id)
+    out = convo_get(target_id, user)
+    if out is not None:
+        out["merge_mode"] = "remove" if remove else "keep"
+        out["removed_ids"] = source_ids if remove else []
+    return out
+
+
 def msg_list(cid: str) -> list:
     rows = wdb.get_conn().execute(
         """SELECT role, content, created_at FROM messages
@@ -329,6 +453,55 @@ def msg_list(cid: str) -> list:
         (cid,),
     ).fetchall()
     return [dict(r) for r in rows]
+
+
+def msg_list_context(cid: str, user: str) -> list:
+    """All messages in this chat's shared context group (for the model)."""
+    convo = convo_get(cid, user)
+    if not convo:
+        return []
+    group = convo_context_group_id(convo)
+    rows = wdb.get_conn().execute(
+        """SELECT m.role, m.content, m.created_at, m.convo_id,
+                  COALESCE(NULLIF(TRIM(c.title), ''), 'Chat') AS convo_title
+           FROM messages m
+           JOIN conversations c ON m.convo_id = c.id
+           WHERE c.user=? AND COALESCE(c.context_group_id, c.id)=?
+           ORDER BY m.id""",
+        (user, group),
+    ).fetchall()
+    raw = [dict(r) for r in rows]
+    convo_ids = {r["convo_id"] for r in raw}
+    multi = len(convo_ids) > 1
+    out = []
+    for r in raw:
+        d = {"role": r["role"], "content": r["content"], "created_at": r["created_at"]}
+        if (
+            multi
+            and r["convo_id"] != cid
+            and r["role"] in ("user", "assistant")
+        ):
+            title = (r.get("convo_title") or "Linked chat").replace('"', "'")
+            d["content"] = f'[From chat "{title}"]\n{r["content"]}'
+        out.append(d)
+    return out
+
+
+def convo_has_linked_context(cid: str, user: str) -> bool:
+    """True when this chat shares LLM context with at least one other thread."""
+    convo = convo_get(cid, user)
+    if not convo:
+        return False
+    group = convo_context_group_id(convo)
+    row = wdb.get_conn().execute(
+        """SELECT COUNT(DISTINCT m.convo_id) AS n
+           FROM messages m
+           JOIN conversations c ON m.convo_id = c.id
+           WHERE c.user=? AND COALESCE(c.context_group_id, c.id)=?
+             AND m.role IN ('user', 'assistant')""",
+        (user, group),
+    ).fetchone()
+    return bool(row and (row["n"] or 0) > 1)
 
 
 def msg_add(cid: str, role: str, content: str) -> dict:

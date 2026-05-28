@@ -38,6 +38,7 @@ from workshop import (  # noqa: E402
     list_apps,
     load_config,
     set_app_display_meta,
+    normalize_app_color,
     save_config,
     tortoise_version,
     tortoise_script,
@@ -212,6 +213,12 @@ class LampHandler(WorkshopHandler):
             return
         title = (body.get("title") or "").strip()
         summary = (body.get("desc") or body.get("summary") or "").strip()
+        color = None
+        if "color" in body:
+            color = normalize_app_color(body.get("color") or "")
+            if not color:
+                self.js({"error": "invalid color"}, 400)
+                return
         if not title:
             self.js({"error": "title required"}, 400)
             return
@@ -225,7 +232,7 @@ class LampHandler(WorkshopHandler):
         if not ap.is_dir():
             self.js({"error": "not found"}, 404)
             return
-        if not set_app_display_meta(ap, title, summary):
+        if not set_app_display_meta(ap, title, summary, color=color):
             self.js({"error": "could not update app"}, 500)
             return
         scope = "shared" if owner == "shared" else "personal"
@@ -441,6 +448,25 @@ class LampHandler(WorkshopHandler):
             title = (body.get("title") or "").strip() or None
             self.js({"ok": True, **ldb.convo_create(user["name"], title)})
             return
+        m = re.match(r"^/api/chat/conversations/([^/]+)/merge$", path)
+        if m:
+            target_id = m.group(1)
+            from_ids = body.get("from") or body.get("source_ids") or []
+            if isinstance(from_ids, str):
+                from_ids = [from_ids]
+            if not from_ids:
+                self.js({"error": "from (conversation id list) required"}, 400)
+                return
+            mode = (body.get("mode") or "keep").strip().lower()
+            if mode not in ("keep", "remove"):
+                self.js({"error": "mode must be keep or remove"}, 400)
+                return
+            convo = ldb.convo_merge(target_id, from_ids, user["name"], mode=mode)
+            if not convo:
+                self.js({"error": "not found"}, 404)
+                return
+            self.js({"ok": True, **convo})
+            return
         if path == "/api/chat/messages":
             self._chat_send_message(body, user)
             return
@@ -468,11 +494,13 @@ class LampHandler(WorkshopHandler):
 
         history = [
             {"role": m["role"], "content": m["content"]}
-            for m in ldb.msg_list(cid)
+            for m in ldb.msg_list_context(cid, user["name"])
             if m["role"] in ("user", "assistant")
         ]
 
         system = lamp_chat.LAMP_SYSTEM
+        if ldb.convo_has_linked_context(cid, user["name"]):
+            system += lamp_chat.LINKED_CONTEXT_NOTE
         if ldb.convo_take_handoff(cid):
             system += lamp_chat.MODEL_HANDOFF_NOTE
 

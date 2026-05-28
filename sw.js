@@ -1,4 +1,4 @@
-const CACHE = "lamp-shell-v19";
+const CACHE = "lamp-shell-v20";
 const PRECACHE = [
   "/manifest.json",
   "/favicon.svg",
