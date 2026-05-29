@@ -15,7 +15,17 @@ import ticker
 import lamp_voice
 from workshop import apps_dir, load_config, save_config, probe_endpoint, VERSION as WS_VERSION
 
-LAMP_VERSION = "0.4.2"
+LAMP_DIR = Path(__file__).resolve().parent
+
+
+def read_lamp_version(root: Path | None = None) -> str:
+    vf = (root or LAMP_DIR) / "VERSION"
+    if vf.is_file():
+        return vf.read_text(encoding="utf-8").strip()
+    return "0.0.0"
+
+
+LAMP_VERSION = read_lamp_version()
 LAMP_UI_BUILD = "2026-05-28"
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 

@@ -146,6 +146,27 @@ Manual checklist: [TESTING.md](TESTING.md).
 
 ---
 
+## Updating Lamp
+
+Admins see an **Update available** banner on the home screen when a newer version is on GitHub.
+
+1. Stop Lamp (Ctrl+C in the terminal where it runs)
+2. Run from your Lamp folder:
+
+```bash
+python3 lamp.py --update
+```
+
+Or: `./setup/update.sh`
+
+3. Restart Lamp (`python3 lamp.py --host 0.0.0.0` or `sudo systemctl restart lamp` on a Pi)
+
+Your chats, users, config, and apps in `~/.workshop` are **not** touched — only the Lamp program files update.
+
+Bump the **`VERSION`** file in the repo when you ship a release so clients can detect it.
+
+---
+
 ## Optional: voice dictation
 
 Local speech-to-text uses [Whisper](https://github.com/openai/whisper) on the same machine (not a cloud API).

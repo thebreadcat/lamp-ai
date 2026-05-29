@@ -64,7 +64,7 @@ See [QUICKSTART.md](QUICKSTART.md) for manual setup (Git, submodules) and troubl
 
 Workshop config stays at `~/.workshop/config.json` (endpoint, model, optional API key). Built apps default to `~/workshop-apps/`. Lamp adds auth tables in the same SQLite DB: `~/.workshop/workshop.db`.
 
-## Current status (v0.4.2)
+## Current status (v0.5.0)
 
 | Phase | Status |
 |-------|--------|

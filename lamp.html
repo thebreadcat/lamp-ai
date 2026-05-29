@@ -1905,6 +1905,11 @@ input, textarea, select, button { font-family: inherit; }
       <div id="config-banner" class="banner-warn" style="display:none">
         Lamp needs a language model. <button class="btn-ghost" onclick="location.hash='#/setup-model'">Set up →</button>
       </div>
+      <div id="update-banner" class="banner-warn banner-update" style="display:none" hidden>
+        Lamp <strong id="update-latest-label"></strong> is available.
+        <button type="button" class="btn-ghost" onclick="copyUpdateCommand()">Copy update command</button>
+        <button type="button" class="btn-ghost" onclick="location.hash='#/settings/system'">Details</button>
+      </div>
       <div class="home-actions">
         <button type="button" class="hero-btn hero-btn-secondary" id="hero-chat-btn" onclick="location.hash='#/chat'">Chat with Lamp</button>
         <button type="button" class="hero-btn hero-btn-secondary" id="hero-mind-btn" style="display:none" onclick="location.hash='#/mind/add'">Mind</button>
@@ -2683,6 +2688,7 @@ const S = {
   chatStreaming: false,
   chatModel: { model: null, endpoint: null, override: false },
   lastNotifId: 0,
+  updateCommand: "",
 };
 
 async function api(method, path, body, opts = {}) {
@@ -2913,6 +2919,50 @@ function updateGreeting() {
   else sub.textContent = "Chat, build apps, or pick a template below.";
 }
 
+async function checkForUpdate() {
+  const banner = document.getElementById("update-banner");
+  if (!banner || S.role !== "admin") {
+    if (banner) { banner.style.display = "none"; banner.hidden = true; }
+    return;
+  }
+  try {
+    const u = await api("GET", "/api/admin/update");
+    if (u.available && u.latest) {
+      S.updateCommand = u.command || "";
+      const label = document.getElementById("update-latest-label");
+      if (label) label.textContent = u.latest;
+      banner.style.display = "block";
+      banner.hidden = false;
+    } else {
+      banner.style.display = "none";
+      banner.hidden = true;
+    }
+  } catch (_) {
+    banner.style.display = "none";
+    banner.hidden = true;
+  }
+}
+
+async function copyUpdateCommand() {
+  const cmd = S.updateCommand;
+  if (!cmd) {
+    try {
+      const u = await api("GET", "/api/admin/update?force=1");
+      S.updateCommand = u.command || "";
+    } catch (_) {}
+  }
+  if (!S.updateCommand) {
+    toast("Update command unavailable");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(S.updateCommand);
+    toast("Copied — stop Lamp, paste in Terminal, then restart");
+  } catch (_) {
+    toast(S.updateCommand);
+  }
+}
+
 async function renderHome() {
   const row = document.getElementById("home-apps");
   const grid = document.getElementById("template-grid");
@@ -2922,6 +2972,7 @@ async function renderHome() {
   const cfg = await api("GET", "/api/config");
   document.getElementById("config-banner").style.display =
     (S.role === "admin" && !cfg.configured) ? "block" : "none";
+  await checkForUpdate();
   const { apps } = await api("GET", `/api/apps?user=${encodeURIComponent(S.user)}`);
   const list = (apps || []).filter(a => a.has_app).slice(0, 6);
   if (!list.length) {
@@ -5142,7 +5193,21 @@ async function renderAdminStorage(panel) {
 async function renderAdminSystem(panel) {
     const s = await api("GET", "/api/admin/system");
     const ram = s.ram || {};
-    panel.innerHTML = `
+    const upd = s.update || {};
+    const updateBlock = upd.available ? `
+      <div class="banner-warn banner-update" style="margin-bottom:16px">
+        <strong>Update available:</strong> ${esc(upd.current || "")} → ${esc(upd.latest || "")}
+        <p style="margin:10px 0 8px;font-size:13px;color:var(--muted)">
+          Stop Lamp (Ctrl+C in its terminal), run the command below, then start Lamp again.
+          Your data in <code>~/.workshop</code> is kept automatically.
+        </p>
+        <div class="code-block" style="position:relative;padding:12px 88px 12px 14px;margin:0;background:var(--code-bg);border-radius:10px;border:1px solid var(--border)">
+          <pre id="admin-update-cmd" style="margin:0;font-size:12px;white-space:pre-wrap;word-break:break-all">${esc(upd.command || "")}</pre>
+          <button type="button" class="btn btn-secondary" style="position:absolute;top:10px;right:10px;padding:6px 12px;font-size:12px" onclick="copyAdminUpdateCmd()">Copy</button>
+        </div>
+        <p style="margin-top:10px;font-size:12px;color:var(--muted)">Pi with systemd: <code>sudo systemctl restart lamp</code> after updating.</p>
+      </div>` : "";
+    panel.innerHTML = `${updateBlock}
       <div class="stat-grid">
         <div class="stat-box">Ollama<strong>${s.ollama && s.ollama.ok ? "OK" : "Down"}</strong></div>
         <div class="stat-box">Ticker<strong>${s.ticker && s.ticker.alive ? "Alive" : "—"}</strong></div>
@@ -5165,6 +5230,18 @@ async function renderAdminSystem(panel) {
         Lamp ${esc((s.versions || {}).lamp)} · Workshop ${esc((s.versions || {}).workshop)} · Tortoise ${esc((s.versions || {}).tortoise)}
       </p>`;
     syncThemeUi();
+}
+
+async function copyAdminUpdateCmd() {
+  const el = document.getElementById("admin-update-cmd");
+  const text = el?.textContent?.trim();
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("Copied update command");
+  } catch (_) {
+    toast(text);
+  }
 }
 
 async function addUser() {

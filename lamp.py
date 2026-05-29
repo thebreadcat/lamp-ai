@@ -33,6 +33,7 @@ import lamp_voice  # noqa: E402
 import lamp_memomind  # noqa: E402
 import lamp_qr  # noqa: E402
 import lamp_tls  # noqa: E402
+import lamp_update  # noqa: E402
 from workshop import (  # noqa: E402
     Handler as WorkshopHandler,
     ThreadedHTTPServer,
@@ -689,7 +690,15 @@ class LampHandler(WorkshopHandler):
             self.js(lamp_admin.storage_breakdown(cfg))
             return
         if path == "/api/admin/system":
-            self.js(lamp_admin.system_status(cfg, tortoise_version() or "?"))
+            out = lamp_admin.system_status(cfg, tortoise_version() or "?")
+            try:
+                out["update"] = lamp_update.get_update_status()
+            except Exception:
+                out["update"] = {"available": False, "current": lamp_admin.LAMP_VERSION}
+            self.js(out)
+            return
+        if path == "/api/admin/update":
+            self.js(lamp_update.get_update_status(force=qs.get("force", ["0"])[0] in ("1", "true")))
             return
         if path == "/api/admin/reminders":
             from ticker import _find_app_dir
@@ -1384,7 +1393,15 @@ def main():
     ap.add_argument("--tls-cert", type=Path, default=None, help="TLS certificate PEM (default: ~/.workshop/lamp-cert.pem)")
     ap.add_argument("--tls-key", type=Path, default=None, help="TLS private key PEM (default: ~/.workshop/lamp-key.pem)")
     ap.add_argument("--status", action="store_true", help="Print config health and exit")
+    ap.add_argument(
+        "--update",
+        action="store_true",
+        help="Download latest Lamp code (git pull or zip); ~/.workshop data is preserved",
+    )
     args = ap.parse_args()
+
+    if args.update:
+        raise SystemExit(lamp_update.run_update(install=LAMP_DIR, port=args.port))
 
     host_norm = args.host.strip().lower()
     use_tls = args.tls or (
@@ -1413,6 +1430,14 @@ def main():
 
     if args.status:
         raise SystemExit(print_status(cfg))
+
+    try:
+        upd = lamp_update.get_update_status()
+        if upd.get("available"):
+            print(f"  Update available: {upd.get('current')} → {upd.get('latest')}")
+            print(f"  Run: {upd.get('command')}\n")
+    except Exception:
+        pass
 
     ticker.start_ticker_thread(lambda: apps_dir(load_config()))
     if lamp_memomind.available():
