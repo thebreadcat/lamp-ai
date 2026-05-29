@@ -835,7 +835,7 @@ class LampHandler(WorkshopHandler):
             if not user:
                 return
             self.lamp_user = user
-            if lamp_memomind.handle(self, "GET", p, user):
+            if lamp_memomind.handle(self, "GET", self.path, user):
                 return
             self.js({"error": "not found"}, 404)
             return
@@ -1300,13 +1300,13 @@ def warn_localhost_port_conflict(port: int):
     if not _localhost_port_in_use(port):
         return
     body = _fetch_localhost_shell(port) or ""
-    ours = "nav-account" in body and "id=\"nav-account\"" in body
-    stale = "theme-toggle" in body or "nav-theme" in body
+    ours = "nav-settings" in body and "id=\"nav-settings\"" in body
+    stale = "nav-account" in body or "theme-toggle" in body or "nav-theme" in body
     if ours:
         return
     print("\n  ⚠  Another Lamp is already listening on http://127.0.0.1:{}/".format(port))
     if stale:
-        print("     That copy is an older build (no Account in the sidebar).")
+        print("     That copy is an older build (no Settings in the sidebar).")
     print("     localhost will NOT show this dev tree — use the LAN URL below, or quit Lamp.app")
     print("     and restart this server.\n")
 

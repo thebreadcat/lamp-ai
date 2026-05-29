@@ -6,6 +6,7 @@ const LAMP_ICONS = {
   hammer: ["solid", "hammer"],
   apps: ["solid", "grip"],
   admin: ["solid", "gear"],
+  settings: ["solid", "gear"],
   sun: ["solid", "sun"],
   moon: ["solid", "moon"],
   star: ["regular", "star"],
@@ -48,6 +49,7 @@ const LAMP_ICONS = {
   "arrow-right": ["solid", "arrow-right"],
   ellipsis: ["solid", "ellipsis-vertical"],
   merge: ["solid", "code-merge"],
+  microchip: ["solid", "microchip"],
 };
 
 const TEMPLATE_ICON_ALIASES = {
