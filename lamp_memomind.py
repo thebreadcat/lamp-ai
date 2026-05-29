@@ -14,6 +14,7 @@ import json
 import logging
 import os
 import re
+import ssl
 import sys
 import tempfile
 import threading
@@ -21,6 +22,8 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 log = logging.getLogger("lamp.memomind")
+
+_CLIENT_GONE = (BrokenPipeError, ConnectionResetError, ssl.SSLEOFError)
 
 LAMP_DIR = Path(__file__).resolve().parent
 WORKSHOP_DIR = Path.home() / ".workshop"
@@ -634,7 +637,7 @@ def _dispatch(handler, method: str, path: str, qs: dict, user: dict) -> bool:
                         f"event: {event['event']}\ndata: {json.dumps(event['data'])}\n\n".encode()
                     )
                     handler.wfile.flush()
-            except (BrokenPipeError, ConnectionResetError):
+            except _CLIENT_GONE:
                 pass
             return True
         try:
@@ -917,7 +920,7 @@ def _dispatch(handler, method: str, path: str, qs: dict, user: dict) -> bool:
             for chunk in generate():
                 handler.wfile.write(chunk)
                 handler.wfile.flush()
-        except (BrokenPipeError, ConnectionResetError):
+        except _CLIENT_GONE:
             pass
         return True
 

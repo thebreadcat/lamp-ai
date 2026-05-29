@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Lamp — a private, local AI assistant for your home. One command to install. Chat, build apps, and remember things without cloud accounts.">
+  <meta name="theme-color" content="#0c0c0f">
+  <title>Lamp — Every home needs a Lamp</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="./">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Lamp</span>
+    </a>
+    <nav class="site-nav">
+      <a href="#install">Install</a>
+      <a href="#how">How it works</a>
+      <a href="https://github.com/thebreadcat/lamp-ai" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <p class="eyebrow">Private · Local · No subscription</p>
+      <h1>Every home needs a Lamp.</h1>
+      <p class="lead">
+        A household AI hub that runs on <em>your</em> computer or Pi — chat, build custom apps,
+        and optional memory — without sending your life to the cloud.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#install">Install in one command</a>
+        <a class="btn btn-secondary" href="https://github.com/thebreadcat/lamp-ai" target="_blank" rel="noopener">View source</a>
+      </div>
+    </section>
+
+    <section class="features" aria-label="Features">
+      <article class="feature-card">
+        <h2>Chat</h2>
+        <p>Talk to a local model on your Wi‑Fi. Family members pick their PIN and keep their own conversations.</p>
+      </article>
+      <article class="feature-card">
+        <h2>Build</h2>
+        <p>Describe an app in plain English — grocery lists, chore charts, timers — and Lamp builds it on your machine.</p>
+      </article>
+      <article class="feature-card">
+        <h2>Mind</h2>
+        <p>Optional second brain: capture notes, search memories, tasks, and events (with MemoMind).</p>
+      </article>
+      <article class="feature-card">
+        <h2>Yours</h2>
+        <p>Data stays in <code>~/.workshop</code> on your hardware. No account, no API keys to a cloud AI vendor.</p>
+      </article>
+    </section>
+
+    <section id="install" class="install">
+      <h2>Install Lamp</h2>
+      <p class="section-lead">One script does the work: downloads Lamp, installs Ollama, picks a model for your RAM, sets up HTTPS, and starts the server.</p>
+
+      <div class="platform-tabs" role="tablist">
+        <button type="button" class="tab active" role="tab" aria-selected="true" data-panel="mac">Mac / Linux</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-panel="win">Windows</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" data-panel="pi">Raspberry Pi</button>
+      </div>
+
+      <div class="panel active" id="panel-mac" role="tabpanel">
+        <p class="panel-hint">Open Terminal and paste:</p>
+        <div class="code-block">
+          <pre id="cmd-mac">curl -fsSL https://raw.githubusercontent.com/thebreadcat/lamp-ai/main/setup/install.sh | bash</pre>
+          <button type="button" class="copy-btn" data-copy="cmd-mac">Copy</button>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-win" role="tabpanel" hidden>
+        <p class="panel-hint">Open PowerShell and paste:</p>
+        <div class="code-block">
+          <pre id="cmd-win">irm https://raw.githubusercontent.com/thebreadcat/lamp-ai/main/setup/install.ps1 | iex</pre>
+          <button type="button" class="copy-btn" data-copy="cmd-win">Copy</button>
+        </div>
+        <p class="panel-note">Or download <a href="https://github.com/thebreadcat/lamp-ai/blob/main/setup/install.bat">install.bat</a> from GitHub and double‑click it.</p>
+      </div>
+
+      <div class="panel" id="panel-pi" role="tabpanel" hidden>
+        <p class="panel-hint">For a dedicated home device (Pi 4/5):</p>
+        <div class="code-block">
+          <pre id="cmd-pi">curl -fsSL https://raw.githubusercontent.com/thebreadcat/lamp-ai/main/setup/first-boot.sh | sudo bash</pre>
+          <button type="button" class="copy-btn" data-copy="cmd-pi">Copy</button>
+        </div>
+        <p class="panel-note">Creates a Wi‑Fi setup hotspot, installs Ollama, and serves at <strong>lamp.local</strong>. See the <a href="https://github.com/thebreadcat/lamp-ai/blob/main/setup/README.md">Pi setup guide</a>.</p>
+      </div>
+
+      <ul class="install-checklist">
+        <li>Detects RAM and pulls a sensible Ollama model</li>
+        <li>Creates HTTPS automatically (microphone works on phones)</li>
+        <li>Shows a QR code on the login screen for same‑Wi‑Fi devices</li>
+        <li>You create a name + 4‑digit PIN — then start chatting</li>
+      </ul>
+    </section>
+
+    <section id="how" class="steps">
+      <h2>How it works</h2>
+      <ol class="step-list">
+        <li>
+          <strong>Run the installer</strong>
+          <span>Wait a few minutes while Ollama and Lamp download.</span>
+        </li>
+        <li>
+          <strong>Open Lamp in your browser</strong>
+          <span>On this computer: <code>https://localhost:7700</code>. On your phone: scan the QR on the login screen.</span>
+        </li>
+        <li>
+          <strong>Accept the security warning once</strong>
+          <span>Lamp uses a self‑signed certificate on your home network so voice input works on phones.</span>
+        </li>
+        <li>
+          <strong>Create the admin account</strong>
+          <span>Add family members later in Settings. Everyone gets their own PIN and apps.</span>
+        </li>
+      </ol>
+    </section>
+
+    <section class="faq">
+      <h2>Common questions</h2>
+      <details>
+        <summary>Do I need to know Git or Python?</summary>
+        <p>No. The installer handles downloads, Ollama, HTTPS, and starting the server. You only need a Mac, PC, or Pi with internet for the first run.</p>
+      </details>
+      <details>
+        <summary>Does my data leave the house?</summary>
+        <p>Chat and apps run against a model on your machine (via Ollama). Nothing is sent to Lamp’s servers — there aren’t any.</p>
+      </details>
+      <details>
+        <summary>Why does my phone warn about the certificate?</summary>
+        <p>Browsers require HTTPS for the microphone off‑localhost. Lamp generates a private certificate for your Wi‑Fi. Tap through the warning once per device — that’s normal for self‑hosted home software.</p>
+      </details>
+      <details>
+        <summary>What hardware do I need?</summary>
+        <p>A Mac or PC with 8 GB+ RAM works well. For an always‑on home hub, a Raspberry Pi 4 (4 GB+) or Pi 5 is ideal — see the <a href="https://github.com/thebreadcat/lamp-ai/blob/main/PI-REQUIREMENTS.md">Pi requirements</a>.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Lamp is open source — <a href="https://github.com/thebreadcat/lamp-ai">thebreadcat/lamp-ai</a></p>
+    <p class="footer-sub">Built on <a href="https://github.com/thebreadcat/workshop">Workshop</a> and <a href="https://github.com/thebreadcat/tortoise">Tortoise</a>.</p>
+  </footer>
+
+  <script>
+    document.querySelectorAll(".platform-tabs .tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".platform-tabs .tab").forEach((t) => {
+          t.classList.toggle("active", t === tab);
+          t.setAttribute("aria-selected", t === tab ? "true" : "false");
+        });
+        document.querySelectorAll(".panel").forEach((p) => {
+          const on = p.id === "panel-" + tab.dataset.panel;
+          p.classList.toggle("active", on);
+          p.hidden = !on;
+        });
+      });
+    });
+    document.querySelectorAll(".copy-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.copy;
+        const text = document.getElementById(id)?.textContent?.trim();
+        if (!text) return;
+        try {
+          await navigator.clipboard.writeText(text);
+          const prev = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(() => { btn.textContent = prev; }, 1600);
+        } catch (_) {
+          btn.textContent = "Select & copy";
+        }
+      });
+    });
+  </script>
+</body>
+</html>

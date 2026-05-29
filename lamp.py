@@ -10,6 +10,8 @@ import os
 import re
 import shutil
 import socket
+import ssl
+import subprocess
 import sys
 import urllib.request
 from http import cookies
@@ -29,6 +31,8 @@ import lamp_admin  # noqa: E402
 import lamp_models  # noqa: E402
 import lamp_voice  # noqa: E402
 import lamp_memomind  # noqa: E402
+import lamp_qr  # noqa: E402
+import lamp_tls  # noqa: E402
 from workshop import (  # noqa: E402
     Handler as WorkshopHandler,
     ThreadedHTTPServer,
@@ -63,14 +67,22 @@ AUTH_PUBLIC_GET = {
     "/icon-192.png",
     "/icon-512.png",
     "/favicon.ico",
+    "/api/connect-qr.svg",
+    "/api/connect-qr.png",
 }
 AUTH_PUBLIC_GET_PREFIX = ("/api/auth/", "/assets/")
 AUTH_PUBLIC_POST = {"/api/auth/login", "/api/auth/setup"}
+
+# Client closed an SSE/stream (common on phone Wi‑Fi over HTTPS).
+_CLIENT_GONE = (BrokenPipeError, ConnectionResetError, ssl.SSLEOFError)
 
 
 class LampHandler(WorkshopHandler):
     lamp_user = None
     _lamp_body_cache = None
+    lamp_bind_host = "127.0.0.1"
+    lamp_port = DEFAULT_PORT
+    lamp_scheme = "http"
 
     def body(self):
         if self._lamp_body_cache is not None:
@@ -314,7 +326,48 @@ class LampHandler(WorkshopHandler):
 
     # ── Auth ──────────────────────────────────────────────────────────────────
 
+    def _connect_qr_url(self) -> str:
+        host = self.headers.get("Host", f"localhost:{self.lamp_port}")
+        return lamp_qr.phone_connect_url(
+            host,
+            self.lamp_port,
+            scheme=self.lamp_scheme,
+            server_bind_host=self.lamp_bind_host,
+        )
+
+    def _serve_connect_qr(self, want_png: bool = False):
+        url = self._connect_qr_url()
+        if want_png:
+            png = lamp_qr.make_qr_png(url)
+            if png:
+                self.send_response(200)
+                self.send_header("Content-Type", "image/png")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Content-Length", str(len(png)))
+                self.end_headers()
+                self.wfile.write(png)
+                return
+        svg = lamp_qr.make_qr_svg(url).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "image/svg+xml; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Content-Length", str(len(svg)))
+        self.end_headers()
+        self.wfile.write(svg)
+
     def _auth_get(self, path: str, qs: dict):
+        if path == "/api/auth/connect-info":
+            bind = (self.lamp_bind_host or "").strip().lower()
+            listening_lan = bind in ("", "0.0.0.0", "::")
+            url = self._connect_qr_url()
+            show = listening_lan and bool(lamp_qr._lan_ip())
+            self.js({
+                "url": url,
+                "qr_svg": "/api/connect-qr.svg",
+                "qr_png": "/api/connect-qr.png",
+                "show": show,
+            })
+            return
         if path == "/api/auth/check":
             token = self._cookie(SESSION_COOKIE)
             user = ldb.session_check(token) if token else None
@@ -515,7 +568,7 @@ class LampHandler(WorkshopHandler):
                 stored += "\n\n```json\n" + json.dumps(parsed["app_idea"]) + "\n```"
             ldb.msg_add(cid, "assistant", stored)
             ldb.convo_touch(cid)
-        except (BrokenPipeError, ConnectionResetError):
+        except _CLIENT_GONE:
             pass
         return
 
@@ -677,7 +730,7 @@ class LampHandler(WorkshopHandler):
             self._start_sse()
             try:
                 lamp_admin.ollama_pull_stream(model, self._sse_write)
-            except (BrokenPipeError, ConnectionResetError):
+            except _CLIENT_GONE:
                 pass
             return
 
@@ -838,6 +891,9 @@ class LampHandler(WorkshopHandler):
             if lamp_memomind.handle(self, "GET", self.path, user):
                 return
             self.js({"error": "not found"}, 404)
+            return
+        if p in ("/api/connect-qr.svg", "/api/connect-qr.png"):
+            self._serve_connect_qr(want_png=(p.endswith(".png")))
             return
         if p.startswith("/api/auth/"):
             self._auth_get(p, qs)
@@ -1318,22 +1374,38 @@ def main():
     ap.add_argument(
         "--tls",
         action="store_true",
-        help="Serve HTTPS (required for microphone from phones on Wi‑Fi; run setup/generate-lamp-cert.sh first)",
+        help="Serve HTTPS (auto-enabled when --host 0.0.0.0 for phone microphone)",
+    )
+    ap.add_argument(
+        "--no-tls",
+        action="store_true",
+        help="Force HTTP even when listening on 0.0.0.0 (not recommended for household use)",
     )
     ap.add_argument("--tls-cert", type=Path, default=None, help="TLS certificate PEM (default: ~/.workshop/lamp-cert.pem)")
     ap.add_argument("--tls-key", type=Path, default=None, help="TLS private key PEM (default: ~/.workshop/lamp-key.pem)")
     ap.add_argument("--status", action="store_true", help="Print config health and exit")
     args = ap.parse_args()
 
-    scheme = "https" if args.tls else "http"
+    host_norm = args.host.strip().lower()
+    use_tls = args.tls or (
+        not args.no_tls and host_norm in ("0.0.0.0", "::")
+    )
+    scheme = "https" if use_tls else "http"
     def_cert, def_key = _default_tls_paths()
     tls_cert = args.tls_cert or def_cert
     tls_key = args.tls_key or def_key
-    if args.tls and (not tls_cert.is_file() or not tls_key.is_file()):
-        print("\n  TLS certificate not found.")
-        print("  Run:  ./setup/generate-lamp-cert.sh")
-        print("  Then: python3 lamp.py --host 0.0.0.0 --tls\n")
-        raise SystemExit(1)
+    if use_tls:
+        try:
+            tls_cert, tls_key = lamp_tls.ensure_tls_cert()
+        except (RuntimeError, subprocess.CalledProcessError) as e:
+            print(f"\n  Could not set up HTTPS: {e}")
+            print("  Install OpenSSL, or run: python3 lamp_tls.py")
+            print("  Or start without TLS: python3 lamp.py --host 0.0.0.0 --no-tls\n")
+            raise SystemExit(1) from e
+        if args.tls_cert:
+            tls_cert = args.tls_cert
+        if args.tls_key:
+            tls_key = args.tls_key
 
     cfg = load_config()
     apps_dir(cfg).mkdir(parents=True, exist_ok=True)
@@ -1351,18 +1423,35 @@ def main():
         for line in TORTOISE_INSTALL_HINT.splitlines():
             print(f"    {line}")
     print("  Open:")
+    phone_url = None
     for url, hint in server_urls(args.host, args.port, scheme=scheme):
         line = f"    {url}"
         if hint:
             line += f"  — {hint}"
         print(line)
-    if not args.tls and args.host.strip() not in ("127.0.0.1", "localhost", "::1"):
-        print("  Note: microphone from phones needs HTTPS — use --tls (see setup/generate-lamp-cert.sh)")
+        if hint and "phones" in hint:
+            phone_url = url
+    if phone_url:
+        print("\n  Scan on your phone (same Wi‑Fi):")
+        if use_tls:
+            print("  Accept the security warning once on your phone, then the microphone works.")
+        if lamp_qr.print_terminal_qr(phone_url):
+            print(f"  {phone_url}\n")
+        else:
+            print(f"    {phone_url}")
+            print("    Or open the login page on this computer — the QR appears there too.\n")
+    elif use_tls:
+        print("\n  HTTPS is on. Use https:// on phones/tablets (same Wi‑Fi) for the microphone.\n")
+    elif host_norm not in ("127.0.0.1", "localhost", "::1"):
+        print("  Note: microphone from phones needs HTTPS — use --host 0.0.0.0 (auto TLS) or --tls")
     warn_localhost_port_conflict(args.port)
     print()
 
+    LampHandler.lamp_bind_host = args.host
+    LampHandler.lamp_port = args.port
+    LampHandler.lamp_scheme = scheme
     server = ThreadedHTTPServer((args.host, args.port), LampHandler)
-    if args.tls:
+    if use_tls:
         import ssl
 
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

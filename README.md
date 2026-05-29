@@ -2,6 +2,8 @@
 
 **Every home needs a Lamp.** A private, local AI assistant for the household — built on [Workshop](https://github.com/thebreadcat/workshop) and [Tortoise](https://github.com/thebreadcat/tortoise).
 
+**Website (install + onboarding):** [thebreadcat.github.io/lamp-ai](https://thebreadcat.github.io/lamp-ai) — enable via [docs/README.md](docs/README.md) (GitHub Pages from `/docs`).
+
 Plug in a Raspberry Pi, connect phones over WiFi, and chat + build custom apps without cloud accounts or subscriptions.
 
 ## Stack
@@ -48,7 +50,15 @@ Override location with `MEMOMIND_PATH=/path/to/memomind`. Optional shared brain 
 - [Workshop](https://github.com/thebreadcat/workshop) (git submodule) + [Tortoise](https://github.com/thebreadcat/tortoise)
 - Ollama, LM Studio, or another OpenAI-compatible endpoint
 
-See [QUICKSTART.md](QUICKSTART.md) for full desktop setup steps.
+**Easy install (Mac/Linux):**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/thebreadcat/lamp-ai/main/setup/install.sh | bash
+```
+
+**Windows:** double-click [setup/install.bat](setup/install.bat) or see [QUICKSTART.md](QUICKSTART.md).
+
+See [QUICKSTART.md](QUICKSTART.md) for manual setup (Git, submodules) and troubleshooting.
 
 ## Configuration
 

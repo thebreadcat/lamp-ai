@@ -2,6 +2,36 @@
 
 Run Lamp on your own computer in a few minutes. Everything stays local — no cloud account required.
 
+## Easy install (one command)
+
+**Mac or Linux** — installs Python (if needed), downloads Lamp + Workshop + Tortoise (no Git required), installs Ollama, pulls a RAM-sized model, writes `~/.workshop/config.json`, and starts the server:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/thebreadcat/lamp-ai/main/setup/install.sh | bash
+```
+
+**Windows** — download [setup/install.bat](setup/install.bat) and double-click, or in PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/thebreadcat/lamp-ai/main/setup/install.ps1 | iex
+```
+
+When it finishes, open **https://localhost:7700** on this computer. On a phone or tablet on the same Wi‑Fi, **scan the QR code** in the terminal or on the login screen. Accept the browser’s security warning once (self-signed certificate), then create your admin name and PIN. **HTTPS is included automatically** so the microphone works on phones — no extra setup.
+
+Optional environment variables:
+
+| Variable | Effect |
+|----------|--------|
+| `LAMP_INSTALL_DIR` | Install location (default `~/lamp`) |
+| `LAMP_HOST=127.0.0.1` | Localhost only (no phone/tablet access) |
+| `LAMP_NO_TLS=1` | HTTP only — microphone on phones will not work |
+| `LAMP_SKIP_OLLAMA=1` | Skip Ollama install and model pull |
+| `LAMP_START=0` | Setup only; start manually with `python3 lamp.py` |
+
+Manual setup (Git, submodules, Tortoise) is below if you prefer the developer path.
+
+---
+
 ## What you need
 
 | Requirement | Notes |

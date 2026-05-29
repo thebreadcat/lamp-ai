@@ -571,6 +571,21 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   margin-bottom: 28px;
 }
 .auth-tagline { color: var(--muted); font-size: 15px; margin-top: 12px; }
+.connect-qr-card {
+  text-align: center; margin: 16px auto 20px; padding: 16px 14px;
+  max-width: 280px; border: 1px solid var(--border); border-radius: var(--r);
+  background: var(--surface);
+}
+.connect-qr-card img {
+  display: block; margin: 0 auto 10px; width: 200px; height: 200px;
+  border-radius: 10px; background: #fff;
+}
+.connect-qr-label {
+  font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 10px;
+}
+.connect-qr-url {
+  font-size: 13px; color: var(--subtle); word-break: break-all; margin: 0; line-height: 1.4;
+}
 .app-chip-icon {
   width: 40px; height: 40px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
@@ -1848,6 +1863,11 @@ input, textarea, select, button { font-family: inherit; }
       </div>
       <h1>Welcome</h1>
       <p>Create the first account — this person will be the admin for this home device.</p>
+      <div id="setup-connect-qr" class="connect-qr-card" style="display:none" aria-hidden="true">
+        <p class="connect-qr-label">Open on your phone (same Wi‑Fi)</p>
+        <img src="/api/connect-qr.svg" width="200" height="200" alt="QR code to open Lamp">
+        <p id="setup-qr-url" class="connect-qr-url"></p>
+      </div>
       <input id="setup-name" class="setup-input" placeholder="Your name" autocomplete="name">
       <p style="font-size:14px;color:var(--muted)">Choose a 4-digit PIN</p>
       <div id="setup-pin-display" class="pin-display">····</div>
@@ -1864,6 +1884,11 @@ input, textarea, select, button { font-family: inherit; }
           <span class="lamp-lava-logo__word">lamp</span>
         </div>
         <p class="auth-tagline">Every home needs a Lamp.</p>
+      </div>
+      <div id="login-connect-qr" class="connect-qr-card" style="display:none" aria-hidden="true">
+        <p class="connect-qr-label">Open on your phone (same Wi‑Fi)</p>
+        <img src="/api/connect-qr.svg" width="200" height="200" alt="QR code to open Lamp">
+        <p id="login-qr-url" class="connect-qr-url"></p>
       </div>
     </div>
     <div id="login-users" class="pin-users"></div>
@@ -2713,8 +2738,8 @@ async function route() {
 
   if (auth.needs_setup) {
     hideOnboarding();
-    if (r !== "setup") { showView("setup"); buildPinPad("setup"); return; }
-    showView("setup"); buildPinPad("setup"); return;
+    if (r !== "setup") { showView("setup"); buildPinPad("setup"); refreshConnectQr(); return; }
+    showView("setup"); buildPinPad("setup"); refreshConnectQr(); return;
   }
 
   if (!auth.ok) {
@@ -3170,7 +3195,40 @@ function pinKey(mode, k) {
   }
 }
 
+async function refreshConnectQr() {
+  const cards = [
+    { card: "login-connect-qr", url: "login-qr-url" },
+    { card: "setup-connect-qr", url: "setup-qr-url" },
+  ];
+  try {
+    const info = await api("GET", "/api/auth/connect-info");
+    cards.forEach(({ card, url }) => {
+      const el = document.getElementById(card);
+      const urlEl = document.getElementById(url);
+      if (!el) return;
+      if (!info.show) {
+        el.style.display = "none";
+        el.setAttribute("aria-hidden", "true");
+        return;
+      }
+      el.style.display = "block";
+      el.removeAttribute("aria-hidden");
+      if (urlEl && info.url) urlEl.textContent = info.url;
+      const img = el.querySelector("img");
+      if (img && info.qr_svg) {
+        img.src = info.qr_svg + "?v=" + encodeURIComponent(info.url || "");
+      }
+    });
+  } catch (_) {
+    cards.forEach(({ card }) => {
+      const el = document.getElementById(card);
+      if (el) { el.style.display = "none"; el.setAttribute("aria-hidden", "true"); }
+    });
+  }
+}
+
 async function loadLoginUsers() {
+  refreshConnectQr();
   const el = document.getElementById("login-users");
   panelLoading(el, "Loading accounts…", true);
   const { users } = await api("GET", "/api/auth/users");

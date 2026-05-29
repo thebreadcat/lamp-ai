@@ -2,14 +2,7 @@
 # Self-signed TLS cert for Lamp on your home LAN (microphone / PWA over HTTPS).
 set -euo pipefail
 
-DIR="${LAMP_TLS_DIR:-$HOME/.workshop}"
-CERT="$DIR/lamp-cert.pem"
-KEY="$DIR/lamp-key.pem"
-CN="${LAMP_TLS_CN:-lamp.local}"
-DAYS="${LAMP_TLS_DAYS:-825}"
-
-mkdir -p "$DIR"
-
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LAN_IP=""
 if [[ -n "${1:-}" ]]; then
   LAN_IP="$1"
@@ -26,24 +19,16 @@ except OSError:
 " 2>/dev/null || true)"
 fi
 
-SAN="DNS:${CN},DNS:localhost,IP:127.0.0.1"
-if [[ -n "$LAN_IP" ]]; then
-  SAN="${SAN},IP:${LAN_IP}"
-fi
+ARGS=()
+[[ -n "$LAN_IP" ]] && ARGS+=(--lan "$LAN_IP")
+python3 "$ROOT/lamp_tls.py" "${ARGS[@]}"
 
-echo "Writing $CERT (SAN: $SAN)"
-openssl req -x509 -newkey rsa:2048 -nodes \
-  -keyout "$KEY" -out "$CERT" -days "$DAYS" \
-  -subj "/CN=${CN}" \
-  -addext "subjectAltName=${SAN}"
-
-chmod 600 "$KEY"
 echo ""
-echo "Start Lamp with HTTPS:"
-echo "  python3 lamp.py --host 0.0.0.0 --tls"
+echo "Start Lamp (HTTPS is automatic when listening on the network):"
+echo "  python3 lamp.py --host 0.0.0.0"
 echo ""
 if [[ -n "$LAN_IP" ]]; then
   echo "On your phone (accept the security warning once):"
   echo "  https://${LAN_IP}:7700"
 fi
-echo "  https://${CN}:7700  (Pi / mDNS)"
+echo "  https://lamp.local:7700  (Pi / mDNS)"

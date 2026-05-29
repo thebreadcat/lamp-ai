@@ -5,6 +5,22 @@ Provision a Pi as a home Lamp device: WiFi onboarding, Ollama, mDNS, and systemd
 **Hardware & model sizing:** [PI-REQUIREMENTS.md](../PI-REQUIREMENTS.md)  
 **Try on a computer first:** [QUICKSTART.md](../QUICKSTART.md)
 
+## Desktop one-command install (Mac / Linux / Windows)
+
+| Platform | Command |
+|----------|---------|
+| **macOS / Linux** | `curl -fsSL https://raw.githubusercontent.com/thebreadcat/lamp-ai/main/setup/install.sh \| bash` |
+| **Windows** | Double-click `setup/install.bat`, or `irm …/setup/install.ps1 \| iex` (see [QUICKSTART.md](../QUICKSTART.md)) |
+
+The installer:
+
+- Uses **zip downloads** when Git is not installed (no submodules required for end users)
+- Installs **Ollama** and pulls a model sized to your RAM (`qwen2.5:3b` on 8 GB, `qwen2.5:7b` on 16 GB+)
+- Creates a **self-signed HTTPS certificate** and starts **`python3 lamp.py --host 0.0.0.0`** (TLS automatic on the network)
+- Writes **`~/.workshop/config.json`** so you can skip in-browser model setup
+
+From an existing clone: `./setup/install.sh` (uses the current directory instead of re-downloading).
+
 ## Requirements (short)
 
 - Raspberry Pi 4 (2 GB+) or Pi 5 — see [PI-REQUIREMENTS.md](../PI-REQUIREMENTS.md) for RAM/model guidance
