@@ -9,19 +9,41 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <title>Lamp</title>
 <link rel="stylesheet" href="/assets/fontawesome/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script>
 (function () {
+  var pack = localStorage.getItem("lamp-theme-pack");
+  if (pack !== "chalk" && pack !== "default") pack = "default";
   var s = localStorage.getItem("lamp-theme");
   var t = s === "light" || s === "dark" ? s
     : (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme-pack", pack);
   document.documentElement.setAttribute("data-theme", t);
   var m = document.querySelector('meta[name="theme-color"]');
-  if (m) m.content = t === "light" ? "#f5f5f4" : "#0c0c0f";
+  if (m) {
+    if (pack === "chalk") m.content = t === "light" ? "#e8e4dc" : "#090909";
+    else m.content = t === "light" ? "#f5f5f4" : "#0c0c0f";
+  }
 })();
 </script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root, [data-theme="dark"] {
+
+/* Layout + motion tokens — shared by every theme pack (do not scope to a pack) */
+html {
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 0.18s var(--ease);
+  --t-med: 0.28s var(--ease);
+  --nav-h: 64px;
+  --chat-compose-h: 72px;
+  --nav-side-w: 220px;
+  --content-max: 1200px;
+  --mind-mobile-header-h: 68px;
+}
+
+[data-theme-pack="default"][data-theme="dark"] {
   color-scheme: dark;
   --bg: #121216;
   --surface: #1c1c22;
@@ -45,22 +67,26 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 8px 28px rgba(0, 0, 0, 0.45);
   --shadow-glow: 0 4px 24px var(--accent-glow);
-  --ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --t-fast: 0.18s var(--ease);
-  --t-med: 0.28s var(--ease);
   --r: 14px;
-  --nav-h: 64px;
-  --chat-compose-h: 72px;
-  --nav-side-w: 220px;
-  --content-max: 1200px;
-  --mind-mobile-header-h: 68px;
   --lava-blob-core: #fcd34d;
   --lava-blob-mid: #f59e0b;
+  --lava-bg-1: #471A19;
+  --lava-bg-2: #290F0E;
+  --lava-bg-3: #120706;
+  --lava-bg-4: #050202;
+  --lava-bg-5: #000000;
+  --logo-glow: rgba(251, 191, 36, 0.35);
 }
-[data-theme="light"] {
+[data-theme-pack="default"][data-theme="light"] {
   color-scheme: light;
   --lava-blob-core: #fbbf24;
   --lava-blob-mid: #f59e0b;
+  --lava-bg-1: #6b3030;
+  --lava-bg-2: #4a2020;
+  --lava-bg-3: #2a1212;
+  --lava-bg-4: #120808;
+  --lava-bg-5: #080404;
+  --logo-glow: rgba(217, 119, 6, 0.28);
   --bg: #f5f5f4;
   --surface: #ffffff;
   --surface-raised: #fafaf9;
@@ -83,9 +109,7 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
   --shadow-glow: 0 4px 20px var(--accent-glow);
-  --ease: cubic-bezier(0.4, 0, 0.2, 1);
-  --t-fast: 0.18s var(--ease);
-  --t-med: 0.28s var(--ease);
+  --r: 14px;
 }
 html, body {
   height: 100%;
@@ -97,7 +121,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-[data-theme="dark"] body {
+[data-theme-pack="default"][data-theme="dark"] body {
   background: linear-gradient(165deg, var(--page-bg) 0%, var(--bg) 42%, #16161c 100%);
   background-attachment: fixed;
 }
@@ -130,7 +154,7 @@ html, body {
   display: none; align-items: stretch; z-index: 100;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
 }
-[data-theme="dark"] .bottom-nav {
+[data-theme-pack="default"][data-theme="dark"] .bottom-nav {
   background: rgba(18, 18, 24, 0.82);
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);
@@ -146,7 +170,7 @@ html, body {
   transition: color var(--t-fast), background var(--t-fast);
 }
 .nav-item.active { color: var(--accent); font-weight: 600; }
-[data-theme="dark"] .nav-item.active {
+[data-theme-pack="default"][data-theme="dark"] .nav-item.active {
   text-shadow: 0 0 20px var(--accent-glow);
 }
 .nav-item span.icon { font-size: 22px; line-height: 1; }
@@ -187,7 +211,7 @@ html, body {
   cursor: pointer;
   transition: transform 0.15s ease, border-color var(--t-fast), box-shadow var(--t-fast);
 }
-[data-theme="dark"] .notif-card {
+[data-theme-pack="default"][data-theme="dark"] .notif-card {
   background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, var(--surface) 55%);
 }
 .notif-card:active { transform: scale(0.99); }
@@ -195,7 +219,7 @@ html, body {
   border-color: rgba(251, 191, 36, 0.35);
   box-shadow: var(--shadow-sm), inset 3px 0 0 var(--accent);
 }
-[data-theme="dark"] .notif-card.unread {
+[data-theme-pack="default"][data-theme="dark"] .notif-card.unread {
   background: linear-gradient(145deg, rgba(251, 191, 36, 0.1) 0%, var(--surface) 50%);
   box-shadow: var(--shadow-sm), inset 3px 0 0 var(--accent), 0 0 24px rgba(251, 191, 36, 0.08);
 }
@@ -413,7 +437,8 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
 .lamp-lava-logo {
   position: relative; display: block; overflow: hidden; width: 100%;
   border-radius: 32px 14px 14px 14px;
-  box-shadow: var(--shadow-sm), inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+  box-shadow: var(--shadow-sm), 0 0 28px var(--logo-glow, rgba(251, 191, 36, 0.2)),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 .lamp-lava-logo--lg {
   width: min(280px, 88vw); height: 112px;
@@ -451,7 +476,7 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   box-shadow: var(--shadow-sm);
   transition: border-color var(--t-fast), box-shadow var(--t-fast);
 }
-[data-theme="dark"] .card {
+[data-theme-pack="default"][data-theme="dark"] .card {
   background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, var(--surface) 100%);
 }
 .hero-btn {
@@ -461,7 +486,7 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   font-size: 18px; font-weight: 700; cursor: pointer;
   transition: transform var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
 }
-[data-theme="dark"] .hero-btn:not(.hero-btn-secondary) {
+[data-theme-pack="default"][data-theme="dark"] .hero-btn:not(.hero-btn-secondary) {
   background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 55%, #d97706 100%);
   color: #1c1408;
   box-shadow: var(--shadow-glow);
@@ -473,7 +498,12 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
 }
-[data-theme="dark"] .hero-btn-secondary {
+.hero-btn-tertiary {
+  background: var(--surface); color: var(--muted);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme-pack="default"][data-theme="dark"] .hero-btn-secondary {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.1);
 }
@@ -515,12 +545,13 @@ body:not(.has-nav) .toast-wrap { bottom: 24px; }
   border: none; cursor: pointer; text-decoration: none; gap: 6px;
 }
 .btn-primary { background: var(--accent); color: var(--on-accent); }
-[data-theme="dark"] .btn-primary {
+[data-theme-pack="default"][data-theme="dark"] .btn-primary {
   background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 55%, #d97706 100%);
   color: #1c1408;
   box-shadow: var(--shadow-sm);
 }
 .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.btn-tertiary { background: var(--surface-raised); color: var(--muted); border: 1px solid var(--border); }
 .btn-ghost { background: none; color: var(--muted); border: none; padding: 8px 12px; font-size: 14px; }
 .btn-ghost:hover { color: var(--subtle); }
 .btn-danger { background: none; color: var(--warn); border: 1px solid var(--border); }
@@ -633,7 +664,7 @@ input, textarea, select, button { font-family: inherit; }
   background: var(--surface); border: 1px solid var(--border); align-self: flex-start;
   border-bottom-left-radius: 4px; box-shadow: var(--shadow-sm);
 }
-[data-theme="dark"] .bubble-ws {
+[data-theme-pack="default"][data-theme="dark"] .bubble-ws {
   background: var(--surface-raised);
   border-color: rgba(255, 255, 255, 0.08);
 }
@@ -642,7 +673,7 @@ input, textarea, select, button { font-family: inherit; }
   border-bottom-right-radius: 4px;
   box-shadow: var(--shadow-sm);
 }
-[data-theme="dark"] .bubble-user {
+[data-theme-pack="default"][data-theme="dark"] .bubble-user {
   background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
   color: #1c1408;
 }
@@ -652,10 +683,13 @@ input, textarea, select, button { font-family: inherit; }
   flex-shrink: 0;
 }
 [data-theme="dark"] .chat-input-bar {
-  background: rgba(12, 12, 15, 0.88);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-top-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme-pack="default"][data-theme="dark"] .chat-input-bar {
+  background: rgba(12, 12, 15, 0.88);
 }
 .chat-input {
   flex: 1; box-sizing: border-box;
@@ -671,7 +705,7 @@ input, textarea, select, button { font-family: inherit; }
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-l);
 }
-[data-theme="dark"] .send-btn {
+[data-theme-pack="default"][data-theme="dark"] .send-btn {
   background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
   color: #1c1408;
   box-shadow: var(--shadow-glow);
@@ -723,6 +757,16 @@ input, textarea, select, button { font-family: inherit; }
 }
 .build-progress { padding-bottom: 24px; }
 .building-sub { color: var(--muted); font-size: 15px; line-height: 1.45; margin-bottom: 16px; }
+.editing-banner {
+  display: none; margin: 0 20px 12px; padding: 12px 14px; border-radius: var(--r);
+  border: 1px solid var(--border); background: var(--accent-l); font-size: 14px; line-height: 1.45;
+}
+.editing-banner.visible { display: block; }
+.editing-banner strong { font-weight: 700; color: var(--accent); }
+.editing-banner button {
+  margin-left: 8px; padding: 0; border: none; background: none; color: var(--muted);
+  font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: underline;
+}
 .step-list { display: flex; flex-direction: column; gap: 10px; }
 .step-row {
   display: flex; gap: 12px; align-items: flex-start;
@@ -833,7 +877,7 @@ input, textarea, select, button { font-family: inherit; }
   border-right-color: rgba(255, 255, 255, 0.06);
 }
 [data-theme="dark"] .chat-panel { background: transparent; }
-[data-theme="dark"] .convo-item.active {
+[data-theme-pack="default"][data-theme="dark"] .convo-item.active {
   background: rgba(251, 191, 36, 0.1);
   box-shadow: inset 3px 0 0 var(--accent);
 }
@@ -849,7 +893,7 @@ input, textarea, select, button { font-family: inherit; }
   background: var(--accent); color: var(--on-accent);
   transition: transform var(--t-fast), filter var(--t-fast), box-shadow var(--t-fast);
 }
-[data-theme="dark"] .chat-new-btn {
+[data-theme-pack="default"][data-theme="dark"] .chat-new-btn {
   background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 55%, #d97706 100%);
   color: #1c1408;
   box-shadow: var(--shadow-glow);
@@ -877,7 +921,7 @@ input, textarea, select, button { font-family: inherit; }
   outline-offset: -2px;
   box-shadow: none;
 }
-[data-theme="dark"] .convo-list.is-dragging .convo-item.convo-drop-target {
+[data-theme-pack="default"][data-theme="dark"] .convo-list.is-dragging .convo-item.convo-drop-target {
   background: rgba(251, 191, 36, 0.1);
   box-shadow: none;
 }
@@ -1136,7 +1180,7 @@ input, textarea, select, button { font-family: inherit; }
   box-shadow: var(--shadow-sm);
   transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast);
 }
-[data-theme="dark"] .template-card {
+[data-theme-pack="default"][data-theme="dark"] .template-card {
   background: rgba(255, 255, 255, 0.03);
   border-color: rgba(255, 255, 255, 0.08);
 }
@@ -1146,7 +1190,7 @@ input, textarea, select, button { font-family: inherit; }
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
-[data-theme="dark"] .template-card:hover {
+[data-theme-pack="default"][data-theme="dark"] .template-card:hover {
   border-color: rgba(251, 191, 36, 0.35);
   background: rgba(251, 191, 36, 0.08);
 }
@@ -1161,7 +1205,7 @@ input, textarea, select, button { font-family: inherit; }
   border: 1px solid rgba(251, 191, 36, 0.28);
   background: var(--surface); box-shadow: var(--shadow-sm);
 }
-[data-theme="dark"] .home-notif-banner {
+[data-theme-pack="default"][data-theme="dark"] .home-notif-banner {
   background: linear-gradient(160deg, rgba(251, 191, 36, 0.12) 0%, var(--surface) 45%);
   box-shadow: var(--shadow-sm), 0 0 28px rgba(251, 191, 36, 0.06);
 }
@@ -1185,7 +1229,7 @@ input, textarea, select, button { font-family: inherit; }
   background: var(--surface-raised); color: inherit; cursor: pointer; text-align: left;
   transition: border-color var(--t-fast), transform var(--t-fast);
 }
-[data-theme="dark"] .home-notif-card {
+[data-theme-pack="default"][data-theme="dark"] .home-notif-card {
   background: rgba(255, 255, 255, 0.04);
 }
 .home-notif-card:hover { border-color: var(--border-strong); }
@@ -1557,14 +1601,19 @@ input, textarea, select, button { font-family: inherit; }
   #v-mind.view.active {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - var(--nav-h));
+    height: calc(100dvh - var(--nav-h));
+    max-height: calc(100dvh - var(--nav-h));
+    min-height: 0;
+    padding-bottom: 0;
     overflow: hidden;
+    box-sizing: border-box;
   }
   #v-mind.view.active .mind-shell {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
+    height: 100%;
     padding-top: 0;
   }
   #v-mind.view.active .mind-mobile-nav {
@@ -1595,10 +1644,11 @@ input, textarea, select, button { font-family: inherit; }
     padding: 12px 16px 16px;
   }
   #v-mind.view.active .mind-panel--dock.active {
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    overflow: hidden;
   }
   #v-mind.view.active .mind-panel--dock .mind-panel-scroll {
     order: 1;
@@ -1606,20 +1656,27 @@ input, textarea, select, button { font-family: inherit; }
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 12px 16px 16px;
+    padding: 12px 16px 8px;
   }
   #v-mind.view.active .mind-panel--dock .mind-dock-bar {
     order: 2;
     flex-shrink: 0;
-    padding: 8px 10px;
-    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    position: relative;
+    z-index: 90;
+    padding: 8px 10px 10px;
     border-top: 1px solid var(--border);
     background: var(--bg);
   }
   [data-theme="dark"] #v-mind.view.active .mind-panel--dock .mind-dock-bar {
-    background: rgba(12, 12, 15, 0.88);
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
+  }
+  [data-theme-pack="chalk"] #v-mind.view.active .mind-panel--dock .mind-dock-bar {
+    background: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-top: 2px solid var(--border);
   }
 }
 @media (min-width: 768px) {
@@ -1687,7 +1744,7 @@ input, textarea, select, button { font-family: inherit; }
     font-weight: 600;
     box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.15);
   }
-  [data-theme="dark"] body.has-nav #bottom-nav {
+  [data-theme-pack="default"][data-theme="dark"] body.has-nav #bottom-nav {
     background: rgba(14, 14, 18, 0.9);
     backdrop-filter: blur(20px) saturate(1.15);
     -webkit-backdrop-filter: blur(20px) saturate(1.15);
@@ -1793,6 +1850,7 @@ input, textarea, select, button { font-family: inherit; }
   .nav-main, .nav-footer { display: contents; }
 }
 .theme-setting { margin-top: 20px; }
+.theme-setting + .theme-setting { margin-top: 12px; }
 .theme-setting > strong { display: block; font-size: 15px; margin-bottom: 10px; }
 .theme-switch {
   display: flex; gap: 8px; background: var(--surface); border: 1px solid var(--border);
@@ -1804,6 +1862,436 @@ input, textarea, select, button { font-family: inherit; }
 }
 .theme-opt.active { background: var(--accent-l); color: var(--accent); }
 .theme-opt:hover:not(.active) { color: var(--text); }
+.account-appearance { padding: 0 0 8px; }
+.account-appearance .theme-setting { margin-top: 0; }
+.account-appearance .theme-setting + .theme-setting { margin-top: 10px; }
+
+/* ── Chalk theme pack (visual tokens + decorative overrides only) ── */
+[data-theme-pack="chalk"][data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #090909;
+  --bg-soft: #121212;
+  --bg-elevated: #181818;
+  --texture: #202020;
+  --surface: #111111;
+  --surface-raised: #151515;
+  --border: #1d1d1d;
+  --border-strong: #2b2b2b;
+  --text: #f4f4f5;
+  --muted: #8a8a92;
+  --subtle: #c4c4cc;
+  --accent: #7ee7d8;
+  --accent-l: rgba(126, 231, 216, 0.1);
+  --accent-d: #56c7c2;
+  --accent-glow: rgba(126, 231, 216, 0.25);
+  --chalk-gold: #f1be64;
+  --chalk-orange: #ff8452;
+  --chalk-red: #d45a4f;
+  --chalk-purple: #9b7dff;
+  --chalk-teal: #56c7c2;
+  --warn: #d45a4f;
+  --page-bg: #090909;
+  --code-bg: #151515;
+  --badge-ok-bg: #0f2a24;
+  --badge-ok-fg: #7ee7d8;
+  --badge-off-bg: #1a1a1a;
+  --on-accent: #090909;
+  --outline: #000;
+  --shadow-sm: 0 0 0 1px rgba(255,255,255,0.03), 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-md: 0 0 0 2px #000, 0 10px 30px rgba(0,0,0,0.6);
+  --shadow-glow: 0 0 20px rgba(126,231,216,0.12);
+  --r: 18px;
+  --lava-blob-core: #7ee7d8;
+  --lava-blob-mid: #56c7c2;
+  --lava-bg-1: #0e3230;
+  --lava-bg-2: #0a2523;
+  --lava-bg-3: #061816;
+  --lava-bg-4: #030c0b;
+  --lava-bg-5: #000000;
+  --logo-glow: rgba(126, 231, 216, 0.38);
+  --accent-2: #f1be64;
+  --accent-2-l: rgba(241, 190, 100, 0.12);
+  --accent-2-glow: rgba(241, 190, 100, 0.28);
+  --on-accent-2: #090909;
+  --accent-3: #ff8452;
+  --accent-3-l: rgba(255, 132, 82, 0.12);
+  --accent-3-glow: rgba(255, 132, 82, 0.25);
+  --on-accent-3: #090909;
+}
+[data-theme-pack="chalk"][data-theme="light"] {
+  color-scheme: light;
+  --bg: #e8e4dc;
+  --bg-soft: #ddd8cf;
+  --bg-elevated: #f0ece4;
+  --texture: #d4cfc6;
+  --surface: #f2efe8;
+  --surface-raised: #faf8f4;
+  --border: #c4bfb4;
+  --border-strong: #a8a398;
+  --text: #1a1814;
+  --muted: #6b6560;
+  --subtle: #3d3935;
+  --accent: #2d8a7f;
+  --accent-l: rgba(45, 138, 127, 0.12);
+  --accent-d: #1f6b62;
+  --accent-glow: rgba(45, 138, 127, 0.22);
+  --chalk-gold: #b8862e;
+  --chalk-orange: #d66a3a;
+  --chalk-red: #b84a42;
+  --chalk-purple: #7a5fd4;
+  --chalk-teal: #2d8a7f;
+  --warn: #b84a42;
+  --page-bg: #e0dcd3;
+  --code-bg: #e4e0d8;
+  --badge-ok-bg: #d4ede8;
+  --badge-ok-fg: #1f6b62;
+  --badge-off-bg: #ddd8cf;
+  --on-accent: #faf8f4;
+  --outline: #1a1814;
+  --shadow-sm: 0 0 0 1px rgba(26,24,20,0.08), 0 4px 14px rgba(0,0,0,0.08);
+  --shadow-md: 0 0 0 2px rgba(26,24,20,0.12), 0 10px 28px rgba(0,0,0,0.1);
+  --shadow-glow: 0 0 16px rgba(45,138,127,0.15);
+  --r: 18px;
+  --lava-blob-core: #56c7c2;
+  --lava-blob-mid: #2d8a7f;
+  --lava-bg-1: #4a8a82;
+  --lava-bg-2: #3a726b;
+  --lava-bg-3: #2a5852;
+  --lava-bg-4: #1a3e3a;
+  --lava-bg-5: #0e2826;
+  --logo-glow: rgba(45, 138, 127, 0.32);
+  --accent-2: #b8862e;
+  --accent-2-l: rgba(184, 134, 46, 0.14);
+  --accent-2-glow: rgba(184, 134, 46, 0.22);
+  --on-accent-2: #faf8f4;
+  --accent-3: #d66a3a;
+  --accent-3-l: rgba(214, 106, 58, 0.14);
+  --accent-3-glow: rgba(214, 106, 58, 0.2);
+  --on-accent-3: #faf8f4;
+}
+html[data-theme-pack="chalk"],
+html[data-theme-pack="chalk"] body {
+  font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme-pack="chalk"][data-theme="dark"] body {
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,0.03), transparent 40%),
+    repeating-radial-gradient(circle at center, #0e0e0e 0px, #0e0e0e 6px, #121212 7px, #121212 14px),
+    radial-gradient(circle at top, #161616 0%, #090909 60%);
+  background-attachment: fixed;
+}
+[data-theme-pack="chalk"][data-theme="light"] body {
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,0.55), transparent 45%),
+    repeating-linear-gradient(120deg, transparent 0px, transparent 12px, rgba(0,0,0,0.018) 13px, transparent 14px),
+    radial-gradient(circle at top, #f5f2eb 0%, #e8e4dc 65%);
+  background-attachment: fixed;
+}
+/* Word-level chalk type: glow + silhouette outline (not per-letter stroke) */
+[data-theme-pack="chalk"] .wordmark,
+[data-theme-pack="chalk"] .greeting {
+  color: var(--chalk-gold);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  -webkit-text-stroke: 0;
+  paint-order: fill;
+  text-shadow: 0 0 14px rgba(241, 190, 100, 0.32);
+  filter:
+    drop-shadow(1px 0 0 var(--outline))
+    drop-shadow(-1px 0 0 var(--outline))
+    drop-shadow(0 1px 0 var(--outline))
+    drop-shadow(0 -1px 0 var(--outline));
+}
+[data-theme-pack="chalk"][data-theme="light"] .wordmark,
+[data-theme-pack="chalk"][data-theme="light"] .greeting {
+  text-shadow: 0 0 12px rgba(184, 134, 46, 0.28);
+}
+[data-theme-pack="chalk"] .bottom-nav {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: 2px solid var(--border-strong);
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+[data-theme-pack="chalk"][data-theme="light"] .bottom-nav {
+  box-shadow: 0 -6px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+[data-theme-pack="chalk"] .nav-item.active {
+  color: var(--accent);
+  text-shadow: 0 0 12px var(--accent-glow);
+}
+[data-theme-pack="chalk"] .card,
+[data-theme-pack="chalk"] .notif-card,
+[data-theme-pack="chalk"] .account-row,
+[data-theme-pack="chalk"] .app-chip,
+[data-theme-pack="chalk"] .template-card,
+[data-theme-pack="chalk"] .connect-qr-card,
+[data-theme-pack="chalk"] .notif-empty,
+[data-theme-pack="chalk"] .stat-box {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: calc(var(--r) + 4px);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+[data-theme-pack="chalk"] .card::before,
+[data-theme-pack="chalk"] .notif-card::before,
+[data-theme-pack="chalk"] .template-card::before,
+[data-theme-pack="chalk"] .stat-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(120deg, transparent 0px, transparent 12px, rgba(255,255,255,0.02) 13px, transparent 14px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+[data-theme-pack="chalk"][data-theme="light"] .card::before,
+[data-theme-pack="chalk"][data-theme="light"] .notif-card::before,
+[data-theme-pack="chalk"][data-theme="light"] .template-card::before,
+[data-theme-pack="chalk"][data-theme="light"] .stat-box::before {
+  background: repeating-linear-gradient(120deg, transparent 0px, transparent 12px, rgba(0,0,0,0.025) 13px, transparent 14px);
+  opacity: 0.5;
+}
+[data-theme-pack="chalk"] .notif-card.unread {
+  border-color: rgba(126,231,216,0.35);
+  box-shadow: var(--shadow-sm), inset 3px 0 0 var(--accent);
+}
+[data-theme-pack="chalk"] .hero-btn:not(.hero-btn-secondary):not(.hero-btn-tertiary) {
+  background: var(--surface-raised);
+  color: var(--accent);
+  border: 2px solid var(--border-strong);
+  box-shadow: var(--shadow-glow), inset 0 0 0 1px rgba(255,255,255,0.03);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-shadow: 0 0 10px var(--accent-glow);
+}
+[data-theme-pack="chalk"] .hero-btn:not(.hero-btn-secondary):not(.hero-btn-tertiary):hover {
+  filter: none;
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  box-shadow: 0 0 25px var(--accent-glow), 0 0 0 2px var(--outline);
+}
+[data-theme-pack="chalk"] .hero-btn-secondary {
+  background: var(--surface);
+  color: var(--accent-2);
+  border: 2px solid var(--border-strong);
+  box-shadow: 0 0 16px var(--accent-2-glow), inset 0 0 0 1px rgba(255,255,255,0.03);
+  font-weight: 700;
+  text-shadow: 0 0 10px var(--accent-2-glow);
+}
+[data-theme-pack="chalk"] .hero-btn-secondary:hover {
+  border-color: var(--accent-2);
+  background: var(--surface-raised);
+  box-shadow: 0 0 22px var(--accent-2-glow), 0 0 0 2px var(--outline);
+}
+[data-theme-pack="chalk"] .hero-btn-tertiary {
+  background: var(--surface);
+  color: var(--accent-3);
+  border: 2px solid var(--border);
+  box-shadow: 0 0 14px var(--accent-3-glow), inset 0 0 0 1px rgba(255,255,255,0.03);
+  font-weight: 700;
+  text-shadow: 0 0 8px var(--accent-3-glow);
+}
+[data-theme-pack="chalk"] .hero-btn-tertiary:hover {
+  border-color: var(--accent-3);
+  box-shadow: 0 0 20px var(--accent-3-glow), 0 0 0 2px var(--outline);
+}
+[data-theme-pack="chalk"] .btn-primary {
+  background: var(--surface-raised);
+  color: var(--accent);
+  border: 2px solid var(--border-strong);
+  box-shadow: var(--shadow-glow);
+  font-weight: 700;
+}
+[data-theme-pack="chalk"] .btn-primary:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+[data-theme-pack="chalk"] .btn-secondary {
+  background: var(--surface);
+  color: var(--accent-2);
+  border: 2px solid var(--border-strong);
+  box-shadow: 0 0 14px var(--accent-2-glow), inset 0 0 0 1px rgba(255,255,255,0.03);
+  font-weight: 600;
+}
+[data-theme-pack="chalk"] .btn-secondary:hover {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 20px var(--accent-2-glow);
+}
+[data-theme-pack="chalk"] .btn-tertiary {
+  background: var(--surface-raised);
+  color: var(--accent-3);
+  border: 2px solid var(--border);
+  box-shadow: 0 0 12px var(--accent-3-glow), inset 0 0 0 1px rgba(255,255,255,0.03);
+  font-weight: 600;
+}
+[data-theme-pack="chalk"] .btn-tertiary:hover {
+  border-color: var(--accent-3);
+  box-shadow: 0 0 18px var(--accent-3-glow);
+}
+[data-theme-pack="chalk"] .bubble-ws {
+  background: var(--surface-raised);
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme-pack="chalk"] .bubble-user {
+  background: var(--surface-raised);
+  color: var(--accent);
+  border: 2px solid var(--border-strong);
+  box-shadow: 0 0 16px var(--accent-glow);
+  font-weight: 600;
+}
+[data-theme-pack="chalk"] .chat-input-bar {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: 2px solid var(--border);
+}
+[data-theme-pack="chalk"] .send-btn {
+  background: var(--surface-raised);
+  color: var(--accent);
+  border: 2px solid var(--border-strong);
+  box-shadow: var(--shadow-glow);
+}
+[data-theme-pack="chalk"] .send-btn:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 22px var(--accent-glow);
+}
+[data-theme-pack="chalk"] .chat-sidebar {
+  background: var(--bg-soft);
+  border-right: 2px solid var(--border);
+}
+[data-theme-pack="chalk"] .convo-item.active {
+  background: var(--accent-l);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(126,231,216,0.15);
+}
+[data-theme-pack="chalk"] .chat-new-btn {
+  background: var(--surface-raised);
+  border: 2px solid var(--border-strong);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme-pack="chalk"] .template-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md), 0 0 20px var(--accent-glow);
+}
+[data-theme-pack="chalk"] .home-notif-banner,
+[data-theme-pack="chalk"] .home-notif-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+[data-theme-pack="chalk"] .section-title,
+[data-theme-pack="chalk"] .apps-section-title,
+[data-theme-pack="chalk"] .account-section-label {
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+[data-theme-pack="chalk"] .theme-opt.active {
+  background: var(--accent-l);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(126,231,216,0.2);
+}
+[data-theme-pack="chalk"] .pin-user.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+/* Chalk logo — cyan glow matching primary accent */
+[data-theme-pack="chalk"] .lamp-lava-logo {
+  box-shadow: var(--shadow-sm), 0 0 32px var(--logo-glow),
+    inset 0 0 0 1px rgba(126, 231, 216, 0.18);
+}
+[data-theme-pack="chalk"][data-theme="light"] .lamp-lava-logo {
+  box-shadow: var(--shadow-sm), 0 0 24px var(--logo-glow),
+    inset 0 0 0 1px rgba(45, 138, 127, 0.22);
+}
+[data-theme-pack="chalk"] .lamp-lava-logo__word {
+  color: #eafffb;
+  -webkit-text-stroke: 0;
+  paint-order: fill;
+  text-shadow: 0 0 16px var(--logo-glow), 0 0 28px var(--accent-glow);
+  filter:
+    drop-shadow(1px 0 0 var(--outline))
+    drop-shadow(-1px 0 0 var(--outline))
+    drop-shadow(0 1px 0 var(--outline))
+    drop-shadow(0 -1px 0 var(--outline))
+    drop-shadow(0 0 14px var(--logo-glow));
+}
+[data-theme-pack="chalk"][data-theme="light"] .lamp-lava-logo__word {
+  color: #f0fffc;
+}
+/* Chalk nav — route-colored icons */
+[data-theme-pack="chalk"] .nav-item[data-route="home"],
+[data-theme-pack="chalk"] .nav-flyout-item[data-route="home"] { --nav-chalk: var(--chalk-gold); --nav-chalk-glow: var(--accent-2-glow); --nav-chalk-bg: var(--accent-2-l); }
+[data-theme-pack="chalk"] .nav-item[data-route="chat"],
+[data-theme-pack="chalk"] .nav-flyout-item[data-route="chat"] { --nav-chalk: var(--accent); --nav-chalk-glow: var(--accent-glow); --nav-chalk-bg: var(--accent-l); }
+[data-theme-pack="chalk"] .nav-item[data-route="mind"],
+[data-theme-pack="chalk"] .nav-flyout-item[data-route="mind"] { --nav-chalk: var(--chalk-purple); --nav-chalk-glow: rgba(155, 125, 255, 0.28); --nav-chalk-bg: rgba(155, 125, 255, 0.1); }
+[data-theme-pack="chalk"] .nav-item[data-route="build"],
+[data-theme-pack="chalk"] .nav-flyout-item[data-route="build"] { --nav-chalk: var(--chalk-orange); --nav-chalk-glow: var(--accent-3-glow); --nav-chalk-bg: var(--accent-3-l); }
+[data-theme-pack="chalk"] .nav-item[data-route="apps"],
+[data-theme-pack="chalk"] .nav-flyout-item[data-route="apps"] { --nav-chalk: var(--chalk-teal); --nav-chalk-glow: rgba(86, 199, 194, 0.28); --nav-chalk-bg: rgba(86, 199, 194, 0.1); }
+[data-theme-pack="chalk"] .nav-item[data-route="settings"],
+[data-theme-pack="chalk"] .nav-flyout-item[data-route="settings"] { --nav-chalk: var(--chalk-gold); --nav-chalk-glow: var(--accent-2-glow); --nav-chalk-bg: var(--accent-2-l); }
+[data-theme-pack="chalk"] .nav-item[data-route="notifications"],
+[data-theme-pack="chalk"] .nav-flyout-item[data-route="notifications"] { --nav-chalk: var(--chalk-red); --nav-chalk-glow: rgba(212, 90, 79, 0.28); --nav-chalk-bg: rgba(212, 90, 79, 0.1); }
+[data-theme-pack="chalk"] .nav-item .ico,
+[data-theme-pack="chalk"] .nav-flyout-item .ico {
+  color: var(--nav-chalk, var(--muted));
+  text-shadow: 0 0 10px var(--nav-chalk-glow, transparent);
+  transition: color var(--t-fast), text-shadow var(--t-fast);
+}
+[data-theme-pack="chalk"] .nav-item.active .ico,
+[data-theme-pack="chalk"] .nav-flyout-item:active .ico {
+  filter: brightness(1.12);
+}
+[data-theme-pack="chalk"] .nav-item.active {
+  color: var(--nav-chalk, var(--accent));
+  text-shadow: 0 0 12px var(--nav-chalk-glow, var(--accent-glow));
+}
+[data-theme-pack="chalk"] body.has-nav #bottom-nav .nav-item:hover {
+  background: var(--nav-chalk-bg, var(--accent-l));
+  color: var(--nav-chalk, var(--subtle));
+}
+[data-theme-pack="chalk"] body.has-nav #bottom-nav .nav-item.active {
+  background: var(--nav-chalk-bg, var(--accent-l));
+  color: var(--nav-chalk, var(--accent));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nav-chalk, var(--accent)) 30%, transparent),
+    0 0 16px var(--nav-chalk-glow, var(--accent-glow));
+  border: 1px solid color-mix(in srgb, var(--nav-chalk, var(--accent)) 35%, transparent);
+}
+[data-theme-pack="chalk"] .nav-flyout-item:hover,
+[data-theme-pack="chalk"] .nav-flyout-item:active {
+  background: var(--nav-chalk-bg, var(--accent-l));
+  color: var(--nav-chalk, var(--text));
+}
+/* Chalk template icons — cycle accent palette */
+[data-theme-pack="chalk"] .chalk-icon-0 .ico { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
+[data-theme-pack="chalk"] .chalk-icon-1 .ico { color: var(--chalk-gold); text-shadow: 0 0 10px var(--accent-2-glow); }
+[data-theme-pack="chalk"] .chalk-icon-2 .ico { color: var(--chalk-orange); text-shadow: 0 0 10px var(--accent-3-glow); }
+[data-theme-pack="chalk"] .chalk-icon-3 .ico { color: var(--chalk-purple); text-shadow: 0 0 10px rgba(155, 125, 255, 0.3); }
+[data-theme-pack="chalk"] .chalk-icon-4 .ico { color: var(--chalk-teal); text-shadow: 0 0 10px rgba(86, 199, 194, 0.3); }
+[data-theme-pack="chalk"] .template-icon .ico { font-size: 1.75rem; width: 1.75rem; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-theme-pack="chalk"] .card,
+  [data-theme-pack="chalk"] .notif-card {
+    animation: chalk-drift 6s ease-in-out infinite;
+  }
+}
+@keyframes chalk-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+@media (min-width: 768px) {
+  [data-theme-pack="chalk"] body.has-nav #bottom-nav {
+    background: var(--surface);
+    border-top: 2px solid var(--border-strong);
+    backdrop-filter: none;
+  }
+}
 </style>
 </head>
 <body>
@@ -1819,11 +2307,11 @@ input, textarea, select, button { font-family: inherit; }
       <feBlend in="SourceGraphic" in2="cm"/>
     </filter>
     <radialGradient id="lamp-lava-bg" cx="50%" cy="38%" r="72%" gradientUnits="objectBoundingBox">
-      <stop offset="7%" stop-color="#471A19"/>
-      <stop offset="31%" stop-color="#290F0E"/>
-      <stop offset="55%" stop-color="#120706"/>
-      <stop offset="78%" stop-color="#050202"/>
-      <stop offset="98%" stop-color="#000000"/>
+      <stop offset="7%" stop-color="var(--lava-bg-1, #471A19)"/>
+      <stop offset="31%" stop-color="var(--lava-bg-2, #290F0E)"/>
+      <stop offset="55%" stop-color="var(--lava-bg-3, #120706)"/>
+      <stop offset="78%" stop-color="var(--lava-bg-4, #050202)"/>
+      <stop offset="98%" stop-color="var(--lava-bg-5, #000000)"/>
     </radialGradient>
     <radialGradient id="lamp-lava-blob" cx="40%" cy="35%" r="70%" gradientUnits="objectBoundingBox">
       <stop offset="0%" stop-color="var(--lava-blob-core)"/>
@@ -2055,7 +2543,7 @@ input, textarea, select, button { font-family: inherit; }
       <span class="wordmark">Model setup</span>
     </div>
     <div class="card">
-      <p id="detect-status" style="color:var(--muted);margin-bottom:12px">Scanning for local AI services…</p>
+      <p id="detect-status" style="color:var(--muted);margin-bottom:12px">Scanning for Ollama, llama.cpp, LM Studio…</p>
       <div id="detect-list" style="display:none;margin-bottom:16px"></div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:8px">Or enter manually:</p>
       <input id="model-endpoint" class="setup-input" placeholder="http://localhost:11434/v1">
@@ -2070,8 +2558,9 @@ input, textarea, select, button { font-family: inherit; }
   <div id="v-build" class="view">
     <div class="header">
       <span class="wordmark">Build</span>
-      <button class="btn-ghost" onclick="clearBuildChat()">New</button>
+      <button class="btn-ghost" onclick="leaveBuildEditing()">New</button>
     </div>
+    <div class="editing-banner" id="build-editing-banner"></div>
     <div id="build-chat" class="chat-body"></div>
     <div class="chat-input-bar">
       <textarea id="build-input" class="chat-input" rows="1" placeholder="Describe what you want…"
@@ -2330,13 +2819,13 @@ input, textarea, select, button { font-family: inherit; }
       <p class="nav-flyout-title" style="padding:0;margin:0">Menu</p>
       <button type="button" class="nav-flyout-close" onclick="closeNavFlyout()" aria-label="Close menu">×</button>
     </div>
-    <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/')"><span class="ico" id="flyout-ico-home"></span>Home</button>
-    <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/chat')"><span class="ico" id="flyout-ico-chat"></span>Chat</button>
-    <button type="button" class="nav-flyout-item" id="flyout-mind" style="display:none" onclick="navFlyoutGo('#/mind/add')"><span class="ico" id="flyout-ico-mind"></span>Mind</button>
-    <button type="button" class="nav-flyout-item" id="flyout-build" onclick="navFlyoutGo('#/build')"><span class="ico" id="flyout-ico-build"></span>Build</button>
-    <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/apps')"><span class="ico" id="flyout-ico-apps"></span>Apps</button>
-    <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/notifications')"><span class="ico" id="flyout-ico-bell"></span>Notifications</button>
-    <button type="button" class="nav-flyout-item" onclick="navFlyoutGo('#/settings')"><span class="ico" id="flyout-ico-settings"></span>Settings</button>
+    <button type="button" class="nav-flyout-item" data-route="home" onclick="navFlyoutGo('#/')"><span class="ico" id="flyout-ico-home"></span>Home</button>
+    <button type="button" class="nav-flyout-item" data-route="chat" onclick="navFlyoutGo('#/chat')"><span class="ico" id="flyout-ico-chat"></span>Chat</button>
+    <button type="button" class="nav-flyout-item" id="flyout-mind" data-route="mind" style="display:none" onclick="navFlyoutGo('#/mind/add')"><span class="ico" id="flyout-ico-mind"></span>Mind</button>
+    <button type="button" class="nav-flyout-item" id="flyout-build" data-route="build" onclick="navFlyoutGo('#/build')"><span class="ico" id="flyout-ico-build"></span>Build</button>
+    <button type="button" class="nav-flyout-item" data-route="apps" onclick="navFlyoutGo('#/apps')"><span class="ico" id="flyout-ico-apps"></span>Apps</button>
+    <button type="button" class="nav-flyout-item" data-route="notifications" onclick="navFlyoutGo('#/notifications')"><span class="ico" id="flyout-ico-bell"></span>Notifications</button>
+    <button type="button" class="nav-flyout-item" data-route="settings" onclick="navFlyoutGo('#/settings')"><span class="ico" id="flyout-ico-settings"></span>Settings</button>
   </div>
 </div>
 
@@ -2356,6 +2845,7 @@ input, textarea, select, button { font-family: inherit; }
 <script>
 
 const THEME_KEY = "lamp-theme";
+const THEME_PACK_KEY = "lamp-theme-pack";
 const ONBOARD_KEY = "lamp_onboarded_v1";
 const LAMP_UI_BUILD = "2026-05-28";
 
@@ -2364,21 +2854,80 @@ function getTheme() {
   return t === "light" || t === "dark" ? t : "dark";
 }
 
-function applyTheme(theme) {
-  document.documentElement.classList.add("theme-transition");
-  document.documentElement.setAttribute("data-theme", theme);
-  localStorage.setItem(THEME_KEY, theme);
+function getThemePack() {
+  const p = document.documentElement.getAttribute("data-theme-pack");
+  return p === "chalk" ? "chalk" : "default";
+}
+
+function themeMetaColor(pack, mode) {
+  if (pack === "chalk") return mode === "light" ? "#e8e4dc" : "#090909";
+  return mode === "light" ? "#f5f5f4" : "#0c0c0f";
+}
+
+function updateThemeMeta() {
+  const theme = getTheme();
+  const pack = getThemePack();
   const meta = document.getElementById("meta-theme-color");
-  if (meta) meta.content = theme === "light" ? "#f5f5f4" : "#0c0c0f";
+  if (meta) meta.content = themeMetaColor(pack, theme);
   const manifestTheme = document.querySelector('meta[name="theme-color"][data-manifest]');
-  if (manifestTheme) manifestTheme.content = theme === "light" ? "#d97706" : "#fbbf24";
-  window.setTimeout(() => document.documentElement.classList.remove("theme-transition"), 320);
+  if (manifestTheme) manifestTheme.content = pack === "chalk"
+    ? (theme === "light" ? "#2d8a7f" : "#7ee7d8")
+    : (theme === "light" ? "#d97706" : "#fbbf24");
+}
+
+function updateThemeUiControls() {
+  const theme = getTheme();
+  const pack = getThemePack();
   setIconEl(document.getElementById("theme-toggle-icon"), theme === "light" ? "moon" : "sun");
   const label = document.getElementById("theme-toggle-label");
   if (label) label.textContent = theme === "light" ? "Dark" : "Light";
-  document.querySelectorAll(".theme-opt").forEach(btn => {
+  document.querySelectorAll(".theme-opt[data-theme-pick]").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.themePick === theme);
   });
+  document.querySelectorAll(".theme-opt[data-theme-pack-pick]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.themePackPick === pack);
+  });
+}
+
+function applyTheme(theme, opts = {}) {
+  if (theme !== "light" && theme !== "dark") return;
+  if (!opts.skipTransition) document.documentElement.classList.add("theme-transition");
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem(THEME_KEY, theme);
+  updateThemeMeta();
+  updateThemeUiControls();
+  if (!opts.skipTransition) {
+    window.setTimeout(() => document.documentElement.classList.remove("theme-transition"), 320);
+  }
+}
+
+function applyThemePack(pack) {
+  pack = pack === "chalk" ? "chalk" : "default";
+  document.documentElement.classList.add("theme-transition");
+  document.documentElement.setAttribute("data-theme-pack", pack);
+  localStorage.setItem(THEME_PACK_KEY, pack);
+  updateThemeMeta();
+  updateThemeUiControls();
+  if (document.getElementById("v-home")?.classList.contains("active")) renderHome();
+  window.setTimeout(() => document.documentElement.classList.remove("theme-transition"), 320);
+}
+
+function appearanceSettingsHtml() {
+  return `
+    <div class="theme-setting">
+      <strong>Style</strong>
+      <div class="theme-switch">
+        <button type="button" class="theme-opt" data-theme-pack-pick="default" onclick="setThemePack('default')">Default</button>
+        <button type="button" class="theme-opt" data-theme-pack-pick="chalk" onclick="setThemePack('chalk')">Chalk</button>
+      </div>
+    </div>
+    <div class="theme-setting">
+      <strong>Mode</strong>
+      <div class="theme-switch">
+        <button type="button" class="theme-opt" data-theme-pick="light" onclick="setTheme('light')">${iconHtml("sun")} Light</button>
+        <button type="button" class="theme-opt" data-theme-pick="dark" onclick="setTheme('dark')">${iconHtml("moon")} Dark</button>
+      </div>
+    </div>`;
 }
 
 function updateStarBtn(starred) {
@@ -2561,8 +3110,13 @@ function setTheme(theme) {
   if (theme === "light" || theme === "dark") applyTheme(theme);
 }
 
+function setThemePack(pack) {
+  applyThemePack(pack);
+}
+
 function syncThemeUi() {
-  applyTheme(getTheme());
+  updateThemeMeta();
+  updateThemeUiControls();
 }
 
 function appDisplayName(a) {
@@ -2826,6 +3380,10 @@ async function route() {
     }
     const pendingBuild =
       sessionStorage.getItem("lamp_build_idea") || sessionStorage.getItem("lamp_build_desc");
+    if (S.editing) {
+      updateBuildEditingBanner();
+      return;
+    }
     if (pendingBuild || !document.getElementById("build-chat").children.length) {
       startBuildChat();
     }
@@ -3001,12 +3559,15 @@ async function renderHome() {
   applyRoleUi();
   if (S.role === "child") return;
   const { templates } = await api("GET", "/api/templates");
-  grid.innerHTML = (templates || []).map(t => `
+  grid.innerHTML = (templates || []).map((t, i) => {
+    const chalkCls = getThemePack() === "chalk" ? ` chalk-icon-${i % 5}` : "";
+    return `
     <button class="template-card" data-tid="${esc(t.id)}">
-      <div class="template-icon">${iconHtml(resolveIconName(t.icon))}</div>
+      <div class="template-icon${chalkCls}">${iconHtml(resolveIconName(t.icon))}</div>
       <div class="template-title">${esc(t.title)}</div>
       <div class="template-sub">${esc(t.subtitle || "")}</div>
-    </button>`).join("");
+    </button>`;
+  }).join("");
   grid.querySelectorAll(".template-card").forEach(btn => {
     btn.onclick = () => startTemplate(btn.dataset.tid);
   });
@@ -3380,8 +3941,6 @@ async function renderAccountPage() {
   const initial = esc(S.user.charAt(0).toUpperCase());
   const child = S.role === "child";
   const admin = S.role === "admin";
-  const themeLabel = document.documentElement.getAttribute("data-theme") === "light" ? "Dark mode" : "Light mode";
-  const themeIcon = document.documentElement.getAttribute("data-theme") === "light" ? "moon" : "sun";
   let menu = `
     <p class="account-section-label">Shortcuts</p>
     <button type="button" class="account-row" onclick="location.hash='#/notifications'">
@@ -3398,9 +3957,7 @@ async function renderAccountPage() {
   }
   menu += `
     <p class="account-section-label">Appearance</p>
-    <button type="button" class="account-row" onclick="toggleTheme(); renderAccount();">
-      <span>${themeLabel}</span>${iconHtml(themeIcon)}
-    </button>
+    <div class="account-appearance">${appearanceSettingsHtml()}</div>
     <p class="account-section-label">Session</p>
     <button type="button" class="account-row danger" onclick="confirmLogout()">Sign out</button>`;
   page.innerHTML = `
@@ -3412,6 +3969,7 @@ async function renderAccountPage() {
     </div>
     <div class="account-menu">${menu}</div>
     <div id="account-hidden-apps"></div>`;
+  syncThemeUi();
   const hiddenWrap = document.getElementById("account-hidden-apps");
   if (!hiddenWrap) return;
   const { apps } = await api("GET", "/api/apps?hidden=1");
@@ -4279,7 +4837,7 @@ async function loadChatModelPicker() {
   });
   const keys = Object.keys(groups).sort();
   if (!keys.length) {
-    list.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px">No models found. Set up Ollama or LM Studio, or configure a model in Admin.</p>';
+    list.innerHTML = '<p style="color:var(--muted);font-size:13px;padding:8px">No models found. Start Ollama, llama.cpp server, or LM Studio, or set an endpoint in Admin → Models.</p>';
     return;
   }
   list.innerHTML = keys.map(label => `
@@ -5219,13 +5777,7 @@ async function renderAdminSystem(panel) {
         <div class="stat-box">Model<strong style="font-size:13px">${esc((s.ollama || {}).model || "—")}</strong></div>
         <div class="stat-box">Whisper<strong>${(s.voice && s.voice.whisper_available) ? "OK · " + esc(s.voice.model || "tiny") : "Not installed"}</strong></div>
       </div>
-      <div class="theme-setting">
-        <strong>Appearance</strong>
-        <div class="theme-switch">
-          <button type="button" class="theme-opt" data-theme-pick="light" onclick="setTheme('light')">${iconHtml("sun")} Light</button>
-          <button type="button" class="theme-opt" data-theme-pick="dark" onclick="setTheme('dark')">${iconHtml("moon")} Dark</button>
-        </div>
-      </div>
+      ${appearanceSettingsHtml()}
       <p style="margin-top:16px;font-size:13px;color:var(--muted)">
         Lamp ${esc((s.versions || {}).lamp)} · Workshop ${esc((s.versions || {}).workshop)} · Tortoise ${esc((s.versions || {}).tortoise)}
       </p>`;
@@ -5323,7 +5875,10 @@ async function renderModelsAdmin(panel) {
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:8px;word-break:break-all">${esc(src.endpoint)}</div>`;
     if (!src.online) {
-      html += `<p style="font-size:13px;color:var(--muted)">Not reachable — start this service on the device.</p>`;
+      const hint = src.kind === "llamacpp"
+        ? "Start <code>llama-server</code> with a GGUF model (default <code>http://localhost:8080/v1</code>)."
+        : "Not reachable — start this service on the device.";
+      html += `<p style="font-size:13px;color:var(--muted)">${hint}</p>`;
     } else if (!src.models.length) {
       html += `<p style="font-size:13px;color:var(--muted)">No models reported.</p>`;
     } else {
@@ -5345,13 +5900,15 @@ async function renderModelsAdmin(panel) {
     html += `</div>`;
   }
 
+  const ollamaOnline = !!(m.ollama_installed);
   html += `
     <div class="section-label">Download (Ollama)</div>
-    <input id="catalog-search" class="setup-input" placeholder="Search models e.g. llama, qwen…" onkeydown="if(event.key==='Enter')searchCatalog()">
-    <button class="btn btn-secondary" style="width:100%;margin-bottom:8px" onclick="searchCatalog()">Search catalog</button>
+    ${!ollamaOnline && m.llamacpp_installed ? `<p style="font-size:13px;color:var(--muted);margin-bottom:10px">llama.cpp loads GGUF files directly — use <code>llama-server -m your-model.gguf</code>. Ollama pull is only for Ollama.</p>` : ""}
+    <input id="catalog-search" class="setup-input" placeholder="Search models e.g. llama, qwen…" onkeydown="if(event.key==='Enter')searchCatalog()"${ollamaOnline ? "" : " disabled"}>
+    <button class="btn btn-secondary" style="width:100%;margin-bottom:8px" onclick="searchCatalog()"${ollamaOnline ? "" : " disabled"}>Search catalog</button>
     <div id="catalog-list"></div>
-    <input id="pull-model" class="setup-input" placeholder="Or type name: qwen2.5:3b" style="margin-top:12px">
-    <button class="btn btn-primary" style="width:100%" onclick="pullModel()">Pull / download</button>
+    <input id="pull-model" class="setup-input" placeholder="Or type name: qwen2.5:3b" style="margin-top:12px"${ollamaOnline ? "" : " disabled"}>
+    <button class="btn btn-primary" style="width:100%" onclick="pullModel()"${ollamaOnline ? "" : " disabled"}>Pull / download</button>
     <div id="pull-log" class="pull-log" style="display:none"></div>
 
     <div class="section-label">Import from URL</div>
@@ -5514,7 +6071,7 @@ async function initModelSetup() {
   const list = document.getElementById("detect-list");
   list.style.display = "none";
   status.style.display = "block";
-  status.innerHTML = `<div class="panel-loading inline">${iconHtml("spinner", "ico ico-loading")}<span>Scanning for Ollama, LM Studio, and other local services…</span></div>`;
+  status.innerHTML = `<div class="panel-loading inline">${iconHtml("spinner", "ico ico-loading")}<span>Scanning for Ollama, llama.cpp, LM Studio…</span></div>`;
   try {
     const { models } = await api("GET", "/api/detect");
     status.style.display = "none";
@@ -5626,7 +6183,7 @@ async function refineBuildPlanFromChat() {
   const res = await api("POST", "/api/agent/chat", {
     messages: S.interview.messages,
     user: S.user,
-    app_context: S.editing || undefined,
+    app_path: S.editing?.path || S.build?.app_path || undefined,
   });
   if (res.error) {
     addBuildBubble("ws", "Couldn't reach the model: " + res.error);
@@ -5643,10 +6200,32 @@ async function refineBuildPlanFromChat() {
   document.getElementById("build-send").disabled = false;
 }
 
+function updateBuildEditingBanner() {
+  const el = document.getElementById("build-editing-banner");
+  if (!el) return;
+  if (!S.editing) {
+    el.classList.remove("visible");
+    el.innerHTML = "";
+    return;
+  }
+  const name = esc(S.editing.title || S.editing.name || "app");
+  el.classList.add("visible");
+  el.innerHTML = `Improving <strong>${name}</strong> — Lamp has this app's code. Describe fixes or new features, then confirm the plan. `
+    + `<button type="button" onclick="leaveBuildEditing()">Start fresh instead</button>`;
+}
+
+function leaveBuildEditing() {
+  S.editing = null;
+  S.build = { app_name: "", app_path: "", label: "", owner: "", url: null };
+  startBuildChat();
+}
+
 function startBuildChat() {
   document.getElementById("build-chat").innerHTML = "";
   S.interview = { messages: [], plan: null, desc: "", scope: "personal" };
   S.editing = null;
+  S.build = { app_name: "", app_path: "", label: "", owner: "", url: null };
+  updateBuildEditingBanner();
   const pending = readPendingBuildIdea();
   if (pending) {
     addBuildBubble("ws", "Here's what you wanted to build from chat:");
@@ -5656,7 +6235,7 @@ function startBuildChat() {
   addBuildBubble("ws", `Hi ${S.user}! What would you like to build? I'll suggest a plan before we write any code.`);
 }
 
-function clearBuildChat() { startBuildChat(); }
+function clearBuildChat() { leaveBuildEditing(); }
 
 function addBuildBubble(who, text) {
   const body = document.getElementById("build-chat");
@@ -5716,7 +6295,7 @@ async function sendBuildChat() {
   const res = await api("POST", "/api/agent/chat", {
     messages: S.interview.messages,
     user: S.user,
-    app_context: S.editing || undefined,
+    app_path: S.editing?.path || S.build?.app_path || undefined,
   });
   thinking.remove();
   if (res.error) {
@@ -5738,14 +6317,19 @@ function showPlanCard(plan, opts = {}) {
   const body = document.getElementById("build-chat");
   const existing = body.querySelector(".plan-card-wrap");
   existing?.remove();
+  const isUpdate = !!(S.editing || plan.update_mode);
   const wrap = document.createElement("div");
   wrap.className = "plan-card-wrap";
-  const items = (plan.features || []).map(f => `<li>${esc(f)}</li>`).join("");
-  const defaultName = (plan.title || "My app").trim();
+  const changes = plan.changes || plan.features || [];
+  const items = changes.map(f => `<li>${esc(f)}</li>`).join("");
+  const accept = (plan.acceptance || []).map(a => `<li>${esc(a)}</li>`).join("");
+  const defaultName = (plan.title || S.editing?.title || "My app").trim();
   wrap.innerHTML = `<div class="plan-card">
-    <h3>${esc(plan.title || "App plan")}</h3>
+    <h3>${isUpdate ? "Updates for" : esc(plan.title || "App plan")}${isUpdate ? `: ${esc(plan.title || S.editing?.title || "App")}` : ""}</h3>
     <p>${esc(plan.summary || "")}</p>
-    ${items ? `<ul>${items}</ul>` : ""}
+    ${items ? `<p><strong>${isUpdate ? "Changes" : "Features"}</strong></p><ul>${items}</ul>` : ""}
+    ${accept ? `<p><strong>We'll verify</strong></p><ul>${accept}</ul>` : ""}
+    ${isUpdate ? "" : `
     <label class="plan-name-label" for="plan-app-name">App name</label>
     <input type="text" id="plan-app-name" class="setup-input plan-app-name" maxlength="48"
       value="${attrEsc(defaultName)}" autocomplete="off">
@@ -5760,21 +6344,23 @@ function showPlanCard(plan, opts = {}) {
         <input type="radio" name="plan-scope" value="shared">
         <span class="opt-text">Whole family<span class="opt-sub">Everyone on this Lamp can open it</span></span>
       </label>
-    </div>
+    </div>`}
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
-      <button type="button" class="btn btn-primary plan-build-btn">Build this →</button>
+      <button type="button" class="btn btn-primary plan-build-btn">${isUpdate ? "Apply changes →" : "Build this →"}</button>
       ${opts.fromChat ? '<button type="button" class="btn btn-secondary plan-refine-btn">Refine plan with AI</button>' : ""}
     </div>
   </div>`;
-  const nameInput = wrap.querySelector("#plan-app-name");
-  const slugEl = wrap.querySelector("#plan-app-slug");
-  const syncSlug = () => { slugEl.textContent = slugifyAppName(nameInput.value); };
-  nameInput.addEventListener("input", syncSlug);
-  syncSlug();
-  const scopeVal = plan.scope === "shared" ? "shared" : "personal";
-  wrap.querySelectorAll('input[name="plan-scope"]').forEach((el) => {
-    el.checked = el.value === scopeVal;
-  });
+  if (!isUpdate) {
+    const nameInput = wrap.querySelector("#plan-app-name");
+    const slugEl = wrap.querySelector("#plan-app-slug");
+    const syncSlug = () => { slugEl.textContent = slugifyAppName(nameInput.value); };
+    nameInput.addEventListener("input", syncSlug);
+    syncSlug();
+    const scopeVal = plan.scope === "shared" ? "shared" : "personal";
+    wrap.querySelectorAll('input[name="plan-scope"]').forEach((el) => {
+      el.checked = el.value === scopeVal;
+    });
+  }
   wrap.querySelector(".plan-build-btn").onclick = () => startBuild();
   const refineBtn = wrap.querySelector(".plan-refine-btn");
   if (refineBtn) refineBtn.onclick = () => refineBuildPlanFromChat();
@@ -5785,17 +6371,61 @@ function showPlanCard(plan, opts = {}) {
 async function openAppForEdit(app) {
   const { context, error } = await api("GET", `/api/app/${app.owner}/${app.name}/context`);
   if (error) { toast(error); return; }
-  S.editing = context;
-  S.build = { app_name: app.name, app_path: context.path, owner: app.owner, url: app.url, label: app.name };
+  S.editing = {
+    name: context.name,
+    title: context.title,
+    summary: context.summary,
+    path: context.path,
+    scope: context.scope || app.scope,
+    owner: context.owner || app.owner,
+    url: context.url || app.url,
+  };
+  S.build = {
+    app_name: app.name,
+    app_path: context.path,
+    owner: app.owner,
+    url: app.url || context.url,
+    label: context.title || app.name,
+  };
+  S.interview = {
+    messages: [],
+    plan: null,
+    desc: context.summary || "",
+    scope: context.scope || app.scope || "personal",
+  };
+  document.getElementById("build-chat").innerHTML = "";
+  updateBuildEditingBanner();
+  addBuildBubble("ws", `Updating ${appDisplayName(app)}. I already have this app's code — tell me what to fix or add and I'll propose a plan.`);
   location.hash = "#/build";
-  clearBuildChat();
-  addBuildBubble("ws", `Updating ${appDisplayName(app)}. What should we change?`);
+  showView("build");
+}
+
+async function startUpdateBuild() {
+  const plan = S.interview.plan;
+  if (!plan || !S.build.app_path) return;
+  const res = await api("POST", "/api/build/update", {
+    app_path: S.build.app_path,
+    plan,
+    session: S.session,
+  });
+  if (res.error) { addBuildBubble("ws", res.error); return; }
+  document.getElementById("step-list").innerHTML = "";
+  document.getElementById("thinking-row").style.display = "flex";
+  document.getElementById("build-title").textContent = `Updating ${S.editing?.title || S.build.label}…`;
+  document.getElementById("build-sub").textContent = "Applying your changes…";
+  location.hash = "#/building";
+  listenToSSE();
 }
 
 async function startBuild() {
   if (S.role === "child") { toast("Building is not available for child accounts"); return; }
   const desc = S.interview.plan?.summary || S.interview.desc;
   if (!desc) return;
+
+  if (S.editing && S.build.app_path) {
+    return startUpdateBuild();
+  }
+
   const nameInput = document.getElementById("plan-app-name");
   const displayName = (nameInput?.value || S.interview.plan?.title || "").trim() || "My app";
   const appSlug = slugifyAppName(displayName);

@@ -976,6 +976,10 @@ class LampHandler(WorkshopHandler):
             self.js({"error": "forbidden"}, 403)
             return
 
+        if p == "/api/detect":
+            self.js({"models": lamp_models.detect_models_flat()})
+            return
+
         return super().do_GET()
 
     def do_POST(self):

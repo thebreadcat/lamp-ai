@@ -100,6 +100,19 @@ Lamp → **Admin → Models** lists popular models and can pull them for you. Th
 2. Enable the **local server** (OpenAI-compatible API, default port `1234`).
 3. Note the model name shown in LM Studio.
 
+### Option C — llama.cpp server
+
+1. Build or install [llama.cpp](https://github.com/ggml-org/llama.cpp) and download a **GGUF** model (e.g. from [Hugging Face](https://huggingface.co/models?library=gguf)).
+2. Start the server (OpenAI-compatible API on port **8080** by default):
+
+```bash
+llama-server -m /path/to/your-model.gguf --host 0.0.0.0 --port 8080
+```
+
+3. In Lamp, pick **llama.cpp server (this device)** during model setup, or set endpoint `http://localhost:8080/v1` and choose the model name from the list.
+
+Lamp discovers loaded models via `/v1/models` and falls back to `/props` when only one GGUF is loaded. Pull/download in **Admin → Models** is for Ollama only; llama.cpp uses files you load into `llama-server` yourself.
+
 ---
 
 ## 3. Run Lamp

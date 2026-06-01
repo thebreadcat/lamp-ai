@@ -14,8 +14,10 @@ from workshop import load_config, probe_endpoint
 # (id, label, base OpenAI-compatible /v1 URL, kind)
 KNOWN_SOURCES = [
     ("ollama-local", "Ollama (this device)", "http://localhost:11434/v1", "ollama"),
+    ("llamacpp-local", "llama.cpp server (this device)", "http://localhost:8080/v1", "llamacpp"),
     ("lmstudio-local", "LM Studio (this device)", "http://localhost:1234/v1", "openai"),
     ("ollama-pi", "Ollama (Pi / lamp.local)", "http://lamp.local:11434/v1", "ollama"),
+    ("llamacpp-pi", "llama.cpp (Pi / lamp.local)", "http://lamp.local:8080/v1", "llamacpp"),
     ("litellm-local", "LiteLLM (this device)", "http://localhost:4000/v1", "openai"),
 ]
 
@@ -35,14 +37,27 @@ def _fmt_size(n) -> str | None:
     return f"{n} B"
 
 
-def openai_base_to_ollama_host(endpoint: str) -> str | None:
-    """http://localhost:11434/v1 -> http://localhost:11434"""
+def openai_base_to_host(endpoint: str) -> str | None:
+    """http://localhost:8080/v1 -> http://localhost:8080"""
     if not endpoint:
         return None
     u = endpoint.rstrip("/")
     if u.endswith("/v1"):
         return u[:-3]
     return u
+
+
+openai_base_to_ollama_host = openai_base_to_host  # alias
+
+
+def infer_endpoint_kind(endpoint: str) -> str:
+    """Guess backend type from URL (used for saved endpoints)."""
+    ep = (endpoint or "").lower()
+    if "11434" in ep or "ollama" in ep:
+        return "ollama"
+    if ":8080" in ep or "llama" in ep or "llamacpp" in ep:
+        return "llamacpp"
+    return "openai"
 
 
 def fetch_openai_models(endpoint: str, api_key: str = None, timeout: float = 4) -> list:
@@ -102,15 +117,75 @@ def fetch_ollama_native(host: str, timeout: float = 4) -> list:
         return []
 
 
+def fetch_llamacpp_models(host: str, endpoint: str, api_key: str = None, timeout: float = 4) -> list:
+    """
+    Models from llama.cpp server (llama-server).
+    Uses OpenAI GET /v1/models; falls back to /props when a single GGUF is loaded.
+    """
+    models = fetch_openai_models(endpoint, api_key, timeout)
+    if models:
+        return models
+    if not host:
+        return []
+    try:
+        url = host.rstrip("/") + "/props"
+        req = urllib.request.Request(url)
+        if api_key:
+            req.add_header("Authorization", f"Bearer {api_key}")
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = json.loads(r.read())
+        path = (data.get("model_path") or data.get("model") or "").strip()
+        if not path:
+            return []
+        name = Path(path).stem or "model"
+        mod = data.get("model_alias") or data.get("model_name")
+        if isinstance(mod, str) and mod.strip():
+            name = mod.strip()
+        return [{
+            "id": name,
+            "name": name,
+            "size": None,
+            "size_human": None,
+            "installed": True,
+            "owned_by": "llama.cpp",
+            "parameter_size": None,
+            "family": None,
+            "path": path,
+        }]
+    except Exception:
+        return []
+
+
+def _llamacpp_reachable(host: str, api_key: str = None, timeout: float = 2) -> bool:
+    if not host:
+        return False
+    base = host.rstrip("/")
+    for path in ("/health", "/props", "/v1/models"):
+        try:
+            req = urllib.request.Request(base + path)
+            if api_key:
+                req.add_header("Authorization", f"Bearer {api_key}")
+            with urllib.request.urlopen(req, timeout=timeout):
+                return True
+        except Exception:
+            continue
+    return False
+
+
 def probe_source(source_id: str, label: str, endpoint: str, kind: str, api_key: str = None) -> dict:
     online = probe_endpoint(endpoint, api_key) is not None
+    if not online and kind == "llamacpp":
+        online = _llamacpp_reachable(openai_base_to_host(endpoint) or "", api_key)
     models = []
     if online:
         if kind == "ollama":
-            host = openai_base_to_ollama_host(endpoint)
+            host = openai_base_to_host(endpoint)
             models = fetch_ollama_native(host) if host else []
             if not models:
                 models = fetch_openai_models(endpoint, api_key)
+        elif kind == "llamacpp":
+            host = openai_base_to_host(endpoint)
+            models = fetch_llamacpp_models(host or "", endpoint, api_key)
         else:
             models = fetch_openai_models(endpoint, api_key)
     return {
@@ -140,8 +215,7 @@ def discover_sources(cfg: dict = None, extra_endpoints: list = None) -> list:
     ep = cfg.get("endpoint")
     if ep and ep not in seen_urls:
         seen_urls.add(ep)
-        kind = "ollama" if "11434" in ep else "openai"
-        jobs.append(("configured", "Configured endpoint", ep, kind))
+        jobs.append(("configured", "Configured endpoint", ep, infer_endpoint_kind(ep)))
 
     for item in extra_endpoints or []:
         url = item.get("endpoint", "").strip()
@@ -268,7 +342,28 @@ def models_overview(cfg: dict = None) -> dict:
         "ollama_installed": any(
             s["kind"] == "ollama" and s["online"] for s in sources
         ),
+        "llamacpp_installed": any(
+            s["kind"] == "llamacpp" and s["online"] for s in sources
+        ),
     }
+
+
+def detect_models_flat(cfg: dict = None) -> list:
+    """Flat {label, url, model} rows for /api/detect and chat model picker."""
+    out = []
+    for src in discover_sources(cfg):
+        if not src.get("online"):
+            continue
+        for mod in src.get("models") or []:
+            mid = mod.get("id") or mod.get("name") or ""
+            if not mid:
+                continue
+            out.append({
+                "label": src["label"],
+                "url": src["endpoint"],
+                "model": mid,
+            })
+    return out
 
 
 def _recommendations() -> list:
