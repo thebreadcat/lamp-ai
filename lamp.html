@@ -1524,7 +1524,33 @@ input, textarea, select, button { font-family: inherit; }
 .mind-empty { color: var(--muted); font-size: 14px; padding: 24px 0; text-align: center; }
 .mind-entity { display: inline-block; font-size: 11px; padding: 2px 8px; margin: 4px 4px 0 0;
   border-radius: 6px; background: var(--surface-raised); color: var(--muted); }
-.mind-confirm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.mind-confirm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
+.mind-safety-chip {
+  display: inline-block; margin: 8px 0; padding: 6px 10px; border-radius: 8px;
+  font-size: 12px; font-weight: 600; background: rgba(212, 115, 106, 0.15); color: var(--warn);
+}
+.mind-conflict-block {
+  margin: 10px 0; padding: 12px 14px; border-radius: var(--r);
+  border: 1px solid var(--warn); background: rgba(212, 115, 106, 0.08);
+  font-size: 14px; line-height: 1.45;
+}
+.mind-conflict-block .mind-conflict-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.mind-thread-pick { margin: 10px 0; }
+.mind-thread-pick label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.mind-thread-pick .mind-thread-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.mind-thread-pick button {
+  flex: 1; min-width: 120px; padding: 10px 12px; border-radius: var(--r);
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  font-size: 13px; cursor: pointer; text-align: left;
+}
+.mind-thread-pick button.selected { border-color: var(--accent); background: var(--accent-l); }
+.mind-safety-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; margin-right: 6px; flex-shrink: 0;
+  border-radius: 50%; font-size: 11px; line-height: 1;
+  background: rgba(212, 115, 106, 0.2); color: var(--warn);
+}
+.mind-safety-badge[title] { cursor: help; }
 .mind-search-tabs {
   display: flex; gap: 8px; margin-bottom: 14px;
 }
@@ -2714,9 +2740,15 @@ html[data-theme-pack="chalk"] body {
           <label class="mind-section-label" for="mind-confirm-content">Content</label>
           <textarea id="mind-confirm-content" rows="4" style="width:100%;padding:12px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);margin-bottom:8px"></textarea>
           <div id="mind-confirm-entities"></div>
+          <div id="mind-confirm-safety" class="mind-safety-chip" hidden>Safety-critical — won&apos;t auto-merge or fade</div>
+          <div id="mind-confirm-conflict" class="mind-conflict-block" hidden></div>
+          <div id="mind-confirm-contradictions" class="mind-conflict-block" hidden></div>
+          <div id="mind-confirm-threads" class="mind-thread-pick" hidden></div>
           <div id="mind-confirm-extra"></div>
           <div class="mind-confirm-actions">
-            <button type="button" class="send-btn" id="mind-confirm-save" onclick="mindConfirmSave()" aria-label="Save"></button>
+            <button type="button" class="send-btn" id="mind-confirm-save" onclick="mindConfirmSave(false)" aria-label="Save"></button>
+            <button type="button" class="btn btn-secondary" id="mind-confirm-save-new" hidden onclick="mindConfirmSave(true)">Keep both</button>
+            <button type="button" class="btn btn-secondary" id="mind-confirm-update" hidden onclick="mindConfirmSave(false, { update: true })">Update existing</button>
             <button type="button" class="btn btn-ghost" onclick="mindConfirmDiscard()">Discard</button>
           </div>
         </div>
@@ -6669,6 +6701,42 @@ function mindEsc(s) {
   return d.innerHTML;
 }
 
+function mindSafetyBadgeHtml(entry) {
+  if (!entry?.is_safety_critical) return "";
+  return '<span class="mind-safety-badge" title="Safety-critical memory">🛡</span>';
+}
+
+function mindClassifyGate(result) {
+  const gate = result?.gate || {};
+  const conflict = result?.conflict || {};
+  const contradictions = result?.contradictions || [];
+  let conflictType = gate.conflict_type || conflict.type || conflict.kind;
+  if (!conflictType) {
+    if (contradictions.length) conflictType = "contradiction";
+    else if (conflict.exists && (result.is_safety_critical || gate.is_safety_critical)) conflictType = "safety_update";
+    else if (conflict.exists) conflictType = "duplicate";
+  }
+  const thread = result?.suggested_thread;
+  const threadAmbiguous = Boolean(
+    result?.thread_ambiguous
+    || (thread && thread.ambiguous && (thread.candidates || []).length)
+  );
+  return {
+    conflictType,
+    contradictions,
+    conflict,
+    isSafety: Boolean(result?.is_safety_critical || gate.is_safety_critical || conflict.is_safety_critical),
+    threadAmbiguous,
+    requiresChoice: Boolean(
+      gate.requires_user_choice
+      || contradictions.length
+      || result?.is_safety_critical
+      || (conflict.exists && conflictType)
+      || threadAmbiguous
+    ),
+  };
+}
+
 function mindFmtDate(iso) {
   return iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
 }
@@ -6762,7 +6830,7 @@ async function mindLoadAdd() {
   } else {
     el.innerHTML = entries.map(e =>
       `<button type="button" class="mind-card mind-card-btn" onclick="mindOpenEntry('${e.id}')">
-        <div style="display:flex;gap:10px;align-items:flex-start">${mindEntryThumbHtml(e)}<div style="flex:1;min-width:0">${mindEsc(e.content)}</div></div>
+        <div style="display:flex;gap:10px;align-items:flex-start">${mindEntryThumbHtml(e)}<div style="flex:1;min-width:0">${mindSafetyBadgeHtml(e)}${mindEsc(e.content)}</div></div>
         <div class="meta">${mindEsc(e.type)} · ${mindFmtDate(e.created_at)}</div>
       </button>`
     ).join("");
@@ -6821,12 +6889,105 @@ async function mindUploadImage(inputEl) {
 function mindShowConfirm(result) {
   mindPending = result;
   mindSetPanel("confirm");
+  const g = mindClassifyGate(result);
   document.getElementById("mind-confirm-hint").textContent = result.persona_message || "Review before saving.";
   document.getElementById("mind-confirm-content").value = result.cleaned || "";
   document.getElementById("mind-confirm-type").value = result.suggested_type || "note";
   document.getElementById("mind-confirm-entities").innerHTML = (result.entities || [])
     .map(e => `<span class="mind-entity">${mindEsc(e.type)}: ${mindEsc(e.value)}</span>`).join("");
+
+  const safetyEl = document.getElementById("mind-confirm-safety");
+  if (safetyEl) safetyEl.hidden = !g.isSafety;
+
+  const conflictEl = document.getElementById("mind-confirm-conflict");
+  const contraEl = document.getElementById("mind-confirm-contradictions");
+  const saveBtn = document.getElementById("mind-confirm-save");
+  const saveNewBtn = document.getElementById("mind-confirm-save-new");
+  const updateBtn = document.getElementById("mind-confirm-update");
+
+  if (contraEl) {
+    if (g.conflictType === "contradiction" && g.contradictions.length) {
+      contraEl.hidden = false;
+      const first = g.contradictions[0];
+      const existing = first.existing_content || "";
+      contraEl.innerHTML =
+        `<p>${mindEsc(first.message || "")}</p>` +
+        `<p class="meta">Earlier: “${mindEsc(existing.slice(0, 200))}”</p>` +
+        `<p>Is this an update, or something different?</p>`;
+    } else {
+      contraEl.hidden = true;
+      contraEl.innerHTML = "";
+    }
+  }
+
+  if (conflictEl) {
+    if (g.conflictType === "duplicate" && g.conflict.exists) {
+      conflictEl.hidden = false;
+      conflictEl.innerHTML =
+        `<p>${mindEsc(g.conflict.message || "This looks similar to something you saved before.")}</p>` +
+        (g.conflict.existing_content
+          ? `<p class="meta">Existing: “${mindEsc(String(g.conflict.existing_content).slice(0, 200))}”</p>`
+          : "") +
+        `<p>Update the earlier note, or keep both?</p>`;
+    } else if (g.conflictType === "safety_update") {
+      conflictEl.hidden = false;
+      conflictEl.innerHTML =
+        "<p><strong>Safety-related memory.</strong> We won&apos;t change this automatically — choose how to save.</p>";
+    } else {
+      conflictEl.hidden = true;
+      conflictEl.innerHTML = "";
+    }
+  }
+
+  const threadEl = document.getElementById("mind-confirm-threads");
+  mindPending._threadPickId = null;
+  const st = result.suggested_thread;
+  let threadCandidates = [];
+  if (st?.ambiguous && st.candidates?.length) threadCandidates = st.candidates;
+  else if (result.thread_ambiguous) {
+    threadCandidates = [result.suggested_thread, ...(result.thread_alternatives || [])].filter(Boolean);
+  }
+  if (threadEl) {
+    if (g.threadAmbiguous && threadCandidates.length) {
+      threadEl.hidden = false;
+      const defaultId = threadCandidates[0]?.id || "";
+      mindPending._threadPickId = defaultId;
+      threadEl.innerHTML =
+        '<label>Which thread does this belong to?</label><div class="mind-thread-btns">' +
+        threadCandidates.map((t, i) => {
+          const pct = Math.round((t.confidence || 0) * 100);
+          const sel = i === 0 ? " selected" : "";
+          return `<button type="button" class="${sel}" data-thread-id="${mindEsc(t.id)}" onclick="mindPickThread(this)">${mindEsc(t.title)}${pct ? ` (${pct}%)` : ""}</button>`;
+        }).join("") +
+        "</div>";
+    } else {
+      threadEl.hidden = true;
+      threadEl.innerHTML = "";
+      if (st && !st.ambiguous && st.id) mindPending._threadPickId = st.id;
+    }
+  }
+
+  const showDupActions = g.conflictType === "duplicate" && g.conflict.exists;
+  const showContraActions = g.conflictType === "contradiction" && g.contradictions.length;
+  const showSafetyActions = g.conflictType === "safety_update" || (g.isSafety && g.requiresChoice);
+  if (saveBtn) saveBtn.hidden = showDupActions || showContraActions || showSafetyActions;
+  if (saveNewBtn) {
+    saveNewBtn.hidden = !(showDupActions || showContraActions || showSafetyActions);
+    saveNewBtn.textContent = showDupActions ? "Keep both" : "Save as new";
+  }
+  if (updateBtn) {
+    updateBtn.hidden = !(showDupActions || showContraActions);
+    updateBtn.textContent = showContraActions ? "Replace earlier note" : "Update existing";
+  }
+
   mindRenderConfirmExtra(result);
+}
+
+function mindPickThread(btn) {
+  const wrap = btn.closest(".mind-thread-btns");
+  wrap?.querySelectorAll("button").forEach(b => b.classList.remove("selected"));
+  btn.classList.add("selected");
+  if (mindPending) mindPending._threadPickId = btn.dataset.threadId || null;
 }
 
 function mindConfirmTypeChange() {
@@ -6861,14 +7022,35 @@ function mindRenderConfirmExtra(result) {
   } else el.innerHTML = "";
 }
 
-async function mindConfirmSave() {
+async function mindConfirmSave(forceNew = false, opts = {}) {
   if (!mindPending) return;
+  const g = mindClassifyGate(mindPending);
   const save_as = document.getElementById("mind-confirm-type").value;
   const body = {
     confirmation_id: mindPending.confirmation_id,
     approved_content: document.getElementById("mind-confirm-content").value,
     save_as,
+    force_new: !!forceNew,
   };
+
+  const threadPick = document.querySelector("#mind-confirm-threads .mind-thread-btns button.selected");
+  body.thread_id = threadPick?.dataset?.threadId
+    || mindPending._threadPickId
+    || (mindPending.suggested_thread && !mindPending.suggested_thread.ambiguous
+      ? mindPending.suggested_thread.id
+      : null);
+
+  if (forceNew) {
+    body.force_new = true;
+  } else if (opts.update && g.conflict?.entry_id) {
+    body.update_entry_id = g.conflict.entry_id;
+  } else if (g.conflictType === "duplicate" && g.conflict?.entry_id && !g.contradictions.length) {
+    body.update_entry_id = g.conflict.entry_id;
+  } else if (g.conflictType === "contradiction" && opts.update) {
+    const c = g.contradictions[0];
+    if (c?.entry_id) body.update_entry_id = c.entry_id;
+  }
+
   if (save_as === "task") {
     body.task = {
       title: body.approved_content,
@@ -6937,7 +7119,7 @@ async function mindBrowseLoad() {
     el.innerHTML = entries.map(e => `
       <div class="mind-entry-row">
         <div class="body" onclick="mindOpenEntry('${e.id}')">
-          <div style="display:flex;gap:10px;align-items:flex-start">${mindEntryThumbHtml(e)}<span style="flex:1;min-width:0">${mindEsc((e.content || "").replace(/\s+/g, " ").slice(0, 160))}</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start">${mindEntryThumbHtml(e)}<span style="flex:1;min-width:0">${mindSafetyBadgeHtml(e)}${mindEsc((e.content || "").replace(/\s+/g, " ").slice(0, 160))}</span></div>
           <div class="meta">${mindEsc(e.type)} · ${mindFmtDate(e.created_at)}${e.task ? " · " + mindEsc(e.task.status) : ""}</div>
         </div>
         <div class="actions">

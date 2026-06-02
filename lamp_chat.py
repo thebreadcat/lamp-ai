@@ -26,6 +26,9 @@ the conversation normally. Do not include app_idea JSON again unless they ask fo
 Keep responses short (2-4 sentences) unless the user asks for detail.
 Do not mention that you are running on a Pi or local device unless asked.
 
+When the user is saving something to Memory and a prior note might conflict, ask in plain
+language (one short question) instead of sounding like a system error.
+
 When the user links chat threads, you may see messages tagged [From chat "…"] from another
 thread. Treat them as part of this conversation. Recall facts they stated there (names,
 passwords used for tests, preferences) when they ask — this is their private home assistant,
@@ -123,6 +126,36 @@ MODEL_HANDOFF_NOTE = (
     "Continue the conversation using the full message history below. "
     "Do not mention the model switch unless the user asks.]"
 )
+
+
+def mind_contradiction_assistant_message(existing_content: str) -> str:
+    """Natural-language prompt when a new memory may contradict an older one."""
+    existing = (existing_content or "").strip()
+    if len(existing) > 200:
+        existing = existing[:197] + "…"
+    return (
+        f'Just checking — you previously noted: "{existing}". '
+        "Is this an update, or something different?"
+    )
+
+
+def mind_contradiction_from_confirmation(confirmation: dict) -> str | None:
+    """
+    Return a chat-ready assistant message when confirmation needs contradiction resolution.
+    Works with normalized or raw MemoMind capture payloads.
+    """
+    if not confirmation:
+        return None
+    gate = confirmation.get("gate") or {}
+    conflict = confirmation.get("conflict") or {}
+    contradictions = confirmation.get("contradictions") or []
+    conflict_type = gate.get("conflict_type") or conflict.get("type") or conflict.get("kind")
+    if gate.get("has_contradiction") or conflict_type == "contradiction" or contradictions:
+        first = contradictions[0] if contradictions else conflict
+        existing = (first or {}).get("existing_content") or conflict.get("existing_content")
+        if existing:
+            return mind_contradiction_assistant_message(existing)
+    return None
 
 
 def stream_chat(cfg: dict, messages: list, write_sse, system: str = None):

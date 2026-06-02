@@ -257,6 +257,67 @@ def _validate_shared_key(handler) -> bool:
     return True
 
 
+def normalize_confirmation(confirmation: dict) -> dict:
+    """
+    Enrich MemoMind capture confirmation with an explicit gate contract for Lamp UI/chat.
+    Supports current memomind fields and future conflict.type values.
+    """
+    if not confirmation:
+        return confirmation
+
+    contradictions = list(confirmation.get("contradictions") or [])
+    conflict = dict(confirmation.get("conflict") or {})
+    is_safety = bool(confirmation.get("is_safety_critical"))
+    safety_in_conflict = any(c.get("is_safety_critical") for c in contradictions)
+
+    conflict_type = conflict.get("type") or conflict.get("kind")
+    if not conflict_type:
+        if contradictions:
+            conflict_type = "contradiction"
+        elif conflict.get("exists") and (is_safety or safety_in_conflict):
+            conflict_type = "safety_update"
+        elif conflict.get("exists"):
+            conflict_type = "duplicate"
+
+    if conflict_type:
+        conflict["type"] = conflict_type
+    conflict["is_safety_critical"] = bool(
+        conflict.get("is_safety_critical") or is_safety or safety_in_conflict
+    )
+    if contradictions and conflict_type == "contradiction":
+        first = contradictions[0]
+        conflict.setdefault("existing_content", first.get("existing_content"))
+        conflict.setdefault("entry_id", first.get("entry_id"))
+        conflict.setdefault("message", first.get("message"))
+
+    confirmation["conflict"] = conflict if conflict else None
+
+    thread_ambiguous = bool(confirmation.get("thread_ambiguous"))
+    alts = confirmation.get("thread_alternatives") or []
+    primary = confirmation.get("suggested_thread")
+    if thread_ambiguous and (alts or primary):
+        confirmation["suggested_thread"] = {
+            "ambiguous": True,
+            "candidates": [t for t in ([primary] + list(alts)) if t],
+        }
+    elif primary and not isinstance(primary, dict):
+        confirmation["suggested_thread"] = primary
+
+    requires_choice = bool(
+        contradictions
+        or is_safety
+        or (conflict.get("exists") and conflict_type in ("duplicate", "safety_update"))
+        or thread_ambiguous
+    )
+    confirmation["gate"] = {
+        "requires_user_choice": requires_choice,
+        "conflict_type": conflict_type,
+        "has_contradiction": bool(contradictions),
+        "is_safety_critical": is_safety,
+    }
+    return confirmation
+
+
 def handle(handler, method: str, full_path: str, user: dict) -> bool:
     """Handle /api/memomind/* and /memomind-app. Returns True if handled."""
     parsed = urlparse(full_path)
@@ -586,7 +647,9 @@ def _dispatch(handler, method: str, path: str, qs: dict, user: dict) -> bool:
         if not raw:
             _err(handler, mm.ERROR["too_vague"], "EMPTY_INPUT")
             return True
-        result = mm.capture.build_confirmation(raw, input_type=data.get("type", "text"))
+        result = normalize_confirmation(
+            mm.capture.build_confirmation(raw, input_type=data.get("type", "text"))
+        )
         _json(handler, result)
         return True
 
@@ -608,6 +671,7 @@ def _dispatch(handler, method: str, path: str, qs: dict, user: dict) -> bool:
                 task_data=data.get("task"),
                 event_data=data.get("event"),
                 reminders=data.get("reminders"),
+                force_new=bool(data.get("force_new")),
             )
             _json(handler, result)
         except ValueError as e:
